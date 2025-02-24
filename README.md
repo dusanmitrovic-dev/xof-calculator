@@ -13,7 +13,7 @@
 - [ ] **File Operation Safety**
     - [x] (v0.0.3) Create utils/file_handlers for file operations
     - [ ] Create JSON operation helpers
-        - [ ] (v0.0.4) `load_json()` with validation
+        - [x] (v0.0.4) `load_json()` with validation
         - [ ] `save_json()` with atomic writes
         - [ ] Implement file locking
         - [ ] Add automatic backups before writes
