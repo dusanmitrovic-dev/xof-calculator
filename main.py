@@ -1,7 +1,14 @@
+import os
 import discord
 import json
 from discord.ext import commands
 from datetime import datetime, timedelta
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+
+TOKEN = os.getenv("DISCORD_TOKEN")
 
 intents = discord.Intents.default()
 intents.members = True
@@ -10,33 +17,33 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 
 # Load configuration files
 try:
-    with open('role_percentages.json', 'r') as f:
+    with open('./data/role_percentages.json', 'r') as f:
         role_data = json.load(f)
 except FileNotFoundError:
     role_data = {}
 
 try:
-    with open('shift_config.json', 'r') as f:
+    with open('./data/shift_config.json', 'r') as f:
         shift_data = json.load(f)
 except FileNotFoundError:
     shift_data = {}
 
 try:
-    with open('period_config.json', 'r') as f:
+    with open('./data/period_config.json', 'r') as f:
         period_data = json.load(f)
 except FileNotFoundError:
     period_data = {}
 
 # Load bonus rules
 try:
-    with open('bonus_rules.json', 'r') as f:
+    with open('./data/bonus_rules.json', 'r') as f:
         bonus_rules = json.load(f)
 except FileNotFoundError:
     bonus_rules = {}
 
 # Load earnings data
 try:
-    with open('earnings.json', 'r') as f:
+    with open('./data/earnings.json', 'r') as f:
         earnings_by_sender = json.load(f)
 except FileNotFoundError:
     earnings_by_sender = {}
@@ -60,7 +67,7 @@ async def calculateroleset(ctx, role: discord.Role, percentage: float):
         role_data[guild_id] = {}
     role_data[guild_id][role_id] = percentage
     
-    with open('role_percentages.json', 'w') as f:
+    with open('./data/role_percentages.json', 'w') as f:
         json.dump(role_data, f, indent=4)
     
     await ctx.send(f"✅ {role.name} now has {percentage}% cut!")
@@ -80,7 +87,7 @@ async def calculateshiftset(ctx, *, shift: str):
         shift_data[guild_id] = []
     shift_data[guild_id].append(shift)
     
-    with open('shift_config.json', 'w') as f:
+    with open('./data/shift_config.json', 'w') as f:
         json.dump(shift_data, f, indent=4)
     
     await ctx.send(f"✅ Shift '{shift}' added!")
@@ -100,7 +107,7 @@ async def calculateperiodset(ctx, *, period: str):
         period_data[guild_id] = []
     period_data[guild_id].append(period)
     
-    with open('period_config.json', 'w') as f:
+    with open('./data/period_config.json', 'w') as f:
         json.dump(period_data, f, indent=4)
     
     await ctx.send(f"✅ Period '{period}' added!")
@@ -132,7 +139,7 @@ async def calculatebonus(ctx, from_str: str, to_str: str, bonus_str: str):
         bonus_rules[guild_id] = []
     bonus_rules[guild_id].append(new_rule)
 
-    with open('bonus_rules.json', 'w') as f:
+    with open('./data/bonus_rules.json', 'w') as f:
         json.dump(bonus_rules, f, indent=4)
 
     await ctx.send(f"✅ Bonus rule added: ${from_num:,.2f} to ${to_num:,.2f} → ${bonus_amount:,.2f} bonus!")
@@ -195,7 +202,7 @@ async def calculate(ctx, period: str, shift: str, role: discord.Role, gross_reve
         "period": period.lower()
     })
 
-    with open('earnings.json', 'w') as f:
+    with open('./data/earnings.json', 'w') as f:
         json.dump(earnings_by_sender, f, indent=4)
 
     print(f"DEBUG: Earnings saved for {sender} in period {period}: {earnings_by_sender[sender]}")  # Debug line
@@ -265,4 +272,4 @@ async def total(ctx, period: str, from_date: str = None, to_date: str = None, se
     else:
         await ctx.send(f"No earnings recorded for {sender}.")
   
-bot.run("")
+bot.run(TOKEN)

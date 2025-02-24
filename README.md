@@ -3,12 +3,12 @@
 ### Fox agency shift calculator.
 
 ### CRITICAL (Security & Core Stability)
-- [ ] **Secure Token Management**
-    - [ ] Remove hardcoded token
-    - [ ] Create `.env` file for token
-    - [ ] Add python-dotenv to requirements.txt
-    - [ ] Add `.env` to `.gitignore`
-    - [ ] Create `.env.example` template
+- [x] **Secure Token Management**
+    - [x] Remove hardcoded token
+    - [x] Create `.env` file for token
+    - [x] Add python-dotenv to requirements.txt
+    - [x] Add `.env` to `.gitignore`
+    - [x] Create `.env.example` template
 
 - [ ] **File Operation Safety**
     - [ ] Create JSON operation helpers
