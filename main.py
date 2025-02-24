@@ -1,19 +1,49 @@
 import os
-import discord
 import json
+import logging
+import discord
+import asyncio
+
 from discord.ext import commands
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler("logs/bot.log"),
+        logging.StreamHandler()
+    ]
+)
+
+logger = logging.getLogger("xof_calculator.main")
 
 # Load environment variables
 load_dotenv()
 
 TOKEN = os.getenv("DISCORD_TOKEN")
 
+if not TOKEN:
+    logger.critical("No Discord token found. Please create a .env file with your DISCORD_TOKEN.")
+    exit(1)
+
 intents = discord.Intents.default()
 intents.members = True
 intents.message_content = True
+
 bot = commands.Bot(command_prefix='!', intents=intents)
+
+# Load cogs
+# async def load_extensions():
+#     for filename in os.listdir("./cogs"):
+#         if filename.endswith(".py") and not filename.startswith("_"):
+#             try:
+#                 await bot.load_extension(f"cogs.{filename[:-3]}")
+#                 logger.info(f"Loaded extension: {filename[:-3]}")
+#             except Exception as e:
+#                 logger.error(f"Failed to load extension {filename[:-3]}: {e}")
 
 # Load configuration files
 try:
@@ -48,9 +78,14 @@ try:
 except FileNotFoundError:
     earnings_by_sender = {}
 
+
 @bot.event
 async def on_ready():
-    print(f'Bot is online as {bot.user}')
+    logger.info(f"Bot is online as {bot.user}")
+    await bot.change_presence(activity=discord.Activity(
+        type=discord.ActivityType.watching, 
+        name="shift calculations"
+    ))
 
 @bot.command()
 @commands.has_permissions(administrator=True)
@@ -273,3 +308,12 @@ async def total(ctx, period: str, from_date: str = None, to_date: str = None, se
         await ctx.send(f"No earnings recorded for {sender}.")
   
 bot.run(TOKEN)
+
+# Run the bot
+async def main():
+    async with bot:
+        # await load_extensions()
+        await bot.start(TOKEN)
+
+if __name__ == "__main__":
+    asyncio.run(main())
