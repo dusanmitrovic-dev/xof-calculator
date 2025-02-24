@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.0.10] - 2025-02-24
+### Added
+- implemented validate_shift function in validators.py for validation and finding a shift by name (case-insensitive)
+
 ## [0.0.9] - 2025-02-24
 ### Added
 - implemented validate_date_format function in validators.py for validation if a string matches the expected date format
