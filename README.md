@@ -26,8 +26,9 @@
         - [x] (v0.0.7) Use Decimal for all calculations
         - [ ] Implement proper rounding rules (2 decimals?)
     - [ ] Input validation
-        - [ ] Check for negative values
         - [x] (v0.0.8) Validate percentage ranges (0-100)
+        - [ ] (v0.0.9) validation if a string matches the expected date format
+        - [ ] Check for negative values
         - [ ] Verify role existence
         - [ ] Sanitize string inputs
 

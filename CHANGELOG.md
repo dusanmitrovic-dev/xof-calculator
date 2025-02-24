@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.0.9] - 2025-02-24
+### Added
+- implemented validate_date_format function in validators.py for validation if a string matches the expected date format
+
 ## [0.0.8] - 2025-02-24
 ### Added
 - implemented validate_percentage function in validators.py for percentage validation if value is between 0-100

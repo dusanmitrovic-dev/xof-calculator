@@ -57,3 +57,21 @@ def validate_percentage(value: Union[str, int, float, Decimal]) -> Optional[Deci
     except (InvalidOperation, ValueError, TypeError) as e:
         logger.error(f"Invalid percentage value '{value}': {e}")
         return None
+
+def validate_date_format(date_str: str, format_str: str = "%d/%m/%Y") -> bool:
+    """
+    Validate if a string matches the expected date format
+    
+    Args:
+        date_str: Date string to validate
+        format_str: Expected date format
+        
+    Returns:
+        True if valid, False otherwise
+    """
+    import datetime
+    try:
+        datetime.datetime.strptime(date_str, format_str)
+        return True
+    except ValueError:
+        return False
