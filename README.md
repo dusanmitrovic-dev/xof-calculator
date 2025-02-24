@@ -23,7 +23,7 @@
 - [ ] **Critical Data Validation**
     - [x] (v0.0.6) Create utils/validators.py for monetary calculations
     - [ ] Monetary calculations
-        - [ ] Use Decimal for all calculations
+        - [x] (v0.0.7) Use Decimal for all calculations
         - [ ] Implement proper rounding rules (2 decimals?)
     - [ ] Input validation
         - [ ] Check for negative values

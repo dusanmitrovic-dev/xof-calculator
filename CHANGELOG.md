@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.0.7] - 2025-02-24
+### Added
+- implemented parse_money function in validators.py for parsing a monetary value to Decimal with proper validation
+
 ## [0.0.6] - 2025-02-24
 ### Added
 - utils/validators.py for monetary calculations
