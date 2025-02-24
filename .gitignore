@@ -169,3 +169,14 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# VSCode
+.vscode/
+
+# Logs
+logs/*.log
+logs/*.log.*
+
+# JSON data files
+data/*.json
+!data/__init__.py

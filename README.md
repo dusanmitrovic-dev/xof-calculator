@@ -1,2 +1,108 @@
-# fox-shift-calculator
-Fox agency shift calculator discord bot.
+# Discord Bot Implementation Plan
+
+### Fox agency shift calculator.
+
+### CRITICAL (Security & Core Stability)
+- [ ] **Secure Token Management**
+    - [ ] Remove hardcoded token
+    - [ ] Create `.env` file for token
+    - [ ] Add python-dotenv to requirements.txt
+    - [ ] Add `.env` to `.gitignore`
+    - [ ] Create `.env.example` template
+
+- [ ] **File Operation Safety**
+    - [ ] Create JSON operation helpers
+        - [ ] `load_json()` with validation
+        - [ ] `save_json()` with atomic writes
+        - [ ] Implement file locking
+        - [ ] Add automatic backups before writes
+    - [ ] Add try-except blocks for all file operations
+    - [ ] Implement file existence checks
+
+- [ ] **Critical Data Validation**
+    - [ ] Monetary calculations
+        - [ ] Use Decimal for all calculations
+        - [ ] Implement proper rounding rules (2 decimals?)
+    - [ ] Input validation
+        - [ ] Check for negative values
+        - [ ] Validate percentage ranges (0-100)
+        - [ ] Verify role existence
+        - [ ] Sanitize string inputs
+
+### HIGH PRIORITY (Core Functionality)
+- [ ] **Command Safety & Validation**
+    - [ ] Fix bonus calculation logic
+        - [ ] Sort rules by ascending value (double check)
+        - [ ] Check for overlapping ranges (double check)
+        - [ ] Validate bonus amounts (double check)
+    - [ ] Add permission checks
+        - [ ] Verify admin status
+        - [ ] Check command permissions
+    - [ ] Implement proper error messages
+
+- [ ] **Date & Time Handling**
+    - [ ] Add time zone support (Is it really necessary?)
+    - [ ] Fix date range calculations
+    - [ ] Validate date formats
+    - [ ] Standardize date display
+
+- [ ] **Basic Logging**
+    - [ ] Set up logging configuration
+    - [ ] Log command usage
+    - [ ] Log calculation results
+    - [ ] Log errors with stack traces
+    - [ ] Implement log rotation
+
+### MEDIUM PRIORITY (Structure)
+- [ ] **Code Organization**
+    - [ ] Split into modules
+        - [ ] `commands.py` (command logic)
+        - [ ] `utils.py` (helpers)
+        - [ ] `config.py` (configuration)
+        - [ ] `calculations.py` (business logic)
+    - [ ] Create `main.py` as entry point
+    - [ ] Convert to Discord.py Cogs
+
+- [ ] **Configuration Management**
+    - [ ] Add config reload function
+    - [ ] Create config validation
+    - [ ] Optimize lookups
+        - [ ] Use dictionaries instead of lists
+        - [ ] Case-insensitive matching
+
+### USER EXPERIENCE
+- [ ] **Command Improvements**
+    - [ ] Add management commands
+        - [ ] `!calculateroleremove`
+        - [ ] `!calculateshiftremove`
+        - [ ] `!calculateperiodremove`
+        - [ ] `!calculateroleslist`
+        - [ ] `!calculateshiftslist`
+    - [ ] Add help messages
+        - [ ] Usage examples
+        - [ ] Parameter descriptions
+
+- [ ] **Display Enhancements**
+    - [ ] Improve embeds
+        - [ ] Add thousand separators
+        - [ ] Consistent formatting
+        - [ ] Color coding
+    - [ ] Add confirmation reactions
+    - [ ] Implement command cooldowns
+
+### FUTURE IMPROVEMENTS
+- [ ] Basic report generation
+- [ ] CSV/JSON data export
+- [ ] Bulk calculations
+- [ ] Simple statistics commands
+- [ ] Documentation
+    - [ ] README.md
+    - [ ] Setup guide
+    - [ ] Command reference
+
+---
+
+### Excluded Features:
+- Database integration (staying with JSON) (at the very end.. maybe even skip it)
+- Web dashboard (will see If needed like admin dashboard)
+- Charts/visualizations
