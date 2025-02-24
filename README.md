@@ -29,6 +29,7 @@
         - [x] (v0.0.8) Validate percentage ranges (0-100)
         - [x] (v0.0.9) validation if a string matches the expected date format
         - [x] (v0.0.10) validation and finding a shift by name (case-insensitive)
+        - [x] (v0.0.11) validation and finding a period by name (case-insensitive)
         - [ ] Check for negative values
         - [ ] Verify role existence
         - [ ] Sanitize string inputs

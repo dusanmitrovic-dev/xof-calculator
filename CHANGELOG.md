@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.0.11] - 2025-02-24
+### Added
+- implemented validate_period function in validators.py for validation and finding a period by name (case-insensitive)
+
 ## [0.0.10] - 2025-02-24
 ### Added
 - implemented validate_shift function in validators.py for validation and finding a shift by name (case-insensitive)

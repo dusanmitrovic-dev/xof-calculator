@@ -96,3 +96,24 @@ def validate_shift(shift: str, valid_shifts: List[str]) -> Optional[str]:
             return valid_shift
             
     return None
+
+def validate_period(period: str, valid_periods: List[str]) -> Optional[str]:
+    """
+    Validate and find a period by name (case-insensitive)
+    
+    Args:
+        period: Period name to validate
+        valid_periods: List of valid period names
+        
+    Returns:
+        The matched period name or None if not found
+    """
+    if not period or not valid_periods:
+        return None
+        
+    # Case-insensitive matching
+    for valid_period in valid_periods:
+        if valid_period.lower() == period.lower():
+            return valid_period
+            
+    return None
