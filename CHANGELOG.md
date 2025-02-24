@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.0.6] - 2025-02-24
+### Added
+- utils/validators.py for monetary calculations
+
 ## [0.0.5] - 2025-02-24
 ### Added
 - implemented save_json function in file_handlers.py for saving JSON files

@@ -12,15 +12,16 @@
 
 - [ ] **File Operation Safety**
     - [x] (v0.0.3) Create utils/file_handlers for file operations
-    - [ ] Create JSON operation helpers
+    - [x] Create JSON operation helpers
         - [x] (v0.0.4) `load_json()` with validation
         - [x] (v0.0.5) `save_json()` with atomic writes
-        - [ ] Implement file locking
-        - [ ] Add automatic backups before writes
-    - [ ] Add try-except blocks for all file operations
-    - [ ] Implement file existence checks
+        - [x] Implement file locking
+        - [x] Add automatic backups before writes
+    - [x] Add try-except blocks for all file operations
+    - [x] Implement file existence checks
 
 - [ ] **Critical Data Validation**
+    - [x] (v0.0.6) Create utils/validators.py for monetary calculations
     - [ ] Monetary calculations
         - [ ] Use Decimal for all calculations
         - [ ] Implement proper rounding rules (2 decimals?)
