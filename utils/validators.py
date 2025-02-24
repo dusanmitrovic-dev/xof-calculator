@@ -30,3 +30,30 @@ def parse_money(value: Union[str, int, float, Decimal]) -> Optional[Decimal]:
     except (InvalidOperation, ValueError, TypeError) as e:
         logger.error(f"Invalid monetary value '{value}': {e}")
         return None
+
+def validate_percentage(value: Union[str, int, float, Decimal]) -> Optional[Decimal]:
+    """
+    Validate a percentage value is between 0-100
+    
+    Args:
+        value: The percentage value to validate
+        
+    Returns:
+        Decimal representation if valid, None otherwise
+    """
+    try:
+        if isinstance(value, str):
+            # Remove percentage symbol and whitespace
+            value = value.replace('%', '').strip()
+            
+        percentage = Decimal(value).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        
+        if percentage < 0 or percentage > 100:
+            logger.error(f"Percentage value {percentage} out of range (0-100)")
+            return None
+            
+        return percentage
+        
+    except (InvalidOperation, ValueError, TypeError) as e:
+        logger.error(f"Invalid percentage value '{value}': {e}")
+        return None

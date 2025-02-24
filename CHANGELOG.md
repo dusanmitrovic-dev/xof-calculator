@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.0.8] - 2025-02-24
+### Added
+- implemented validate_percentage function in validators.py for percentage validation if value is between 0-100
+
 ## [0.0.7] - 2025-02-24
 ### Added
 - implemented parse_money function in validators.py for parsing a monetary value to Decimal with proper validation

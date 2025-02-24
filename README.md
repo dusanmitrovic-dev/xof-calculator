@@ -27,7 +27,7 @@
         - [ ] Implement proper rounding rules (2 decimals?)
     - [ ] Input validation
         - [ ] Check for negative values
-        - [ ] Validate percentage ranges (0-100)
+        - [x] (v0.0.8) Validate percentage ranges (0-100)
         - [ ] Verify role existence
         - [ ] Sanitize string inputs
 
