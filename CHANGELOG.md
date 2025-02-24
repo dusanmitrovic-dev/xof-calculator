@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.0.12] - 2025-02-24
+### Added
+- implemented validate_bonus_rules function in validators.py for validation of bonus rules for consistency and overlaps
+
 ## [0.0.11] - 2025-02-24
 ### Added
 - implemented validate_period function in validators.py for validation and finding a period by name (case-insensitive)

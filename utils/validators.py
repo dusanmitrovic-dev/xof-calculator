@@ -117,3 +117,57 @@ def validate_period(period: str, valid_periods: List[str]) -> Optional[str]:
             return valid_period
             
     return None
+
+def validate_bonus_rules(rules: List[Dict]) -> Tuple[List[Dict], List[str]]:
+    """
+    Validate bonus rules for consistency and overlaps
+    
+    Args:
+        rules: List of bonus rule dictionaries
+        
+    Returns:
+        Tuple of (valid_rules, error_messages)
+    """
+    valid_rules = []
+    errors = []
+    
+    # Check each rule has required fields
+    for i, rule in enumerate(rules):
+        if not all(key in rule for key in ['from', 'to', 'amount']):
+            errors.append(f"Rule #{i+1} is missing required fields (from, to, amount)")
+            continue
+            
+        # Validate monetary values
+        from_val = parse_money(rule['from'])
+        to_val = parse_money(rule['to']) 
+        amount = parse_money(rule['amount'])
+        
+        if None in (from_val, to_val, amount):
+            errors.append(f"Rule #{i+1} contains invalid monetary values")
+            continue
+            
+        # Check range validity
+        if from_val > to_val:
+            errors.append(f"Rule #{i+1} has 'from' value ({from_val}) greater than 'to' value ({to_val})")
+            continue
+            
+        valid_rules.append({
+            "from": from_val,
+            "to": to_val,
+            "amount": amount
+        })
+    
+    # Check for overlapping ranges
+    valid_rules.sort(key=lambda x: x['from'])
+    for i in range(1, len(valid_rules)):
+        prev_rule = valid_rules[i-1]
+        curr_rule = valid_rules[i]
+        
+        if prev_rule['to'] >= curr_rule['from']:
+            errors.append(
+                f"Overlapping bonus rules: " 
+                f"${prev_rule['from']} - ${prev_rule['to']} overlaps with "
+                f"${curr_rule['from']} - ${curr_rule['to']}"
+            )
+    
+    return valid_rules, errors
