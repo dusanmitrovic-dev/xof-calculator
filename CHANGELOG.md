@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.0.5] - 2025-02-24
+### Added
+- implemented save_json function in file_handlers.py for saving JSON files
+
 ## [0.0.4] - 2025-02-24
 ### Added
 - implemented load_json function in file_handlers.py for reading JSON files

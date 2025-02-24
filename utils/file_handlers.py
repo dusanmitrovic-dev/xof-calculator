@@ -71,3 +71,63 @@ async def load_json(filename: str, default: Optional[Union[Dict, List]] = None) 
         except Exception as e:
             logger.error(f"Unexpected error loading {file_path}: {e}")
             return default
+
+async def save_json(filename: str, data: Union[Dict, List], pretty: bool = True) -> bool:
+    """
+    Safely save data to a JSON file with atomic write operations
+    
+    Args:
+        filename: Path to the JSON file
+        data: Data to save
+        pretty: Whether to format the JSON with indentation
+        
+    Returns:
+        True if successful, False otherwise
+    """
+    file_path = f"data/{filename}"
+    temp_path = f"{file_path}.tmp"
+    backup_path = f"{file_path}.bak"
+    lock = await get_file_lock(file_path)
+    
+    async with lock:
+        try:
+            # Create parent directory if it doesn't exist
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+            
+            # Create backup of existing file
+            if os.path.exists(file_path):
+                try:
+                    shutil.copy2(file_path, backup_path)
+                except Exception as backup_error:
+                    logger.warning(f"Failed to create backup of {file_path}: {backup_error}")
+            
+            # Write to temporary file first
+            json_str = json.dumps(data, indent=4 if pretty else None)
+            async with aiofiles.open(temp_path, 'w') as f:
+                await f.write(json_str)
+            
+            # Validate the written file
+            try:
+                async with aiofiles.open(temp_path, 'r') as f:
+                    content = await f.read()
+                # Make sure the JSON is valid
+                json.loads(content)
+            except Exception as validation_error:
+                logger.error(f"Validation of written data failed: {validation_error}")
+                if os.path.exists(temp_path):
+                    os.remove(temp_path)
+                return False
+            
+            # Replace the original file with the temporary one (atomic operation)
+            os.replace(temp_path, file_path)
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error saving data to {file_path}: {e}")
+            # Clean up temporary file if it exists
+            if os.path.exists(temp_path):
+                try:
+                    os.remove(temp_path)
+                except:
+                    pass
+            return False

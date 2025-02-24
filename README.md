@@ -14,7 +14,7 @@
     - [x] (v0.0.3) Create utils/file_handlers for file operations
     - [ ] Create JSON operation helpers
         - [x] (v0.0.4) `load_json()` with validation
-        - [ ] `save_json()` with atomic writes
+        - [x] (v0.0.5) `save_json()` with atomic writes
         - [ ] Implement file locking
         - [ ] Add automatic backups before writes
     - [ ] Add try-except blocks for all file operations
