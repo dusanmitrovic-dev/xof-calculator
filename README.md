@@ -22,20 +22,21 @@
 
 - [ ] **Critical Data Validation**
     - [x] (v0.0.6) Create utils/validators.py for monetary calculations
-    - [ ] Monetary calculations
+    - [x] Monetary calculations
         - [x] (v0.0.7) Use Decimal for all calculations
-        - [ ] Implement proper rounding rules (2 decimals?)
+        - [x] Implement proper rounding rules (2 decimals?)
     - [ ] Input validation
         - [x] (v0.0.8) Validate percentage ranges (0-100)
         - [x] (v0.0.9) validation if a string matches the expected date format
         - [x] (v0.0.10) validation and finding a shift by name (case-insensitive)
         - [x] (v0.0.11) validation and finding a period by name (case-insensitive)
         - [x] (v0.0.12) validate bonus rules for consistency and overlaps
-        - [ ] Check for negative values
+        - [x] Check for negative values
         - [ ] Verify role existence
-        - [ ] Sanitize string inputs
+        - [x] Sanitize string inputs
 
 ### HIGH PRIORITY (Core Functionality)
+- [x] (v0.0.13) create utils/calculations.py for monetary calculations
 - [ ] **Command Safety & Validation**
     - [ ] Fix bonus calculation logic
         - [ ] Sort rules by ascending value (double check)

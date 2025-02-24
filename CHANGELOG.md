@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.0.13] - 2025-02-24
+### Added
+- utils/calculations.py for monetary calculations
+
 ## [0.0.12] - 2025-02-24
 ### Added
 - implemented validate_bonus_rules function in validators.py for validation of bonus rules for consistency and overlaps
