@@ -3,7 +3,7 @@
 ### Fox agency shift calculator.
 
 ### CRITICAL (Security & Core Stability)
-- [x] **Secure Token Management**
+- [x] (v0.0.1) **Secure Token Management**
     - [x] Remove hardcoded token
     - [x] Create `.env` file for token
     - [x] Add python-dotenv to requirements.txt
@@ -11,8 +11,9 @@
     - [x] Create `.env.example` template
 
 - [ ] **File Operation Safety**
+    - [x] (v0.0.3) Create utils/file_handlers for file operations
     - [ ] Create JSON operation helpers
-        - [ ] `load_json()` with validation
+        - [ ] (v0.0.4) `load_json()` with validation
         - [ ] `save_json()` with atomic writes
         - [ ] Implement file locking
         - [ ] Add automatic backups before writes
