@@ -52,6 +52,10 @@
     - [x] `calculateshiftslist`: list all configured shifts,
     - [x] `calculateperiodslist`: list all configured periods,
     - [x] `calculatebonuslist`: list all configured bonus rules.
+- [x] (v0.0.21) cogs/calculator.py for calculator command cogs.
+- [x] (v0.0.21) new calculator commands:
+    - `calculate`: Calculate earnings based on revenue, role, and shift,
+    - `total`: Calculate total earnings for a period and optional date range.
 - [ ] **Command Safety & Validation**
     - [ ] Fix bonus calculation logic
         - [ ] Sort rules by ascending value (double check)

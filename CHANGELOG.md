@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## [0.0.21] - 2025-02-24
+### Added
+- cogs/calculator.py for calculator command cogs.
+- new calculator commands:
+    - calculate: Calculate earnings based on revenue, role, and shift,
+    - total: Calculate total earnings for a period and optional date range.
+
 ## [0.0.20] - 2025-02-24
 ### Added
 - new admin commands:
