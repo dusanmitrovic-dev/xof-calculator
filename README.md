@@ -80,6 +80,7 @@
         - [ ] Find more appropriate name
         - [x] (v0.1.3) Add period selection to the workflow
         - [x] (v0.1.4) Add shift selection to the workflow
+        - [x] (v0.1.5) Add role selection to the workflow
 - [x]  (v0.0.21) Create `cogs/calculator.py` for calculator commands
 - [x]  New calculator commands:
     - `calculate`: Calculate earnings based on revenue, role, and shift

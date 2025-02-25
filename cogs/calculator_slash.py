@@ -60,6 +60,33 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculator_slash"):
         # Create shift selection view
         view = ShiftSelectionView(self, valid_shifts, period)
         await interaction.response.edit_message(content="Select a shift:", view=view)
+    
+    async def show_role_selection(self, interaction: discord.Interaction, period: str, shift: str):
+        """Third step: Role selection"""
+        guild_id = str(interaction.guild_id)
+        
+        # Load role data
+        role_data = await file_handlers.load_json(settings.ROLE_DATA_FILE, settings.DEFAULT_ROLE_DATA)
+        
+        if guild_id not in role_data or not role_data[guild_id]:
+            await interaction.response.edit_message(content="❌ No roles configured! Admins: use !calculateroleset.", view=None)
+            return
+        
+        # Get roles for this guild that are in the configuration
+        guild_roles = interaction.guild.roles
+        configured_roles = []
+        
+        for role in guild_roles:
+            if str(role.id) in role_data[guild_id]:
+                configured_roles.append(role)
+        
+        if not configured_roles:
+            await interaction.response.edit_message(content="❌ No roles configured! Admins: use !calculateroleset.", view=None)
+            return
+        
+        # Create role selection view
+        view = RoleSelectionView(self, configured_roles, period, shift)
+        await interaction.response.edit_message(content="Select a role:", view=view)
 
 class PeriodSelectionView(ui.View):
     def __init__(self, cog, periods):
@@ -89,6 +116,22 @@ class ShiftSelectionView(ui.View):
     
     async def on_shift_selected(self, interaction: discord.Interaction, shift: str):
         await self.cog.show_role_selection(interaction, self.period, shift)
+
+class RoleSelectionView(ui.View):
+    def __init__(self, cog, roles, period, shift):
+        super().__init__(timeout=180)
+        self.cog = cog
+        self.period = period
+        self.shift = shift
+        
+        # Add a button for each role
+        for role in roles[:25]:
+            button = ui.Button(label=role.name, style=discord.ButtonStyle.primary)
+            button.callback = lambda i, r=role: self.on_role_selected(i, r)
+            self.add_item(button)
+    
+    async def on_role_selected(self, interaction: discord.Interaction, role: discord.Role):
+        await self.cog.show_revenue_input(interaction, self.period, self.shift, role)
 
 async def setup(bot):
     await bot.add_cog(CalculatorSlashCommands(bot))
