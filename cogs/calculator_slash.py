@@ -103,6 +103,92 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculator_slash"):
         view = ModelSelectionView(self, dummy_models, period, shift, role, gross_revenue)
         await interaction.response.edit_message(content="Select models (optional, you can select multiple):", view=view)
 
+    async def finalize_calculation(self, interaction: discord.Interaction, period: str, shift: str, role: discord.Role, 
+                                gross_revenue: Decimal, selected_models: List[str]):
+        """Final step: Calculate and display results"""
+        guild_id = str(interaction.guild_id)
+        
+        # Get role percentage from configuration
+        role_data = await file_handlers.load_json(settings.ROLE_DATA_FILE, settings.DEFAULT_ROLE_DATA)
+        percentage = Decimal(str(role_data[guild_id][str(role.id)]))
+        
+        # Load bonus rules
+        bonus_rules = await file_handlers.load_json(settings.BONUS_RULES_FILE, settings.DEFAULT_BONUS_RULES)
+        guild_bonus_rules = bonus_rules.get(guild_id, [])
+        
+        # Convert to proper Decimal objects for calculations
+        bonus_rule_objects = []
+        for rule in guild_bonus_rules:
+            rule_obj = {
+                "from": Decimal(str(rule.get("from", 0))),
+                "to": Decimal(str(rule.get("to", 0))),
+                "amount": Decimal(str(rule.get("amount", 0)))
+            }
+            bonus_rule_objects.append(rule_obj)
+        
+        # Calculate earnings
+        results = calculations.calculate_earnings(
+            gross_revenue,
+            percentage,
+            bonus_rule_objects
+        )
+        
+        # Save earnings data
+        sender = interaction.user.mention
+        current_date = datetime.now().strftime(settings.DATE_FORMAT)
+        
+        # Process models
+        models_list = ", ".join(selected_models) if selected_models else ""
+        
+        # Load earnings data
+        earnings_data = await file_handlers.load_json(settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS)
+        if sender not in earnings_data:
+            earnings_data[sender] = []
+        
+        # Add new entry
+        earnings_data[sender].append({
+            "date": current_date,
+            "total_cut": float(results["total_cut"]),
+            "gross_revenue": float(results["gross_revenue"]),
+            "period": period.lower(),
+            "shift": shift,
+            "role": role.name,
+            "models": models_list
+        })
+        
+        # Save updated earnings data
+        success = await file_handlers.save_json(settings.EARNINGS_FILE, earnings_data)
+        if not success:
+            logger.error(f"Failed to save earnings data for {sender}")
+            await interaction.followup.send("⚠ Calculation completed but failed to save data. Please try again.", ephemeral=True)
+            return
+        
+        # Create embed
+        embed = discord.Embed(title="📊 Earnings Calculation", color=0x009933)
+        
+        # Add fields to embed
+        fields = [
+            ("📅 Date", current_date, True),
+            ("✍ Sender", sender, True),
+            ("📥 Shift", shift, True),
+            ("🎯 Role", role.name, True),
+            ("⌛ Period", period, True),
+            ("💰 Gross Revenue", f"${float(results['gross_revenue']):,.2f}", True),
+            ("💵 Net Revenue", f"${float(results['net_revenue']):,.2f} (80%)", True),
+            ("🎁 Bonus", f"${float(results['bonus']):,.2f}", True),
+            ("💰 Total Cut", f"${float(results['total_cut']):,.2f}", True),
+            ("🎭 Models", models_list, False)
+        ]
+        
+        for name, value, inline in fields:
+            embed.add_field(name=name, value=value, inline=inline)
+        
+        # Send the final result to everyone
+        await interaction.followup.send(embed=embed)
+        
+        # Edit the ephemeral message to show completion
+        await interaction.edit_original_response(content="Calculation complete!", view=None)
+
 class PeriodSelectionView(ui.View):
     def __init__(self, cog, periods):
         super().__init__(timeout=180)

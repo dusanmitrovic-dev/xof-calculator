@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.1.8] - 2025-02-25
+### Added
+- finalize embedded result for calculate-workflow
+
 ## [0.1.7] - 2025-02-25
 ### Added
 - model selection to the calculate-workflow
