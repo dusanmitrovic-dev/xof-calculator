@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.0.15] - 2025-02-24
+### Added
+- implemented find_applicable_bonus function in calculations.py for finding the applicable bonus based on revenue and rules
+
 ## [0.0.14] - 2025-02-24
 ### Added
 - implemented calculate_revenue_share function in calculations.py for calculating employee's cut based on gross revenue and role percentage

@@ -25,3 +25,27 @@ def calculate_revenue_share(gross_revenue: Decimal, role_percentage: Decimal) ->
     employee_cut = (net_revenue * (role_percentage / Decimal('100'))).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
     
     return net_revenue, employee_cut, platform_fee
+
+def find_applicable_bonus(gross_revenue: Decimal, bonus_rules: List[Dict]) -> Decimal:
+    """
+    Find the applicable bonus based on revenue and rules
+    
+    Args:
+        gross_revenue: The gross revenue amount
+        bonus_rules: List of bonus rule dictionaries
+        
+    Returns:
+        The bonus amount (0 if no applicable rule)
+    """
+    if not bonus_rules:
+        return Decimal('0.00')
+    
+    # Sort rules by revenue range (ascending)
+    sorted_rules = sorted(bonus_rules, key=lambda x: x['from'])
+    
+    # Find applicable rule
+    for rule in sorted_rules:
+        if rule['from'] <= gross_revenue <= rule['to']:
+            return rule['amount']
+            
+    return Decimal('0.00')
