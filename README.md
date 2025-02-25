@@ -75,6 +75,7 @@
 
 ### Calculator Commands
 
+- [x]  (v0.1.1) Create `cogs/calculator_slash.py` for calculator interaction workflow
 - [x]  (v0.0.21) Create `cogs/calculator.py` for calculator commands
 - [x]  New calculator commands:
     - `calculate`: Calculate earnings based on revenue, role, and shift

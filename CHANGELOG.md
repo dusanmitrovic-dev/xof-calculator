@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.1.1] - 2025-02-25
+### Added
+- cogs/calculator_slash.py for calculator interaction workflow
+
 ## [0.1.0] - 2025-02-25
 ### Added
 - `main.py` system remodeled
