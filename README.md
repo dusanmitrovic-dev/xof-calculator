@@ -40,6 +40,7 @@
 - [x] (v0.0.14) calculate employee's cut based on gross revenue and role percentage
 - [x] (v0.0.15) finding the applicable bonus based on revenue and rules
 - [x] (v0.0.16) calculating all earnings values
+- [x] (v0.0.17) calculating total earnings from a list of earnings data
 - [ ] **Command Safety & Validation**
     - [ ] Fix bonus calculation logic
         - [ ] Sort rules by ascending value (double check)

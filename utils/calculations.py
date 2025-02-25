@@ -78,3 +78,38 @@ def calculate_earnings(
         "bonus": bonus,
         "total_cut": total_cut
     }
+
+def get_total_earnings(earnings_data: List[Dict], period: str, from_date: Optional[str] = None, to_date: Optional[str] = None) -> Decimal:
+    """
+    Calculate total earnings from a list of earnings data
+    
+    Args:
+        earnings_data: List of earnings dictionaries
+        period: Period to filter by
+        from_date: Optional start date (format: DD/MM/YYYY)
+        to_date: Optional end date (format: DD/MM/YYYY)
+        
+    Returns:
+        Total earnings amount
+    """
+    from datetime import datetime
+    
+    # Filter by period
+    filtered_data = [entry for entry in earnings_data if entry.get("period", "").lower() == period.lower()]
+    
+    # Filter by date range if provided
+    if from_date and to_date:
+        try:
+            from_date_obj = datetime.strptime(from_date, "%d/%m/%Y")
+            to_date_obj = datetime.strptime(to_date, "%d/%m/%Y")
+            
+            filtered_data = [
+                entry for entry in filtered_data 
+                if from_date_obj <= datetime.strptime(entry.get("date", "01/01/1970"), "%d/%m/%Y") <= to_date_obj
+            ]
+        except ValueError as e:
+            logger.error(f"Date parsing error: {e}")
+    
+    # Sum total cuts
+    total = sum(Decimal(str(entry.get("total_cut", 0))) for entry in filtered_data)
+    return total.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)

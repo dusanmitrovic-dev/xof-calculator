@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.0.17] - 2025-02-24
+### Added
+- implemented get_total_earnings function in calculations.py for calculating total earnings from a list of earnings data
+
 ## [0.0.16] - 2025-02-24
 ### Added
 - implemented calculate_earnings function in calculations.py for calculating all earnings values
