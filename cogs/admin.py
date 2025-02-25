@@ -4,6 +4,7 @@ import logging
 from decimal import Decimal
 from typing import Optional
 from config import settings
+from discord import app_commands
 from discord.ext import commands
 from utils import file_handlers, validators
 
@@ -287,7 +288,7 @@ class AdminCommands(commands.Cog):
         if not guild_rules:
             await ctx.send("❌ No bonus rules have been configured yet.")
             return
-            
+        
         # Sort rules by revenue range
         sorted_rules = sorted(guild_rules, key=lambda x: x.get("from", 0))
         
@@ -299,10 +300,21 @@ class AdminCommands(commands.Cog):
         )
         
         # Add bonus rules to embed
-        for i, rule in enumerate(sorted_rules):
+        for rule in sorted_rules:
             from_val = rule.get("from", 0)
             to_val = rule.get("to", 0)
             amount = rule.get("amount", 0)
+            embed.add_field(
+                name=f"${from_val} - ${to_val}",
+                value=f"Bonus: ${amount}",
+                inline=False
+            )
+
+        await ctx.send(embed=embed)
+    
+    @app_commands.command(name="hello", description="Says hello only to the person who asked")
+    async def hello(self, interaction: discord.Interaction):
+        await interaction.response.send_message("Hello! How can I help you today?", ephemeral=True)
 
 async def setup(bot):
     await bot.add_cog(AdminCommands(bot))

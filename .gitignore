@@ -179,4 +179,5 @@ logs/*.log.*
 
 # JSON data files
 data/*.json
+data/*.bak
 !data/__init__.py
