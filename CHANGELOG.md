@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.1.2] - 2025-02-25
+### Added
+- calculate-workflow command that will initiate interactive workflow
+
 ## [0.1.1] - 2025-02-25
 ### Added
 - cogs/calculator_slash.py for calculator interaction workflow
