@@ -9,7 +9,7 @@ from discord.ext import commands
 from typing import Optional, List, Dict
 from utils import file_handlers, validators, calculations
 
-logger = logging.getLogger("fox_calculator.calculator")
+logger = logging.getLogger("xof_calculator.calculator")
 
 class CalculatorCommands(commands.Cog):
     def __init__(self, bot):

@@ -2,7 +2,7 @@ import logging
 from decimal import Decimal, ROUND_HALF_UP
 from typing import Dict, List, Tuple, Optional
 
-logger = logging.getLogger("fox_calculator.calculations")
+logger = logging.getLogger("xof_calculator.calculations")
 
 def calculate_revenue_share(gross_revenue: Decimal, role_percentage: Decimal) -> Tuple[Decimal, Decimal, Decimal]:
     """

@@ -1,4 +1,3 @@
-# cogs/reports.py
 import os
 import discord
 import logging
@@ -9,7 +8,7 @@ from datetime import datetime
 from discord.ext import commands
 from utils import file_handlers, validators, calculations
 
-logger = logging.getLogger("fox_calculator.reports")
+logger = logging.getLogger("xof_calculator.reports")
 
 class ReportCommands(commands.Cog):
     def __init__(self, bot):

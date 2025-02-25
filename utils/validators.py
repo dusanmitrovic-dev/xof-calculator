@@ -3,7 +3,7 @@ import re
 from decimal import Decimal, ROUND_HALF_UP, InvalidOperation
 from typing import Union, Optional, Tuple, List, Dict
 
-logger = logging.getLogger("fox_calculator.validators")
+logger = logging.getLogger("xof_calculator.validators")
 
 def parse_money(value: Union[str, int, float, Decimal]) -> Optional[Decimal]:
     """

@@ -2,20 +2,27 @@
 
 ## [Unreleased]
 
-## [0.0.22] - 2025-02-24
+## [0.1.0] - 2025-02-25
+### Added
+- `main.py` system remodeled
+    - bug fixes,
+    - clean code.
+    - remodeled functions now being used instead.
+
+## [0.0.22] - 2025-02-25
 ### Added
 - add cogs/reports.py for reporting functionality cogs.
 - new report command:
     - summary: Generate a summary report for all earnings in a period.
 
-## [0.0.21] - 2025-02-24
+## [0.0.21] - 2025-02-25
 ### Added
 - cogs/calculator.py for calculator command cogs.
 - new calculator commands:
     - calculate: Calculate earnings based on revenue, role, and shift,
     - total: Calculate total earnings for a period and optional date range.
 
-## [0.0.20] - 2025-02-24
+## [0.0.20] - 2025-02-25
 ### Added
 - new admin commands:
     - calculateroleset: set a role's percentage cut,
@@ -27,27 +34,27 @@
     - calculateperiodslist: list all configured periods,
     - calculatebonuslist: list all configured bonus rules.
 
-## [0.0.19] - 2025-02-24
+## [0.0.19] - 2025-02-25
 ### Added
 - cogs/admin.py for admin commands cogs
 
-## [0.0.18] - 2025-02-24
+## [0.0.18] - 2025-02-25
 ### Added
 - config/settings.py configuration module
 
-## [0.0.17] - 2025-02-24
+## [0.0.17] - 2025-02-25
 ### Added
 - implemented get_total_earnings function in calculations.py for calculating total earnings from a list of earnings data
 
-## [0.0.16] - 2025-02-24
+## [0.0.16] - 2025-02-25
 ### Added
 - implemented calculate_earnings function in calculations.py for calculating all earnings values
 
-## [0.0.15] - 2025-02-24
+## [0.0.15] - 2025-02-25
 ### Added
 - implemented find_applicable_bonus function in calculations.py for finding the applicable bonus based on revenue and rules
 
-## [0.0.14] - 2025-02-24
+## [0.0.14] - 2025-02-25
 ### Added
 - implemented calculate_revenue_share function in calculations.py for calculating employee's cut based on gross revenue and role percentage
 

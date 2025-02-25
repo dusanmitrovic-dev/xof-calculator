@@ -7,7 +7,7 @@ from config import settings
 from discord.ext import commands
 from utils import file_handlers, validators
 
-logger = logging.getLogger("fox_calculator.admin")
+logger = logging.getLogger("xof_calculator.admin")
 
 class AdminCommands(commands.Cog):
     def __init__(self, bot):
@@ -303,3 +303,6 @@ class AdminCommands(commands.Cog):
             from_val = rule.get("from", 0)
             to_val = rule.get("to", 0)
             amount = rule.get("amount", 0)
+
+async def setup(bot):
+    await bot.add_cog(AdminCommands(bot))
