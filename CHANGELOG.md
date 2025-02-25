@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.1.7] - 2025-02-25
+### Added
+- model selection to the calculate-workflow
+
 ## [0.1.6] - 2025-02-25
 ### Added
 - revenue input to the calculate-workflow

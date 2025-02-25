@@ -93,6 +93,15 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculator_slash"):
         # Create revenue input modal
         modal = RevenueInputModal(self, period, shift, role)
         await interaction.response.send_modal(modal)
+    
+    async def show_model_selection(self, interaction: discord.Interaction, period: str, shift: str, role: discord.Role, gross_revenue: Decimal):
+        """Fifth step: Model selection"""
+        # Dummy list of models for now
+        dummy_models = ["peanut", "almond", "cashew", "walnut", "pistachio"]
+        
+        # Create model selection view
+        view = ModelSelectionView(self, dummy_models, period, shift, role, gross_revenue)
+        await interaction.response.edit_message(content="Select models (optional, you can select multiple):", view=view)
 
 class PeriodSelectionView(ui.View):
     def __init__(self, cog, periods):
@@ -164,6 +173,77 @@ class RevenueInputModal(ui.Modal, title="Enter Gross Revenue"):
             return
         
         await self.cog.show_model_selection(interaction, self.period, self.shift, self.role, gross_revenue)
+
+class ModelSelectionView(ui.View):
+    def __init__(self, cog, models, period, shift, role, gross_revenue):
+        super().__init__(timeout=180)
+        self.cog = cog
+        self.period = period
+        self.shift = shift
+        self.role = role
+        self.gross_revenue = gross_revenue
+        self.selected_models = []
+        
+        # Add a button for each model
+        for model in models[:23]:  # Max 23 to leave room for Finish and Clear buttons
+            button = ui.Button(label=model, style=discord.ButtonStyle.secondary)
+            button.callback = lambda i, m=model: self.on_model_toggled(i, m)
+            self.add_item(button)
+        
+        # Add Finish button
+        finish_button = ui.Button(label="Finish", style=discord.ButtonStyle.success, row=4)
+        finish_button.callback = self.on_finish
+        self.add_item(finish_button)
+        
+        # Add Clear button
+        clear_button = ui.Button(label="Clear Selections", style=discord.ButtonStyle.danger, row=4)
+        clear_button.callback = self.on_clear
+        self.add_item(clear_button)
+    
+    async def on_model_toggled(self, interaction: discord.Interaction, model: str):
+        # Toggle model selection
+        if model in self.selected_models:
+            self.selected_models.remove(model)
+            # Change button style to show it's not selected
+            for item in self.children:
+                if isinstance(item, ui.Button) and item.label == model:
+                    item.style = discord.ButtonStyle.secondary
+        else:
+            self.selected_models.append(model)
+            # Change button style to show it's selected
+            for item in self.children:
+                if isinstance(item, ui.Button) and item.label == model:
+                    item.style = discord.ButtonStyle.primary
+        
+        selected_text = ", ".join(self.selected_models) if self.selected_models else "None"
+        await interaction.response.edit_message(
+            content=f"Select models (optional, you can select multiple):\nSelected: {selected_text}", 
+            view=self
+        )
+    
+    async def on_clear(self, interaction: discord.Interaction):
+        # Clear all selections
+        self.selected_models = []
+        
+        # Reset all model buttons to not selected state
+        for item in self.children:
+            if isinstance(item, ui.Button) and item.label not in ["Finish", "Clear Selections"]:
+                item.style = discord.ButtonStyle.secondary
+        
+        await interaction.response.edit_message(
+            content="Select models (optional, you can select multiple):\nSelected: None", 
+            view=self
+        )
+    
+    async def on_finish(self, interaction: discord.Interaction):
+        await self.cog.finalize_calculation(
+            interaction, 
+            self.period, 
+            self.shift, 
+            self.role, 
+            self.gross_revenue, 
+            self.selected_models
+        )
 
 async def setup(bot):
     await bot.add_cog(CalculatorSlashCommands(bot))
