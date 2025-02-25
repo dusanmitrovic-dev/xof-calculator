@@ -87,6 +87,12 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculator_slash"):
         # Create role selection view
         view = RoleSelectionView(self, configured_roles, period, shift)
         await interaction.response.edit_message(content="Select a role:", view=view)
+    
+    async def show_revenue_input(self, interaction: discord.Interaction, period: str, shift: str, role: discord.Role):
+        """Fourth step: Revenue input"""
+        # Create revenue input modal
+        modal = RevenueInputModal(self, period, shift, role)
+        await interaction.response.send_modal(modal)
 
 class PeriodSelectionView(ui.View):
     def __init__(self, cog, periods):
@@ -132,6 +138,32 @@ class RoleSelectionView(ui.View):
     
     async def on_role_selected(self, interaction: discord.Interaction, role: discord.Role):
         await self.cog.show_revenue_input(interaction, self.period, self.shift, role)
+
+class RevenueInputModal(ui.Modal, title="Enter Gross Revenue"):
+    def __init__(self, cog, period, shift, role):
+        super().__init__()
+        self.cog = cog
+        self.period = period
+        self.shift = shift
+        self.role = role
+        
+        self.revenue_input = ui.TextInput(
+            label="Gross Revenue (e.g. 1269.69)",
+            placeholder="Enter amount...",
+            required=True
+        )
+        self.add_item(self.revenue_input)
+    
+    async def on_submit(self, interaction: discord.Interaction):
+        # Parse revenue input
+        revenue_str = self.revenue_input.value
+        gross_revenue = validators.parse_money(revenue_str)
+        
+        if gross_revenue is None:
+            await interaction.response.send_message("❌ Invalid revenue format. Please use a valid number.", ephemeral=True)
+            return
+        
+        await self.cog.show_model_selection(interaction, self.period, self.shift, self.role, gross_revenue)
 
 async def setup(bot):
     await bot.add_cog(CalculatorSlashCommands(bot))
