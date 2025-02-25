@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.0.14] - 2025-02-24
+### Added
+- implemented calculate_revenue_share function in calculations.py for calculating employee's cut based on gross revenue and role percentage
+
 ## [0.0.13] - 2025-02-24
 ### Added
 - utils/calculations.py for monetary calculations

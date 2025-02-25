@@ -37,6 +37,7 @@
 
 ### HIGH PRIORITY (Core Functionality)
 - [x] (v0.0.13) create utils/calculations.py for monetary calculations
+- [x] (v0.0.14) calculate employee's cut based on gross revenue and role percentage
 - [ ] **Command Safety & Validation**
     - [ ] Fix bonus calculation logic
         - [ ] Sort rules by ascending value (double check)
