@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [0.0.22] - 2025-02-24
+### Added
+- add cogs/reports.py for reporting functionality cogs.
+- new report command:
+    - summary: Generate a summary report for all earnings in a period.
+
 ## [0.0.21] - 2025-02-24
 ### Added
 - cogs/calculator.py for calculator command cogs.

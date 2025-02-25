@@ -56,6 +56,9 @@
 - [x] (v0.0.21) new calculator commands:
     - `calculate`: Calculate earnings based on revenue, role, and shift,
     - `total`: Calculate total earnings for a period and optional date range.
+- [x] (v0.0.22) add cogs/reports.py for reporting functionality cogs.
+- new report command:
+    - `summary`: Generate a summary report for all earnings in a period.
 - [ ] **Command Safety & Validation**
     - [ ] Fix bonus calculation logic
         - [ ] Sort rules by ascending value (double check)
