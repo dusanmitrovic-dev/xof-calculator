@@ -42,6 +42,7 @@
 - [x] (v0.0.16) Calculating all earnings values
 - [x] (v0.0.17) Calculating total earnings from a list of earnings data
 - [x] (v0.0.18) Create config/settings.py configuration module
+- [x] (v0.0.19) Create cogs/admin.py for admin commands cogs
 - [ ] **Command Safety & Validation**
     - [ ] Fix bonus calculation logic
         - [ ] Sort rules by ascending value (double check)
@@ -69,6 +70,7 @@
 - [ ] **Code Organization**
     - [ ] Split into modules
         - [ ] `commands.py` (command logic)
+        - [x] `admin.py` (admin command logic)
         - [x] `file_helpers.py` (helpers)
         - [x] `validators.py` (helpers)
         - [x] `settings.py` (configuration)

@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.0.19] - 2025-02-24
+### Added
+- cogs/admin.py for admin commands cogs
+
 ## [0.0.18] - 2025-02-24
 ### Added
 - config/settings.py configuration module
