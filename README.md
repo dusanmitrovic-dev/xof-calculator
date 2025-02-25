@@ -43,6 +43,15 @@
 - [x] (v0.0.17) Calculating total earnings from a list of earnings data
 - [x] (v0.0.18) Create config/settings.py configuration module
 - [x] (v0.0.19) Create cogs/admin.py for admin commands cogs
+- [x] (v0.0.20) new admin commands:
+    - [x] `calculateroleset`: set a role's percentage cut,
+    - [x] `calculateshiftset`: add a valid shift name,
+    - [x] `calculateperiodset`: add a valid period name,
+    - [x] `calculatebonus`: set a bonus rule for a revenue range,
+    - [x] `calculateroleslist`: list all configured roles and their percentages,
+    - [x] `calculateshiftslist`: list all configured shifts,
+    - [x] `calculateperiodslist`: list all configured periods,
+    - [x] `calculatebonuslist`: list all configured bonus rules.
 - [ ] **Command Safety & Validation**
     - [ ] Fix bonus calculation logic
         - [ ] Sort rules by ascending value (double check)

@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+## [0.0.20] - 2025-02-24
+### Added
+- new admin commands:
+    - calculateroleset: set a role's percentage cut,
+    - calculateshiftset: add a valid shift name,
+    - calculateperiodset: add a valid period name,
+    - calculatebonus: set a bonus rule for a revenue range,
+    - calculateroleslist: list all configured roles and their percentages,
+    - calculateshiftslist: list all configured shifts,
+    - calculateperiodslist: list all configured periods,
+    - calculatebonuslist: list all configured bonus rules.
+
 ## [0.0.19] - 2025-02-24
 ### Added
 - cogs/admin.py for admin commands cogs
