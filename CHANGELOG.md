@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.0.16] - 2025-02-24
+### Added
+- implemented calculate_earnings function in calculations.py for calculating all earnings values
+
 ## [0.0.15] - 2025-02-24
 ### Added
 - implemented find_applicable_bonus function in calculations.py for finding the applicable bonus based on revenue and rules

@@ -49,3 +49,32 @@ def find_applicable_bonus(gross_revenue: Decimal, bonus_rules: List[Dict]) -> De
             return rule['amount']
             
     return Decimal('0.00')
+
+def calculate_earnings(
+    gross_revenue: Decimal, 
+    role_percentage: Decimal, 
+    bonus_rules: List[Dict]
+) -> Dict[str, Decimal]:
+    """
+    Calculate all earnings values
+    
+    Args:
+        gross_revenue: The gross revenue amount
+        role_percentage: The role's percentage cut
+        bonus_rules: List of bonus rule dictionaries
+        
+    Returns:
+        Dictionary with all calculated values
+    """
+    net_revenue, employee_cut, platform_fee = calculate_revenue_share(gross_revenue, role_percentage)
+    bonus = find_applicable_bonus(gross_revenue, bonus_rules)
+    total_cut = (employee_cut + bonus).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+    
+    return {
+        "gross_revenue": gross_revenue,
+        "net_revenue": net_revenue,
+        "platform_fee": platform_fee,
+        "employee_cut": employee_cut,
+        "bonus": bonus,
+        "total_cut": total_cut
+    }
