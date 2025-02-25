@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.1.3] - 2025-02-25
+### Added
+- period selection to the calculate-workflow
+
 ## [0.1.2] - 2025-02-25
 ### Added
 - calculate-workflow command that will initiate interactive workflow
