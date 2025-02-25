@@ -27,25 +27,26 @@
         - [x] Implement proper rounding rules (2 decimals?)
     - [ ] Input validation
         - [x] (v0.0.8) Validate percentage ranges (0-100)
-        - [x] (v0.0.9) validation if a string matches the expected date format
-        - [x] (v0.0.10) validation and finding a shift by name (case-insensitive)
-        - [x] (v0.0.11) validation and finding a period by name (case-insensitive)
-        - [x] (v0.0.12) validate bonus rules for consistency and overlaps
+        - [x] (v0.0.9) Validation if a string matches the expected date format
+        - [x] (v0.0.10) Validation and finding a shift by name (case-insensitive)
+        - [x] (v0.0.11) Validation and finding a period by name (case-insensitive)
+        - [x] (v0.0.12) Validate bonus rules for consistency and overlaps
         - [x] Check for negative values
         - [ ] Verify role existence
         - [x] Sanitize string inputs
 
 ### HIGH PRIORITY (Core Functionality)
-- [x] (v0.0.13) create utils/calculations.py for monetary calculations
-- [x] (v0.0.14) calculate employee's cut based on gross revenue and role percentage
-- [x] (v0.0.15) finding the applicable bonus based on revenue and rules
-- [x] (v0.0.16) calculating all earnings values
-- [x] (v0.0.17) calculating total earnings from a list of earnings data
+- [x] (v0.0.13) Create utils/calculations.py for monetary calculations
+- [x] (v0.0.14) Calculate employee's cut based on gross revenue and role percentage
+- [x] (v0.0.15) Finding the applicable bonus based on revenue and rules
+- [x] (v0.0.16) Calculating all earnings values
+- [x] (v0.0.17) Calculating total earnings from a list of earnings data
+- [x] (v0.0.18) Create config/settings.py configuration module
 - [ ] **Command Safety & Validation**
     - [ ] Fix bonus calculation logic
         - [ ] Sort rules by ascending value (double check)
         - [ ] Check for overlapping ranges (double check)
-        - [ ] Validate bonus amounts (double check)
+        - [x] Validate bonus amounts (double check)
     - [ ] Add permission checks
         - [ ] Verify admin status
         - [ ] Check command permissions
@@ -53,14 +54,14 @@
 
 - [ ] **Date & Time Handling**
     - [ ] Add time zone support (Is it really necessary?)
-    - [ ] Fix date range calculations
-    - [ ] Validate date formats
-    - [ ] Standardize date display
+    - [x] Fix date range calculations
+    - [x] Validate date formats
+    - [x] Standardize date display
 
 - [ ] **Basic Logging**
     - [ ] Set up logging configuration
     - [ ] Log command usage
-    - [ ] Log calculation results
+    - [x] Log calculation results
     - [ ] Log errors with stack traces
     - [ ] Implement log rotation
 
@@ -68,14 +69,15 @@
 - [ ] **Code Organization**
     - [ ] Split into modules
         - [ ] `commands.py` (command logic)
-        - [ ] `utils.py` (helpers)
-        - [ ] `config.py` (configuration)
-        - [ ] `calculations.py` (business logic)
+        - [x] `file_helpers.py` (helpers)
+        - [x] `validators.py` (helpers)
+        - [x] `settings.py` (configuration)
+        - [x] `calculations.py` (business logic)
     - [ ] Create `main.py` as entry point
     - [ ] Convert to Discord.py Cogs
 
 - [ ] **Configuration Management**
-    - [ ] Add config reload function
+    - [ ] Add config reload function (maybe)
     - [ ] Create config validation
     - [ ] Optimize lookups
         - [ ] Use dictionaries instead of lists
