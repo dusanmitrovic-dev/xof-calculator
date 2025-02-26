@@ -311,5 +311,112 @@ class AdminCommands(commands.Cog):
 
         await ctx.send(embed=embed)
 
+    @commands.command(name="set-model")
+    async def model_set(self, ctx, *, model: str):
+        """
+        Add a valid model name (Admin only)
+        
+        Usage: !calculatemodelset peanut
+        """
+        if not model or len(model.strip()) == 0:
+            await ctx.send("❌ Model name cannot be empty.")
+            return
+            
+        guild_id = str(ctx.guild.id)
+        
+        # Load current model data
+        model_data = await file_handlers.load_json(settings.MODELS_DATA_FILE, settings.DEFAULT_MODELS_DATA)
+        
+        # Get existing models for this guild
+        existing_models = model_data.get(guild_id, [])
+        
+        # Check if model already exists (case-insensitive)
+        if model.lower() in [m.lower() for m in existing_models]:
+            await ctx.send(f"❌ Model '{model}' already exists!")
+            return
+        
+        # Add new model
+        if guild_id not in model_data:
+            model_data[guild_id] = []
+        model_data[guild_id].append(model)
+        
+        # Save updated data
+        success = await file_handlers.save_json(settings.MODELS_DATA_FILE, model_data)
+        
+        if success:
+            await ctx.send(f"✅ Model '{model}' added!")
+        else:
+            await ctx.send("❌ Failed to save model data. Please try again later.")
+    
+    @commands.command(name="remove-model")
+    async def model_remove(self, ctx, *, model: str):
+        """
+        Remove a model configuration (Admin only)
+        
+        Usage: !calculatemodelremove peanut
+        """
+        if not model or len(model.strip()) == 0:
+            await ctx.send("❌ Model name cannot be empty.")
+            return
+            
+        guild_id = str(ctx.guild.id)
+        
+        # Load current model data
+        model_data = await file_handlers.load_json(settings.MODELS_DATA_FILE, settings.DEFAULT_MODELS_DATA)
+        
+        # Get existing models for this guild
+        existing_models = model_data.get(guild_id, [])
+        
+        # Find the model with case-insensitive matching
+        normalized_model = None
+        for m in existing_models:
+            if m.lower() == model.lower():
+                normalized_model = m
+                break
+                
+        if normalized_model is None:
+            await ctx.send(f"❌ Model '{model}' doesn't exist!")
+            return
+        
+        # Remove model
+        model_data[guild_id].remove(normalized_model)
+        
+        # Save updated data
+        success = await file_handlers.save_json(settings.MODELS_DATA_FILE, model_data)
+        
+        if success:
+            await ctx.send(f"✅ Model '{normalized_model}' removed!")
+        else:
+            await ctx.send("❌ Failed to save model data. Please try again later.")
+
+    @commands.command(name="list-models")
+    async def models_list(self, ctx):
+        """List all configured models (Admin only)"""
+        guild_id = str(ctx.guild.id)
+        
+        # Load model data
+        model_data = await file_handlers.load_json(settings.MODELS_DATA_FILE, settings.DEFAULT_MODELS_DATA)
+        guild_models = model_data.get(guild_id, [])
+        
+        if not guild_models:
+            await ctx.send("❌ No models have been configured yet.")
+            return
+            
+        # Create embed
+        embed = discord.Embed(
+            title="📋 Configured Models",
+            description="List of available models",
+            color=discord.Color.blue()
+        )
+        
+        # Add models to embed
+        embed.add_field(
+            name="Available Models",
+            value="\n".join(f"• {model}" for model in guild_models),
+            inline=False
+        )
+            
+        await ctx.send(embed=embed)
+
 async def setup(bot):
     await bot.add_cog(AdminCommands(bot))

@@ -13,14 +13,14 @@ from utils import file_handlers, validators, calculations
 
 logger = logging.getLogger("xof_calculator.calculator")
 
-class CalculatorSlashCommands(commands.GroupCog, name="calculator_slash"):
+class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
     def __init__(self, bot):
         self.bot = bot
         super().__init__()
     
     # New interactive slash command
     @app_commands.command(
-        name="calculate-workflow",
+        name="workflow",
         description="Calculate earnings using an interactive wizard"
     )
     async def calculate_slash(self, interaction: discord.Interaction):
@@ -322,6 +322,7 @@ class ModelSelectionView(ui.View):
         )
     
     async def on_finish(self, interaction: discord.Interaction):
+        await interaction.response.defer()
         await self.cog.finalize_calculation(
             interaction, 
             self.period, 

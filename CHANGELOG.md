@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## [0.1.9] - 2025-02-25
+### Added
+- clean code and new commands:
+    - set-model: admin command that sets new model name,
+    - remove-model: removes a model,
+    - list-models: gets list of all available models.
+
 ## [0.1.8] - 2025-02-25
 ### Added
 - finalize embedded result for calculate-workflow
