@@ -24,7 +24,7 @@
 
 ## [0.4.0] - 2025-02-26
 ### Added
-- calculate-workflow updates:
+- Calculate-workflow updates:
     - Finish button is now Continue button.
     - Models are being loaded from file,
     - `Confirm & Post` / `Cancel` buttons,
@@ -32,7 +32,7 @@
 
 ## [0.3.0] - 2025-02-26
 ### Added
-- new commands:
+- New commands:
     - `remove-bonus-rule`: Remove a bonus rule for a specific revenue range,
     - `remove-period`: Remove a selected period from configuration,
     - `remove shift`: Remove a shift configuration,
@@ -40,23 +40,23 @@
 
 ## [0.2.0] - 2025-02-26
 ### Added
-- correct version bump
+- Correct version bump
     - instead of v0.1.9 bumped to v0.2.0
 
 ## [0.1.9] - 2025-02-26
 ### Added
-- clean code and new commands:
+- Clean code and new commands:
     - `set-model`: admin command that sets new model name,
     - `remove-model`: removes a model,
     - `list-models`: gets list of all available models.
 
 ## [0.1.8] - 2025-02-25
 ### Added
-- finalize embedded result for calculate-workflow.
+- Finalize embedded result for calculate-workflow.
 
 ## [0.1.7] - 2025-02-25
 ### Added
-- model selection to the calculate-workflow.
+- Model selection to the calculate-workflow.
 
 ## [0.1.6] - 2025-02-25
 ### Added
