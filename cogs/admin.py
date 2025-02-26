@@ -335,9 +335,13 @@ class AdminCommands(commands.Cog):
         else:
             await ctx.send("❌ Failed to save bonus rule changes. Please try again later.")
     
-    @commands.command(name="calculateroleslist")
+    @commands.command(name="list-roles")
     async def roles_list(self, ctx):
-        """List all configured roles and their percentages (Admin only)"""
+        """
+        List all configured roles and their percentages (Admin only)
+        
+        Usage: !list-roles
+        """
         guild_id = str(ctx.guild.id)
         
         # Load role data

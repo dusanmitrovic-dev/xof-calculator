@@ -65,7 +65,7 @@
     - [x]  `calculatebonus`: set a bonus rule for a revenue range
         - [x] (v0.9.0) Change to `setbonus` or `set-bonus-rule`
     - [x]  `calculateroleslist`: list all configured roles and their percentages
-        - [ ]  Change to `listroles` or `list-roles`
+        - [x] (v0.10.0) Change to `listroles` or `list-roles`
     - [x]  `calculateshiftslist`: list all configured shifts
         - [ ]  Change to `listshifts` or `list-shifts`
     - [x]  `calculateperiodslist`: list all configured periods
