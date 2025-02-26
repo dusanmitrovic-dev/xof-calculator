@@ -224,12 +224,12 @@ class AdminCommands(commands.Cog):
         else:
             await ctx.send("❌ Failed to save period data. Please try again later.")
 
-    @commands.command(name="calculatebonus")
+    @commands.command(name="set-bonus-rule")
     async def bonus_set(self, ctx, from_str: str, to_str: str, bonus_str: str):
         """
         Set a bonus rule for a revenue range (Admin only)
         
-        Usage: !calculatebonus $1000 $2000 $50
+        Usage: !set-bonus-rule 1000 2000 50
         """
         guild_id = str(ctx.guild.id)
         

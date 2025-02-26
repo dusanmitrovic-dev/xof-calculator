@@ -63,7 +63,7 @@
     - [x]  `calculateperiodset`: add a valid period name
         - [x] (v0.8.0) Change to `setperiod` or `set-period`
     - [x]  `calculatebonus`: set a bonus rule for a revenue range
-        - [ ]  Change to `setbonus` or `set-bonus`
+        - [x] (v0.9.0) Change to `setbonus` or `set-bonus-rule`
     - [x]  `calculateroleslist`: list all configured roles and their percentages
         - [ ]  Change to `listroles` or `list-roles`
     - [x]  `calculateshiftslist`: list all configured shifts

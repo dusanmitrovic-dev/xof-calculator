@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.9.0] - 2025-02-26
+### Changed
+- Rename `calculatebonus` to `set-bonus-rule` for better clarity.
+
 ## [0.8.0] - 2025-02-26
 ### Changed
 - Rename `calculateperiodset` to `set-period` for better clarity.
