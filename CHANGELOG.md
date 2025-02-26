@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.8.0] - 2025-02-26
+### Changed
+- Rename `calculateperiodset` to `set-period` for better clarity.
+
 ## [0.7.0] - 2025-02-26
 ### Changed
 - Rename `calculateshiftset` to `set-shift` for better clarity.

@@ -151,12 +151,12 @@ class AdminCommands(commands.Cog):
         else:
             await ctx.send("❌ Failed to save shift data. Please try again later.")
     
-    @commands.command(name="calculateperiodset")
+    @commands.command(name="set-period")
     async def period_set(self, ctx, *, period: str):
         """
         Add a valid period name (Admin only)
         
-        Usage: !calculateperiodset January 2025
+        Usage: !set-period weekly
         """
         if not period or len(period.strip()) == 0:
             await ctx.send("❌ Period name cannot be empty.")
