@@ -115,20 +115,20 @@
 
 ## [0.0.22] - 2025-02-25
 ### Added
-- add `cogs/reports.py` for reporting functionality cogs.
-- new report command:
+- Add `cogs/reports.py` for reporting functionality cogs.
+- New report command:
     - summary: Generate a summary report for all earnings in a period.
 
 ## [0.0.21] - 2025-02-25
 ### Added
 - `cogs/calculator.py` for calculator command cogs.
-- new calculator commands:
+- New calculator commands:
     - `calculate`: Calculate earnings based on revenue, role, and shift,
     - `total`: Calculate total earnings for a period and optional date range.
 
 ## [0.0.20] - 2025-02-25
 ### Added
-- new admin commands:
+- New admin commands:
     - `calculateroleset`: set a role's percentage cut,
     - `calculateshiftset`: add a valid shift name,
     - `calculateperiodset`: add a valid period name,
@@ -208,7 +208,7 @@
 
 ## [0.0.2] - 2025-02-24
 ### Added
-- logging for better debugging and monitoring.
+- Logging for better debugging and monitoring.
 
 ## [0.0.1] - 2025-02-24
 ### Added

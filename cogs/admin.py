@@ -292,6 +292,9 @@ class AdminCommands(commands.Cog):
         Remove a bonus rule for a specific revenue range (Admin only)
         
         Usage: !remove-bonus-rule 1000 2000
+
+        :param from_str: The lower bound of the revenue range (e.g., 1000)
+        :param to_str: The upper bound of the revenue range (e.g., 2000)
         """
         guild_id = str(ctx.guild.id)
         
@@ -334,6 +337,11 @@ class AdminCommands(commands.Cog):
             await ctx.send(f"✅ Bonus rule removed: ${float(from_num):,.2f} to ${float(to_num):,.2f}")
         else:
             await ctx.send("❌ Failed to save bonus rule changes. Please try again later.")
+    
+    bonus_remove.help = {
+        'from_str': 'The lower bound of the revenue range (e.g., 1000)',
+        'to_str': 'The upper bound of the revenue range (e.g., 2000)',
+    }
     
     @commands.command(name="list-roles")
     async def roles_list(self, ctx):
@@ -557,7 +565,11 @@ class AdminCommands(commands.Cog):
 
     @commands.command(name="list-models")
     async def models_list(self, ctx):
-        """List all configured models (Admin only)"""
+        """
+        List all configured models (Admin only)
+        
+        Usage: !list-models
+        """
         guild_id = str(ctx.guild.id)
         
         # Load model data

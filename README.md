@@ -55,7 +55,7 @@
 ### Admin Commands
 
 - [x]  (v0.0.19) Create `cogs/admin.py` for admin commands
-- [ ]  (v0.0.20) New admin commands:
+- [x]  (v0.0.20) New admin commands:
     - [x]  `calculateroleset`: set a role's percentage cut
         - [x] (v0.6.0) Change to `setrole` or `set-role`
     - [x]  `calculateshiftset`: add a valid shift name
@@ -79,7 +79,7 @@
 
 - [x]  (v0.1.1) Create `cogs/calculator_slash.py` for calculator interaction workflow
     - [x] (v0.1.2) Add `calculate-workflow` command that will initiate interactive workflow
-        - [ ] Find more appropriate name
+        - [x] Find more appropriate name (`/calculate workflow`)
         - [x] (v0.1.3) Add period selection to the workflow
         - [x] (v0.1.4) Add shift selection to the workflow
         - [x] (v0.1.5) Add role selection to the workflow
@@ -196,5 +196,6 @@
 ### Excluded Features:
 
 - Database integration (staying with JSON) (at the very end... maybe even skip it)
-- Web dashboard (will see if needed like admin dashboard)
+- Web admin dashboard (will see if needed like admin dashboard)
+    - Adding and removing roles, shifts etc. over web page
 - Charts/visualizations
