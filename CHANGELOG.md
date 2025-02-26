@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.5.0] - 2025-02-26
+### Added
+- Pagination to model select view.
+
 ## [0.4.1] - 2025-02-26
 ### Fixed
 - Preview calculate-workflow ephemeral is now being properly deleted after confirmation.

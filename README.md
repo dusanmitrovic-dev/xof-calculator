@@ -90,7 +90,9 @@
         - [x] (v0.4.0) Load models from the `models_config.json`
         - [x] (v0.4.0) Confirm & Post/Cancel buttons for calculate workflow command
         - [x] (v0.4.0) Calculate preview before confirming it
-        - [x] (v0.4.1) Fix preview ephemeral not being deleted.
+        - [x] (v0.4.1) Fix preview ephemeral not being deleted
+        - [x] (v0.5.0) Add pagination to model select view
+            - [ ] Do any other use-cases need pagination?
 - [x]  (v0.0.21) Create `cogs/calculator.py` for calculator commands
 - [x]  New calculator commands:
     - `calculate`: Calculate earnings based on revenue, role, and shift

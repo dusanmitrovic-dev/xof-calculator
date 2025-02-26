@@ -330,41 +330,108 @@ class ModelSelectionView(ui.View):
         self.role = role
         self.gross_revenue = gross_revenue
         self.selected_models = []
+        self.all_models = models
+        self.current_page = 0
+        self.models_per_page = 15  # Show 15 model buttons per page
         
-        # Add a button for each model
-        for model in models[:23]:  # Max 23 to leave room for Finish and Clear buttons
-            button = ui.Button(label=model, style=discord.ButtonStyle.secondary)
+        # Calculate total pages
+        self.total_pages = max(1, (len(self.all_models) + self.models_per_page - 1) // self.models_per_page)
+        
+        # Update the view with current page buttons
+        self.update_view()
+    
+    def update_view(self):
+        # Clear current buttons
+        self.clear_items()
+        
+        # Calculate page range
+        start_idx = self.current_page * self.models_per_page
+        end_idx = min(start_idx + self.models_per_page, len(self.all_models))
+        current_page_models = self.all_models[start_idx:end_idx]
+        
+        # Add buttons for current page models
+        for model in current_page_models:
+            button = ui.Button(
+                label=model, 
+                style=discord.ButtonStyle.primary if model in self.selected_models else discord.ButtonStyle.secondary,
+                row=min(3, (current_page_models.index(model) // 5))  # Organize into rows of 5 buttons
+            )
             button.callback = lambda i, m=model: self.on_model_toggled(i, m)
             self.add_item(button)
         
-        # Add Continue button
-        Continue = ui.Button(label="Continue", style=discord.ButtonStyle.success, row=4)
-        Continue.callback = self.on_finish
-        self.add_item(Continue)
+        if self.total_pages > 1:
+            # Previous page button
+            prev_button = ui.Button(
+                label="◀️ Previous", 
+                style=discord.ButtonStyle.secondary,
+                disabled=(self.current_page == 0),
+                row=4
+            )
+            prev_button.callback = self.previous_page
+            self.add_item(prev_button)
+            
+            # Page indicator button (non-functional, just shows current page)
+            page_indicator = ui.Button(
+                label=f"Page {self.current_page + 1}/{self.total_pages}",
+                style=discord.ButtonStyle.secondary,
+                disabled=True,
+                row=4
+            )
+            self.add_item(page_indicator)
+            
+            # Next page button
+            next_button = ui.Button(
+                label="Next ▶️", 
+                style=discord.ButtonStyle.secondary,
+                disabled=(self.current_page >= self.total_pages - 1),
+                row=4
+            )
+            next_button.callback = self.next_page
+            self.add_item(next_button)
         
-        # Add Clear button
+        continue_button = ui.Button(label="Continue", style=discord.ButtonStyle.success, row=4)
+        continue_button.callback = self.on_finish
+        self.add_item(continue_button)
+        
         clear_button = ui.Button(label="Clear Selections", style=discord.ButtonStyle.danger, row=4)
         clear_button.callback = self.on_clear
         self.add_item(clear_button)
+    
+    async def previous_page(self, interaction: discord.Interaction):
+        if self.current_page > 0:
+            self.current_page -= 1
+            self.update_view()
+            
+            selected_text = ", ".join(self.selected_models) if self.selected_models else "None"
+            await interaction.response.edit_message(
+                content=f"Select models (optional, you can select multiple):\nSelected: {selected_text}\nPage {self.current_page + 1}/{self.total_pages}",
+                view=self
+            )
+    
+    async def next_page(self, interaction: discord.Interaction):
+        if self.current_page < self.total_pages - 1:
+            self.current_page += 1
+            self.update_view()
+            
+            selected_text = ", ".join(self.selected_models) if self.selected_models else "None"
+            await interaction.response.edit_message(
+                content=f"Select models (optional, you can select multiple):\nSelected: {selected_text}\nPage {self.current_page + 1}/{self.total_pages}",
+                view=self
+            )
     
     async def on_model_toggled(self, interaction: discord.Interaction, model: str):
         # Toggle model selection
         if model in self.selected_models:
             self.selected_models.remove(model)
-            # Change button style to show it's not selected
-            for item in self.children:
-                if isinstance(item, ui.Button) and item.label == model:
-                    item.style = discord.ButtonStyle.secondary
         else:
             self.selected_models.append(model)
-            # Change button style to show it's selected
-            for item in self.children:
-                if isinstance(item, ui.Button) and item.label == model:
-                    item.style = discord.ButtonStyle.primary
+        
+        # Update the view to reflect changes
+        self.update_view()
         
         selected_text = ", ".join(self.selected_models) if self.selected_models else "None"
         await interaction.response.edit_message(
-            content=f"Select models (optional, you can select multiple):\nSelected: {selected_text}", 
+            content=f"Select models (optional, you can select multiple):\nSelected: {selected_text}\nPage {self.current_page + 1}/{self.total_pages}", 
             view=self
         )
     
@@ -372,13 +439,11 @@ class ModelSelectionView(ui.View):
         # Clear all selections
         self.selected_models = []
         
-        # Reset all model buttons to not selected state
-        for item in self.children:
-            if isinstance(item, ui.Button) and item.label not in ["Continue", "Clear Selections"]:
-                item.style = discord.ButtonStyle.secondary
+        # Update the view to reflect changes
+        self.update_view()
         
         await interaction.response.edit_message(
-            content="Select models (optional, you can select multiple):\nSelected: None", 
+            content=f"Select models (optional, you can select multiple):\nSelected: None\nPage {self.current_page + 1}/{self.total_pages}", 
             view=self
         )
     
