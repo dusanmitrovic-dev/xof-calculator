@@ -57,7 +57,7 @@
 - [x]  (v0.0.19) Create `cogs/admin.py` for admin commands
 - [ ]  (v0.0.20) New admin commands:
     - [x]  `calculateroleset`: set a role's percentage cut
-        - [ ]  Change to `setrole` or `set-role`
+        - [x] (v0.6.0) Change to `setrole` or `set-role`
     - [x]  `calculateshiftset`: add a valid shift name
         - [ ]  Change to `setshift` or `set-shift`
     - [x]  `calculateperiodset`: add a valid period name

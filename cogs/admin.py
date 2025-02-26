@@ -17,12 +17,12 @@ class AdminCommands(commands.Cog):
         """Check if user has administrator permissions for all commands in this cog"""
         return ctx.author.guild_permissions.administrator
     
-    @commands.command(name="calculateroleset")
+    @commands.command(name="set-role")
     async def role_set(self, ctx, role: discord.Role, percentage: str):
         """
         Set a role's percentage cut (Admin only)
         
-        Usage: !calculateroleset @RoleName 25.5
+        Usage: !set-role @RoleName 25.5
         """
         # Validate percentage
         percentage_decimal = validators.validate_percentage(percentage)

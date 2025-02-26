@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.6.0] - 2025-02-26
+### Added
+- rename calculateroleset to set-role for better clarity
+
 ## [0.5.0] - 2025-02-26
 ### Added
 - Pagination to model select view.
