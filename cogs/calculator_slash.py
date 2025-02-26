@@ -176,7 +176,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             results
         )
         
-        # await interaction.followup.send(content="Please review your calculation and confirm:", embed=embed, view=view, ephemeral=True)
         # await interaction.edit_original_response(content="Preview ready! Please check the new message to confirm your calculation.", view=None)
         await interaction.edit_original_response(
             content="Please review your calculation and confirm:", 
