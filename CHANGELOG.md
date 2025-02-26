@@ -2,12 +2,20 @@
 
 ## [Unreleased]
 
-## [0.2.0] - 2025-02-25
+## [0.3.0] - 2025-02-26
+### Added
+- new commands:
+    - remove-bonus-rule: Remove a bonus rule for a specific revenue range,
+    - remove-period: Remove a selected period from configuration,
+    - remove shift: Remove a shift configuration,
+    - remove-role: Remove a role's percentage configuration.
+
+## [0.2.0] - 2025-02-26
 ### Added
 - correct version bump
     - instead of v0.1.9 bumped to v0.2.0
 
-## [0.1.9] - 2025-02-25
+## [0.1.9] - 2025-02-26
 ### Added
 - clean code and new commands:
     - set-model: admin command that sets new model name,

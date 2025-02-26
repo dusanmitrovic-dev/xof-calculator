@@ -48,6 +48,35 @@ class AdminCommands(commands.Cog):
             await ctx.send(f"✅ {role.name} now has {percentage_decimal}% cut!")
         else:
             await ctx.send("❌ Failed to save role data. Please try again later.")
+
+    @commands.command(name="remove-role")
+    async def role_remove(self, ctx, role: discord.Role):
+        """
+        Remove a role's percentage configuration (Admin only)
+        
+        Usage: !remove-role @Expert
+        """
+        guild_id = str(ctx.guild.id)
+        role_id = str(role.id)
+        
+        # Load current role data
+        role_data = await file_handlers.load_json(settings.ROLE_DATA_FILE, settings.DEFAULT_ROLE_DATA)
+        
+        # Check if guild and role exist in data
+        if guild_id not in role_data or role_id not in role_data[guild_id]:
+            await ctx.send(f"❌ {role.name} does not have a configured percentage.")
+            return
+        
+        # Remove role
+        del role_data[guild_id][role_id]
+        
+        # Save updated data
+        success = await file_handlers.save_json(settings.ROLE_DATA_FILE, role_data)
+        
+        if success:
+            await ctx.send(f"✅ {role.name} has been removed from percentage configuration!")
+        else:
+            await ctx.send("❌ Failed to save role data. Please try again later.")
     
     @commands.command(name="calculateshiftset")
     async def shift_set(self, ctx, *, shift: str):
@@ -83,6 +112,42 @@ class AdminCommands(commands.Cog):
         
         if success:
             await ctx.send(f"✅ Shift '{shift}' added!")
+        else:
+            await ctx.send("❌ Failed to save shift data. Please try again later.")
+    
+    @commands.command(name="remove-shift")
+    async def shift_remove(self, ctx, *, shift: str):
+        """
+        Remove a shift configuration (Admin only)
+        
+        Usage: !remove-shift night
+        """
+        if not shift or len(shift.strip()) == 0:
+            await ctx.send("❌ Shift name cannot be empty.")
+            return
+            
+        guild_id = str(ctx.guild.id)
+        
+        # Load current shift data
+        shift_data = await file_handlers.load_json(settings.SHIFT_DATA_FILE, settings.DEFAULT_SHIFT_DATA)
+        
+        # Get existing shifts for this guild
+        existing_shifts = shift_data.get(guild_id, [])
+        
+        # Validate and get normalized shift name
+        normalized_shift = validators.validate_shift(shift, existing_shifts)
+        if normalized_shift is None:
+            await ctx.send(f"❌ Shift '{shift}' doesn't exist!")
+            return
+        
+        # Remove shift
+        shift_data[guild_id].remove(normalized_shift)
+        
+        # Save updated data
+        success = await file_handlers.save_json(settings.SHIFT_DATA_FILE, shift_data)
+        
+        if success:
+            await ctx.send(f"✅ Shift '{normalized_shift}' removed!")
         else:
             await ctx.send("❌ Failed to save shift data. Please try again later.")
     
@@ -123,6 +188,42 @@ class AdminCommands(commands.Cog):
         else:
             await ctx.send("❌ Failed to save period data. Please try again later.")
     
+    @commands.command(name="remove-period")
+    async def period_remove(self, ctx, *, period: str):
+        """
+        Remove a period configuration (Admin only)
+        
+        Usage: !remove-period weekly
+        """
+        if not period or len(period.strip()) == 0:
+            await ctx.send("❌ Period name cannot be empty.")
+            return
+            
+        guild_id = str(ctx.guild.id)
+        
+        # Load current period data
+        period_data = await file_handlers.load_json(settings.PERIOD_DATA_FILE, settings.DEFAULT_PERIOD_DATA)
+        
+        # Get existing periods for this guild
+        existing_periods = period_data.get(guild_id, [])
+        
+        # Validate and get normalized period name
+        normalized_period = validators.validate_period(period, existing_periods)
+        if normalized_period is None:
+            await ctx.send(f"❌ Period '{period}' doesn't exist!")
+            return
+        
+        # Remove period
+        period_data[guild_id].remove(normalized_period)
+        
+        # Save updated data
+        success = await file_handlers.save_json(settings.PERIOD_DATA_FILE, period_data)
+        
+        if success:
+            await ctx.send(f"✅ Period '{normalized_period}' removed!")
+        else:
+            await ctx.send("❌ Failed to save period data. Please try again later.")
+
     @commands.command(name="calculatebonus")
     async def bonus_set(self, ctx, from_str: str, to_str: str, bonus_str: str):
         """
@@ -184,6 +285,55 @@ class AdminCommands(commands.Cog):
             await ctx.send(f"✅ Bonus rule added: ${float(from_num):,.2f} to ${float(to_num):,.2f} → ${float(bonus_amount):,.2f} bonus!")
         else:
             await ctx.send("❌ Failed to save bonus rule. Please try again later.")
+
+    @commands.command(name="remove-bonus-rule")
+    async def bonus_remove(self, ctx, from_str: str, to_str: str):
+        """
+        Remove a bonus rule for a specific revenue range (Admin only)
+        
+        Usage: !remove-bonus-rule 1000 2000
+        """
+        guild_id = str(ctx.guild.id)
+        
+        # Parse monetary values
+        from_num = validators.parse_money(from_str)
+        to_num = validators.parse_money(to_str)
+        
+        if None in (from_num, to_num):
+            await ctx.send("❌ Invalid number format. Please enter numbers without symbols other than decimal points.")
+            return
+            
+        # Load current bonus rules
+        bonus_rules = await file_handlers.load_json(settings.BONUS_RULES_FILE, settings.DEFAULT_BONUS_RULES)
+        
+        # Get guild rules
+        guild_rules = bonus_rules.get(guild_id, [])
+        if not guild_rules:
+            await ctx.send("❌ No bonus rules have been configured yet.")
+            return
+        
+        # Find matching rule
+        rule_to_remove = None
+        for rule in guild_rules:
+            rule_from = Decimal(str(rule.get("from", 0)))
+            rule_to = Decimal(str(rule.get("to", 0)))
+            
+            if rule_from == from_num and rule_to == to_num:
+                rule_to_remove = rule
+                break
+                
+        if rule_to_remove is None:
+            await ctx.send(f"❌ No bonus rule found for range ${float(from_num):,.2f} to ${float(to_num):,.2f}.")
+            return
+            
+        # Remove the rule and save
+        bonus_rules[guild_id].remove(rule_to_remove)
+        success = await file_handlers.save_json(settings.BONUS_RULES_FILE, bonus_rules)
+        
+        if success:
+            await ctx.send(f"✅ Bonus rule removed: ${float(from_num):,.2f} to ${float(to_num):,.2f}")
+        else:
+            await ctx.send("❌ Failed to save bonus rule changes. Please try again later.")
     
     @commands.command(name="calculateroleslist")
     async def roles_list(self, ctx):

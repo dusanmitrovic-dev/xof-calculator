@@ -154,9 +154,10 @@
 - [ ]  New well-thought command names
 - [ ]  Add management commands
     - [x] (v0.2.0) `remove-model`
-    - [ ]  `remove-role`
-    - [ ]  `remove-shift`
-    - [ ]  `remove-period`
+    - [x] (v0.3.0) `remove-role`
+    - [x] (v0.3.0) `remove-shift`
+    - [x] (v0.3.0) `remove-period`
+    - [x] (v0.3.0) `remove-bonus-rule`
 - [ ]  Add help messages
     - [ ]  Usage examples
     - [ ]  Parameter descriptions
