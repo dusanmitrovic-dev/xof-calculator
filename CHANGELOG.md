@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.11.0] - 2025-02-26
+### Changed
+- Rename `calculateshiftslist` to `list-shifts` for better clarity.
+
 ## [0.10.0] - 2025-02-26
 ### Changed
 - Rename `calculateroleslist` to `list-roles` for better clarity.

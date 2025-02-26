@@ -67,7 +67,7 @@
     - [x]  `calculateroleslist`: list all configured roles and their percentages
         - [x] (v0.10.0) Change to `listroles` or `list-roles`
     - [x]  `calculateshiftslist`: list all configured shifts
-        - [ ]  Change to `listshifts` or `list-shifts`
+        - [x] (v0.11.0) Change to `listshifts` or `list-shifts`
     - [x]  `calculateperiodslist`: list all configured periods
         - [ ]  Change to `listperiods` or `list-periods`
     - [x]  `calculatebonuslist`: list all configured bonus rules

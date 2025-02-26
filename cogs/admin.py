@@ -371,9 +371,13 @@ class AdminCommands(commands.Cog):
             
         await ctx.send(embed=embed)
     
-    @commands.command(name="calculateshiftslist")
+    @commands.command(name="list-shifts")
     async def shifts_list(self, ctx):
-        """List all configured shifts (Admin only)"""
+        """
+        List all configured shifts (Admin only)
+        
+        Usage: !list-shifts
+        """
         guild_id = str(ctx.guild.id)
         
         # Load shift data
