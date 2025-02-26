@@ -96,16 +96,23 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
     
     async def show_model_selection(self, interaction: discord.Interaction, period: str, shift: str, role: discord.Role, gross_revenue: Decimal):
         """Fifth step: Model selection"""
-        # Dummy list of models for now
-        dummy_models = ["peanut", "almond", "cashew", "walnut", "pistachio"]
+        guild_id = str(interaction.guild_id)
+        # Load models data
+        models_data = await file_handlers.load_json(settings.MODELS_DATA_FILE, settings.DEFAULT_MODELS_DATA)
+
+        valid_models = models_data.get(guild_id, [])
+        
+        if not valid_models:
+            await interaction.response.send_message("❌ No models configured! Admins: use !set-model.", ephemeral=True)
+            return
         
         # Create model selection view
-        view = ModelSelectionView(self, dummy_models, period, shift, role, gross_revenue)
+        view = ModelSelectionView(self, valid_models, period, shift, role, gross_revenue)
         await interaction.response.edit_message(content="Select models (optional, you can select multiple):", view=view)
 
-    async def finalize_calculation(self, interaction: discord.Interaction, period: str, shift: str, role: discord.Role, 
+    async def preview_calculation(self, interaction: discord.Interaction, period: str, shift: str, role: discord.Role, 
                                 gross_revenue: Decimal, selected_models: List[str]):
-        """Final step: Calculate and display results"""
+        """Preview calculation and show confirmation options"""
         guild_id = str(interaction.guild_id)
         
         # Get role percentage from configuration
@@ -132,6 +139,50 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             percentage,
             bonus_rule_objects
         )
+        
+        # Process models
+        models_list = ", ".join(selected_models) if selected_models else ""
+        
+        # Create embed for preview
+        embed = discord.Embed(title="📊 Earnings Calculation (PREVIEW)", color=0x009933)
+        current_date = datetime.now().strftime(settings.DATE_FORMAT)
+        sender = interaction.user.mention
+        
+        # Add fields to embed
+        fields = [
+            ("📅 Date", current_date, True),
+            ("✍ Sender", sender, True),
+            ("📥 Shift", shift, True),
+            ("🎯 Role", role.name, True),
+            ("⌛ Period", period, True),
+            ("💰 Gross Revenue", f"${float(results['gross_revenue']):,.2f}", True),
+            ("💵 Net Revenue", f"${float(results['net_revenue']):,.2f} (80%)", True),
+            ("🎁 Bonus", f"${float(results['bonus']):,.2f}", True),
+            ("💰 Total Cut", f"${float(results['total_cut']):,.2f}", True),
+            ("🎭 Models", models_list, False)
+        ]
+        
+        for name, value, inline in fields:
+            embed.add_field(name=name, value=value, inline=inline)
+        
+        # Create confirmation view
+        view = ConfirmationView(
+            self, 
+            period, 
+            shift, 
+            role,
+            gross_revenue, 
+            selected_models,
+            results
+        )
+        
+        await interaction.followup.send(content="Please review your calculation and confirm:", embed=embed, view=view, ephemeral=True)
+        await interaction.edit_original_response(content="Preview ready! Please check the new message to confirm your calculation.", view=None)
+
+    async def finalize_calculation(self, interaction: discord.Interaction, period: str, shift: str, role: discord.Role, 
+                                gross_revenue: Decimal, selected_models: List[str], results: Dict):
+        """Final step: Save and display results to everyone"""
+        guild_id = str(interaction.guild_id)
         
         # Save earnings data
         sender = interaction.user.mention
@@ -160,10 +211,10 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         success = await file_handlers.save_json(settings.EARNINGS_FILE, earnings_data)
         if not success:
             logger.error(f"Failed to save earnings data for {sender}")
-            await interaction.followup.send("⚠ Calculation completed but failed to save data. Please try again.", ephemeral=True)
+            await interaction.followup.send("⚠ Calculation failed to save data. Please try again.", ephemeral=True)
             return
         
-        # Create embed
+        # Create embed for public announcement
         embed = discord.Embed(title="📊 Earnings Calculation", color=0x009933)
         
         # Add fields to embed
@@ -183,11 +234,11 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         for name, value, inline in fields:
             embed.add_field(name=name, value=value, inline=inline)
         
-        # Send the final result to everyone
-        await interaction.followup.send(embed=embed)
+        # Send the final result to everyone (non-ephemeral)
+        await interaction.channel.send(embed=embed)
         
-        # Edit the ephemeral message to show completion
-        await interaction.edit_original_response(content="Calculation complete!", view=None)
+        # Confirm to the user
+        await interaction.response.edit_message(content="✅ Calculation confirmed and posted!", embed=None, view=None)
 
 class PeriodSelectionView(ui.View):
     def __init__(self, cog, periods):
@@ -276,10 +327,10 @@ class ModelSelectionView(ui.View):
             button.callback = lambda i, m=model: self.on_model_toggled(i, m)
             self.add_item(button)
         
-        # Add Finish button
-        finish_button = ui.Button(label="Finish", style=discord.ButtonStyle.success, row=4)
-        finish_button.callback = self.on_finish
-        self.add_item(finish_button)
+        # Add Continue button
+        Continue = ui.Button(label="Continue", style=discord.ButtonStyle.success, row=4)
+        Continue.callback = self.on_finish
+        self.add_item(Continue)
         
         # Add Clear button
         clear_button = ui.Button(label="Clear Selections", style=discord.ButtonStyle.danger, row=4)
@@ -313,7 +364,7 @@ class ModelSelectionView(ui.View):
         
         # Reset all model buttons to not selected state
         for item in self.children:
-            if isinstance(item, ui.Button) and item.label not in ["Finish", "Clear Selections"]:
+            if isinstance(item, ui.Button) and item.label not in ["Continue", "Clear Selections"]:
                 item.style = discord.ButtonStyle.secondary
         
         await interaction.response.edit_message(
@@ -323,7 +374,8 @@ class ModelSelectionView(ui.View):
     
     async def on_finish(self, interaction: discord.Interaction):
         await interaction.response.defer()
-        await self.cog.finalize_calculation(
+        # Instead of finalizing, show preview with confirmation options
+        await self.cog.preview_calculation(
             interaction, 
             self.period, 
             self.shift, 
@@ -331,6 +383,53 @@ class ModelSelectionView(ui.View):
             self.gross_revenue, 
             self.selected_models
         )
+
+class ConfirmationView(ui.View):
+    def __init__(self, cog, period, shift, role, gross_revenue, selected_models, results):
+        super().__init__(timeout=180)
+        self.cog = cog
+        self.period = period
+        self.shift = shift
+        self.role = role
+        self.gross_revenue = gross_revenue
+        self.selected_models = selected_models
+        self.results = results
+        
+        # Add confirm button
+        confirm_button = ui.Button(label="Confirm & Post", style=discord.ButtonStyle.success)
+        confirm_button.callback = self.on_confirm
+        self.add_item(confirm_button)
+        
+        # Add retry button
+        # retry_button = ui.Button(label="Retry Workflow", style=discord.ButtonStyle.primary)
+        # retry_button.callback = self.on_retry
+        # self.add_item(retry_button)
+        
+        # Add cancel button
+        cancel_button = ui.Button(label="Cancel", style=discord.ButtonStyle.danger)
+        cancel_button.callback = self.on_cancel
+        self.add_item(cancel_button)
+    
+    async def on_confirm(self, interaction: discord.Interaction):
+        # Finalize and post the calculation to everyone
+        await self.cog.finalize_calculation(
+            interaction,
+            self.period,
+            self.shift,
+            self.role,
+            self.gross_revenue,
+            self.selected_models,
+            self.results
+        )
+    
+    # async def on_retry(self, interaction: discord.Interaction):
+    #     # Start the workflow from the beginning
+    #     await interaction.response.edit_message(content="Restarting workflow...", embed=None, view=None)
+    #     await self.cog.start_period_selection(interaction)
+    
+    async def on_cancel(self, interaction: discord.Interaction):
+        # Just cancel the workflow
+        await interaction.response.edit_message(content="Calculation cancelled.", embed=None, view=None)
 
 async def setup(bot):
     await bot.add_cog(CalculatorSlashCommands(bot))

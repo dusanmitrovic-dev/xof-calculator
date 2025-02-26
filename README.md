@@ -86,6 +86,10 @@
         - [x] (v0.1.6) Add revenue input to the workflow
         - [x] (v0.1.7) Add model selection to the workflow
         - [x] (v0.1.8) Finalize embedded result for calculate-workflow
+        - [x] (v0.4.0) Finish button renamed to Continue
+        - [x] (v0.4.0) Load models from the `models_config.json`
+        - [x] (v0.4.0) Confirm & Post/Cancel buttons for calculate workflow command
+        - [x] (v0.4.0) Calculate preview before confirming it
 - [x]  (v0.0.21) Create `cogs/calculator.py` for calculator commands
 - [x]  New calculator commands:
     - `calculate`: Calculate earnings based on revenue, role, and shift
@@ -152,7 +156,7 @@
 ### Command Improvements
 
 - [ ]  New well-thought command names
-- [ ]  Add management commands
+- [x] Add management commands
     - [x] (v0.2.0) `remove-model`
     - [x] (v0.3.0) `remove-role`
     - [x] (v0.3.0) `remove-shift`

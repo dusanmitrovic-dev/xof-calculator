@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+## [0.4.0] - 2025-02-26
+### Added
+- calculate-workflow updates:
+    - Finish button is now Continue button.
+    - Models are being loaded from file,
+    - Confirm & Post/Cancel buttons,
+    - Calculate preview before confirming it.
+
 ## [0.3.0] - 2025-02-26
 ### Added
 - new commands:
