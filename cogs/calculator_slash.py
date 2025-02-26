@@ -176,8 +176,13 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             results
         )
         
-        await interaction.followup.send(content="Please review your calculation and confirm:", embed=embed, view=view, ephemeral=True)
-        await interaction.edit_original_response(content="Preview ready! Please check the new message to confirm your calculation.", view=None)
+        # await interaction.followup.send(content="Please review your calculation and confirm:", embed=embed, view=view, ephemeral=True)
+        # await interaction.edit_original_response(content="Preview ready! Please check the new message to confirm your calculation.", view=None)
+        await interaction.edit_original_response(
+            content="Please review your calculation and confirm:", 
+            embed=embed, 
+            view=view
+        )
 
     async def finalize_calculation(self, interaction: discord.Interaction, period: str, shift: str, role: discord.Role, 
                                 gross_revenue: Decimal, selected_models: List[str], results: Dict):
@@ -238,7 +243,13 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         await interaction.channel.send(embed=embed)
         
         # Confirm to the user
-        await interaction.response.edit_message(content="✅ Calculation confirmed and posted!", embed=None, view=None)
+        await interaction.response.edit_message(
+            content="✅ Calculation confirmed and posted! ", 
+            embed=None, 
+            view=None
+        )
+
+        await interaction.delete_original_response()
 
 class PeriodSelectionView(ui.View):
     def __init__(self, cog, periods):
