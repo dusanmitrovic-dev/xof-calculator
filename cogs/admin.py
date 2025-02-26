@@ -404,9 +404,13 @@ class AdminCommands(commands.Cog):
             
         await ctx.send(embed=embed)
     
-    @commands.command(name="calculateperiodslist")
+    @commands.command(name="list-periods")
     async def periods_list(self, ctx):
-        """List all configured periods (Admin only)"""
+        """
+        List all configured periods (Admin only)
+        
+        Usage: !list-periods
+        """
         guild_id = str(ctx.guild.id)
         
         # Load period data

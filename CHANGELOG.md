@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.12.0] - 2025-02-26
+### Changed
+- Rename `calculateperiodslist` to ` list-periods` for better clarity.
+
 ## [0.11.0] - 2025-02-26
 ### Changed
 - Rename `calculateshiftslist` to `list-shifts` for better clarity.

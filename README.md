@@ -69,7 +69,7 @@
     - [x]  `calculateshiftslist`: list all configured shifts
         - [x] (v0.11.0) Change to `listshifts` or `list-shifts`
     - [x]  `calculateperiodslist`: list all configured periods
-        - [ ]  Change to `listperiods` or `list-periods`
+        - [x] (v0.12.0) Change to `listperiods` or `list-periods`
     - [x]  `calculatebonuslist`: list all configured bonus rules
         - [ ]  Change to `listbonus` or `list-bonus`
     - [x] (v0.2.0) `set-model`: add a new model (`set-model peanut`)
