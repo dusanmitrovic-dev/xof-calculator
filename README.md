@@ -72,8 +72,8 @@
         - [ ]  Change to `listperiods` or `list-periods`
     - [x]  `calculatebonuslist`: list all configured bonus rules
         - [ ]  Change to `listbonus` or `list-bonus`
-    - [x] (v0.1.9) `set-model`: add a new model (`set-model peanut`)
-    - [x] (v0.1.9) `list-models`: list all available models
+    - [x] (v0.2.0) `set-model`: add a new model (`set-model peanut`)
+    - [x] (v0.2.0) `list-models`: list all available models
 
 ### Calculator Commands
 
@@ -153,7 +153,7 @@
 
 - [ ]  New well-thought command names
 - [ ]  Add management commands
-    - [x] (v0.1.9) `remove-model`
+    - [x] (v0.2.0) `remove-model`
     - [ ]  `remove-role`
     - [ ]  `remove-shift`
     - [ ]  `remove-period`

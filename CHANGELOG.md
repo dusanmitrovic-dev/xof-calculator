@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [0.2.0] - 2025-02-25
+### Added
+- correct version bump
+    - instead of v0.1.9 bumped to v0.2.0
+
 ## [0.1.9] - 2025-02-25
 ### Added
 - clean code and new commands:
