@@ -2,9 +2,13 @@
 
 ## [Unreleased]
 
+## [0.13.0] - 2025-02-26
+### Changed
+- Rename `calculatebonuslist` to `list-bonus-rules` for better clarity.
+
 ## [0.12.0] - 2025-02-26
 ### Changed
-- Rename `calculateperiodslist` to ` list-periods` for better clarity.
+- Rename `calculateperiodslist` to `list-periods` for better clarity.
 
 ## [0.11.0] - 2025-02-26
 ### Changed

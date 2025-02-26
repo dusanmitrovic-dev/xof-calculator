@@ -437,9 +437,13 @@ class AdminCommands(commands.Cog):
             
         await ctx.send(embed=embed)
     
-    @commands.command(name="calculatebonuslist")
+    @commands.command(name="list-bonus-rules")
     async def bonus_list(self, ctx):
-        """List all configured bonus rules (Admin only)"""
+        """
+        List all configured bonus rules (Admin only)
+        
+        Usage: !list-bonus-rules
+        """
         guild_id = str(ctx.guild.id)
         
         # Load bonus data
