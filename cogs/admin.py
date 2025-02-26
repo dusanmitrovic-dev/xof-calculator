@@ -22,7 +22,7 @@ class AdminCommands(commands.Cog):
         """
         Set a role's percentage cut (Admin only)
         
-        Usage: !set-role @RoleName 25.5
+        Usage: !set-role @RoleName 6.5
         """
         # Validate percentage
         percentage_decimal = validators.validate_percentage(percentage)
@@ -78,12 +78,12 @@ class AdminCommands(commands.Cog):
         else:
             await ctx.send("❌ Failed to save role data. Please try again later.")
     
-    @commands.command(name="calculateshiftset")
+    @commands.command(name="set-shift")
     async def shift_set(self, ctx, *, shift: str):
         """
         Add a valid shift name (Admin only)
         
-        Usage: !calculateshiftset Morning Shift
+        Usage: !set-shift morning
         """
         if not shift or len(shift.strip()) == 0:
             await ctx.send("❌ Shift name cannot be empty.")

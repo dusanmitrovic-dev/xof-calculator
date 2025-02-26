@@ -59,7 +59,7 @@
     - [x]  `calculateroleset`: set a role's percentage cut
         - [x] (v0.6.0) Change to `setrole` or `set-role`
     - [x]  `calculateshiftset`: add a valid shift name
-        - [ ]  Change to `setshift` or `set-shift`
+        - [x] (v0.7.0)  Change to `setshift` or `set-shift`
     - [x]  `calculateperiodset`: add a valid period name
         - [ ]  Change to `setperiod` or `set-period`
     - [x]  `calculatebonus`: set a bonus rule for a revenue range
