@@ -84,19 +84,19 @@
 
 ## [0.1.6] - 2025-02-25
 ### Added
-- revenue input to the calculate-workflow.
+- Revenue input to the calculate-workflow.
 
 ## [0.1.5] - 2025-02-25
 ### Added
-- role selection to the calculate-workflow.
+- Role selection to the calculate-workflow.
 
 ## [0.1.4] - 2025-02-25
 ### Added
-- shift selection to the calculate-workflow.
+- Shift selection to the calculate-workflow.
 
 ## [0.1.3] - 2025-02-25
 ### Added
-- period selection to the calculate-workflow.
+- Period selection to the calculate-workflow.
 
 ## [0.1.2] - 2025-02-25
 ### Added
