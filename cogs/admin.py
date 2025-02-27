@@ -292,9 +292,6 @@ class AdminCommands(commands.Cog):
         Remove a bonus rule for a specific revenue range (Admin only)
         
         Usage: !remove-bonus-rule 1000 2000
-
-        :param from_str: The lower bound of the revenue range (e.g., 1000)
-        :param to_str: The upper bound of the revenue range (e.g., 2000)
         """
         guild_id = str(ctx.guild.id)
         
@@ -490,7 +487,7 @@ class AdminCommands(commands.Cog):
         """
         Add a valid model name (Admin only)
         
-        Usage: !calculatemodelset peanut
+        Usage: !set-model peanut
         """
         if not model or len(model.strip()) == 0:
             await ctx.send("❌ Model name cannot be empty.")
@@ -527,7 +524,7 @@ class AdminCommands(commands.Cog):
         """
         Remove a model configuration (Admin only)
         
-        Usage: !calculatemodelremove peanut
+        Usage: !remove-model peanut
         """
         if not model or len(model.strip()) == 0:
             await ctx.send("❌ Model name cannot be empty.")
