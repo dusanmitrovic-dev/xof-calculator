@@ -24,9 +24,13 @@ class AdminCommands(commands.Cog):
         
         Usage: !set-role @RoleName 6.5
         """
+        # Log command usage
+        logger.info(f"User {ctx.author.name} ({ctx.author.id}) used set-role command for role {role.name} with percentage {percentage}")
+        
         # Validate percentage
         percentage_decimal = validators.validate_percentage(percentage)
         if percentage_decimal is None:
+            logger.warning(f"Invalid percentage '{percentage}' provided by {ctx.author.name}")
             await ctx.send("❌ Percentage must be a valid number between 0 and 100.")
             return
         
@@ -45,8 +49,11 @@ class AdminCommands(commands.Cog):
         success = await file_handlers.save_json(settings.ROLE_DATA_FILE, role_data)
         
         if success:
+            # Log successful operation
+            logger.info(f"Role {role.name} ({role_id}) percentage set to {percentage_decimal}% by {ctx.author.name}")
             await ctx.send(f"✅ {role.name} now has {percentage_decimal}% cut!")
         else:
+            logger.error(f"Failed to save role data for {role.name} ({role_id}) by {ctx.author.name}")
             await ctx.send("❌ Failed to save role data. Please try again later.")
 
     @commands.command(name="remove-role")
@@ -56,6 +63,9 @@ class AdminCommands(commands.Cog):
         
         Usage: !remove-role @Expert
         """
+        # Log command usage
+        logger.info(f"User {ctx.author.name} ({ctx.author.id}) used remove-role command for role {role.name}")
+        
         guild_id = str(ctx.guild.id)
         role_id = str(role.id)
         
@@ -64,6 +74,7 @@ class AdminCommands(commands.Cog):
         
         # Check if guild and role exist in data
         if guild_id not in role_data or role_id not in role_data[guild_id]:
+            logger.warning(f"Role {role.name} ({role_id}) not found in configuration when {ctx.author.name} tried to remove it")
             await ctx.send(f"❌ {role.name} does not have a configured percentage.")
             return
         
@@ -74,8 +85,10 @@ class AdminCommands(commands.Cog):
         success = await file_handlers.save_json(settings.ROLE_DATA_FILE, role_data)
         
         if success:
+            logger.info(f"Role {role.name} ({role_id}) removed from configuration by {ctx.author.name}")
             await ctx.send(f"✅ {role.name} has been removed from percentage configuration!")
         else:
+            logger.error(f"Failed to remove role {role.name} ({role_id}) by {ctx.author.name}")
             await ctx.send("❌ Failed to save role data. Please try again later.")
     
     @commands.command(name="set-shift")
@@ -85,7 +98,11 @@ class AdminCommands(commands.Cog):
         
         Usage: !set-shift morning
         """
+        # Log command usage
+        logger.info(f"User {ctx.author.name} ({ctx.author.id}) used set-shift command for shift '{shift}'")
+        
         if not shift or len(shift.strip()) == 0:
+            logger.warning(f"Empty shift name provided by {ctx.author.name}")
             await ctx.send("❌ Shift name cannot be empty.")
             return
             
@@ -99,6 +116,7 @@ class AdminCommands(commands.Cog):
         
         # Check if shift already exists (case-insensitive)
         if validators.validate_shift(shift, existing_shifts) is not None:
+            logger.warning(f"Shift '{shift}' already exists, attempted to add by {ctx.author.name}")
             await ctx.send(f"❌ Shift '{shift}' already exists!")
             return
         
@@ -111,8 +129,10 @@ class AdminCommands(commands.Cog):
         success = await file_handlers.save_json(settings.SHIFT_DATA_FILE, shift_data)
         
         if success:
+            logger.info(f"Shift '{shift}' added by {ctx.author.name}")
             await ctx.send(f"✅ Shift '{shift}' added!")
         else:
+            logger.error(f"Failed to save shift '{shift}' added by {ctx.author.name}")
             await ctx.send("❌ Failed to save shift data. Please try again later.")
     
     @commands.command(name="remove-shift")
@@ -122,7 +142,11 @@ class AdminCommands(commands.Cog):
         
         Usage: !remove-shift night
         """
+        # Log command usage
+        logger.info(f"User {ctx.author.name} ({ctx.author.id}) used remove-shift command for shift '{shift}'")
+        
         if not shift or len(shift.strip()) == 0:
+            logger.warning(f"Empty shift name provided for removal by {ctx.author.name}")
             await ctx.send("❌ Shift name cannot be empty.")
             return
             
@@ -137,6 +161,7 @@ class AdminCommands(commands.Cog):
         # Validate and get normalized shift name
         normalized_shift = validators.validate_shift(shift, existing_shifts)
         if normalized_shift is None:
+            logger.warning(f"Shift '{shift}' doesn't exist, attempted to remove by {ctx.author.name}")
             await ctx.send(f"❌ Shift '{shift}' doesn't exist!")
             return
         
@@ -147,8 +172,10 @@ class AdminCommands(commands.Cog):
         success = await file_handlers.save_json(settings.SHIFT_DATA_FILE, shift_data)
         
         if success:
+            logger.info(f"Shift '{normalized_shift}' removed by {ctx.author.name}")
             await ctx.send(f"✅ Shift '{normalized_shift}' removed!")
         else:
+            logger.error(f"Failed to remove shift '{normalized_shift}' by {ctx.author.name}")
             await ctx.send("❌ Failed to save shift data. Please try again later.")
     
     @commands.command(name="set-period")
@@ -158,7 +185,11 @@ class AdminCommands(commands.Cog):
         
         Usage: !set-period weekly
         """
+        # Log command usage
+        logger.info(f"User {ctx.author.name} ({ctx.author.id}) used set-period command for period '{period}'")
+        
         if not period or len(period.strip()) == 0:
+            logger.warning(f"Empty period name provided by {ctx.author.name}")
             await ctx.send("❌ Period name cannot be empty.")
             return
             
@@ -172,6 +203,7 @@ class AdminCommands(commands.Cog):
         
         # Check if period already exists (case-insensitive)
         if validators.validate_period(period, existing_periods) is not None:
+            logger.warning(f"Period '{period}' already exists, attempted to add by {ctx.author.name}")
             await ctx.send(f"❌ Period '{period}' already exists!")
             return
         
@@ -184,8 +216,10 @@ class AdminCommands(commands.Cog):
         success = await file_handlers.save_json(settings.PERIOD_DATA_FILE, period_data)
         
         if success:
+            logger.info(f"Period '{period}' added by {ctx.author.name}")
             await ctx.send(f"✅ Period '{period}' added!")
         else:
+            logger.error(f"Failed to add period '{period}' by {ctx.author.name}")
             await ctx.send("❌ Failed to save period data. Please try again later.")
     
     @commands.command(name="remove-period")
@@ -195,7 +229,11 @@ class AdminCommands(commands.Cog):
         
         Usage: !remove-period weekly
         """
+        # Log command usage
+        logger.info(f"User {ctx.author.name} ({ctx.author.id}) used remove-period command for period '{period}'")
+        
         if not period or len(period.strip()) == 0:
+            logger.warning(f"Empty period name provided for removal by {ctx.author.name}")
             await ctx.send("❌ Period name cannot be empty.")
             return
             
@@ -210,6 +248,7 @@ class AdminCommands(commands.Cog):
         # Validate and get normalized period name
         normalized_period = validators.validate_period(period, existing_periods)
         if normalized_period is None:
+            logger.warning(f"Period '{period}' doesn't exist, attempted to remove by {ctx.author.name}")
             await ctx.send(f"❌ Period '{period}' doesn't exist!")
             return
         
@@ -220,8 +259,10 @@ class AdminCommands(commands.Cog):
         success = await file_handlers.save_json(settings.PERIOD_DATA_FILE, period_data)
         
         if success:
+            logger.info(f"Period '{normalized_period}' removed by {ctx.author.name}")
             await ctx.send(f"✅ Period '{normalized_period}' removed!")
         else:
+            logger.error(f"Failed to remove period '{normalized_period}' by {ctx.author.name}")
             await ctx.send("❌ Failed to save period data. Please try again later.")
 
     @commands.command(name="set-bonus-rule")
@@ -231,6 +272,9 @@ class AdminCommands(commands.Cog):
         
         Usage: !set-bonus-rule 1000 2000 50
         """
+        # Log command usage
+        logger.info(f"User {ctx.author.name} ({ctx.author.id}) used set-bonus-rule command with range {from_str}-{to_str} and bonus {bonus_str}")
+        
         guild_id = str(ctx.guild.id)
         
         # Parse monetary values
@@ -239,10 +283,12 @@ class AdminCommands(commands.Cog):
         bonus_amount = validators.parse_money(bonus_str)
         
         if None in (from_num, to_num, bonus_amount):
+            logger.warning(f"Invalid number format in bonus rule creation by {ctx.author.name}: {from_str}, {to_str}, {bonus_str}")
             await ctx.send("❌ Invalid number format. Please enter numbers without symbols other than decimal points.")
             return
             
         if from_num > to_num:
+            logger.warning(f"Invalid bonus range (from > to) by {ctx.author.name}: {from_num} > {to_num}")
             await ctx.send("❌ The 'from' value must be less than or equal to the 'to' value.")
             return
             
@@ -271,6 +317,7 @@ class AdminCommands(commands.Cog):
             # Check for overlap
             if (from_num <= rule_to and to_num >= rule_from):
                 overlapping = True
+                logger.warning(f"Bonus rule overlap detected in rule created by {ctx.author.name}: {from_num}-{to_num} overlaps with {rule_from}-{rule_to}")
                 break
                 
         if overlapping:
@@ -282,8 +329,10 @@ class AdminCommands(commands.Cog):
         success = await file_handlers.save_json(settings.BONUS_RULES_FILE, bonus_rules)
         
         if success:
+            logger.info(f"Bonus rule added by {ctx.author.name}: ${float(from_num):,.2f} to ${float(to_num):,.2f} → ${float(bonus_amount):,.2f} bonus")
             await ctx.send(f"✅ Bonus rule added: ${float(from_num):,.2f} to ${float(to_num):,.2f} → ${float(bonus_amount):,.2f} bonus!")
         else:
+            logger.error(f"Failed to save bonus rule by {ctx.author.name}: ${float(from_num):,.2f} to ${float(to_num):,.2f} → ${float(bonus_amount):,.2f}")
             await ctx.send("❌ Failed to save bonus rule. Please try again later.")
 
     @commands.command(name="remove-bonus-rule")
@@ -293,6 +342,9 @@ class AdminCommands(commands.Cog):
         
         Usage: !remove-bonus-rule 1000 2000
         """
+        # Log command usage
+        logger.info(f"User {ctx.author.name} ({ctx.author.id}) used remove-bonus-rule command for range {from_str}-{to_str}")
+        
         guild_id = str(ctx.guild.id)
         
         # Parse monetary values
@@ -300,6 +352,7 @@ class AdminCommands(commands.Cog):
         to_num = validators.parse_money(to_str)
         
         if None in (from_num, to_num):
+            logger.warning(f"Invalid number format in bonus rule removal by {ctx.author.name}: {from_str}, {to_str}")
             await ctx.send("❌ Invalid number format. Please enter numbers without symbols other than decimal points.")
             return
             
@@ -309,6 +362,7 @@ class AdminCommands(commands.Cog):
         # Get guild rules
         guild_rules = bonus_rules.get(guild_id, [])
         if not guild_rules:
+            logger.warning(f"No bonus rules configured for guild {guild_id} when {ctx.author.name} tried to remove one")
             await ctx.send("❌ No bonus rules have been configured yet.")
             return
         
@@ -323,6 +377,7 @@ class AdminCommands(commands.Cog):
                 break
                 
         if rule_to_remove is None:
+            logger.warning(f"Bonus rule not found for range ${float(from_num):,.2f} to ${float(to_num):,.2f} by {ctx.author.name}")
             await ctx.send(f"❌ No bonus rule found for range ${float(from_num):,.2f} to ${float(to_num):,.2f}.")
             return
             
@@ -331,8 +386,10 @@ class AdminCommands(commands.Cog):
         success = await file_handlers.save_json(settings.BONUS_RULES_FILE, bonus_rules)
         
         if success:
+            logger.info(f"Bonus rule removed by {ctx.author.name}: ${float(from_num):,.2f} to ${float(to_num):,.2f}")
             await ctx.send(f"✅ Bonus rule removed: ${float(from_num):,.2f} to ${float(to_num):,.2f}")
         else:
+            logger.error(f"Failed to remove bonus rule by {ctx.author.name}: ${float(from_num):,.2f} to ${float(to_num):,.2f}")
             await ctx.send("❌ Failed to save bonus rule changes. Please try again later.")
     
     bonus_remove.help = {
@@ -347,6 +404,9 @@ class AdminCommands(commands.Cog):
         
         Usage: !list-roles
         """
+        # Log command usage
+        logger.info(f"User {ctx.author.name} ({ctx.author.id}) used list-roles command")
+        
         guild_id = str(ctx.guild.id)
         
         # Load role data
@@ -354,6 +414,7 @@ class AdminCommands(commands.Cog):
         guild_roles = role_data.get(guild_id, {})
         
         if not guild_roles:
+            logger.info(f"No roles configured for guild {guild_id} when {ctx.author.name} requested list")
             await ctx.send("❌ No roles have been configured yet.")
             return
             
@@ -373,7 +434,8 @@ class AdminCommands(commands.Cog):
                 value=f"{percentage}%",
                 inline=True
             )
-            
+        
+        logger.info(f"Listed {len(guild_roles)} roles for guild {guild_id} requested by {ctx.author.name}")
         await ctx.send(embed=embed)
     
     @commands.command(name="list-shifts")
@@ -383,6 +445,9 @@ class AdminCommands(commands.Cog):
         
         Usage: !list-shifts
         """
+        # Log command usage
+        logger.info(f"User {ctx.author.name} ({ctx.author.id}) used list-shifts command")
+        
         guild_id = str(ctx.guild.id)
         
         # Load shift data
@@ -390,6 +455,7 @@ class AdminCommands(commands.Cog):
         guild_shifts = shift_data.get(guild_id, [])
         
         if not guild_shifts:
+            logger.info(f"No shifts configured for guild {guild_id} when {ctx.author.name} requested list")
             await ctx.send("❌ No shifts have been configured yet.")
             return
             
@@ -406,7 +472,8 @@ class AdminCommands(commands.Cog):
             value="\n".join(f"• {shift}" for shift in guild_shifts),
             inline=False
         )
-            
+        
+        logger.info(f"Listed {len(guild_shifts)} shifts for guild {guild_id} requested by {ctx.author.name}")
         await ctx.send(embed=embed)
     
     @commands.command(name="list-periods")
@@ -416,6 +483,9 @@ class AdminCommands(commands.Cog):
         
         Usage: !list-periods
         """
+        # Log command usage
+        logger.info(f"User {ctx.author.name} ({ctx.author.id}) used list-periods command")
+        
         guild_id = str(ctx.guild.id)
         
         # Load period data
@@ -423,6 +493,7 @@ class AdminCommands(commands.Cog):
         guild_periods = period_data.get(guild_id, [])
         
         if not guild_periods:
+            logger.info(f"No periods configured for guild {guild_id} when {ctx.author.name} requested list")
             await ctx.send("❌ No periods have been configured yet.")
             return
             
@@ -439,7 +510,8 @@ class AdminCommands(commands.Cog):
             value="\n".join(f"• {period}" for period in guild_periods),
             inline=False
         )
-            
+        
+        logger.info(f"Listed {len(guild_periods)} periods for guild {guild_id} requested by {ctx.author.name}")
         await ctx.send(embed=embed)
     
     @commands.command(name="list-bonus-rules")
@@ -449,6 +521,9 @@ class AdminCommands(commands.Cog):
         
         Usage: !list-bonus-rules
         """
+        # Log command usage
+        logger.info(f"User {ctx.author.name} ({ctx.author.id}) used list-bonus-rules command")
+        
         guild_id = str(ctx.guild.id)
         
         # Load bonus data
@@ -456,6 +531,7 @@ class AdminCommands(commands.Cog):
         guild_rules = bonus_rules.get(guild_id, [])
         
         if not guild_rules:
+            logger.info(f"No bonus rules configured for guild {guild_id} when {ctx.author.name} requested list")
             await ctx.send("❌ No bonus rules have been configured yet.")
             return
         
@@ -480,6 +556,7 @@ class AdminCommands(commands.Cog):
                 inline=False
             )
 
+        logger.info(f"Listed {len(guild_rules)} bonus rules for guild {guild_id} requested by {ctx.author.name}")
         await ctx.send(embed=embed)
 
     @commands.command(name="set-model")
@@ -489,7 +566,11 @@ class AdminCommands(commands.Cog):
         
         Usage: !set-model peanut
         """
+        # Log command usage
+        logger.info(f"User {ctx.author.name} ({ctx.author.id}) used set-model command for model '{model}'")
+        
         if not model or len(model.strip()) == 0:
+            logger.warning(f"Empty model name provided by {ctx.author.name}")
             await ctx.send("❌ Model name cannot be empty.")
             return
             
@@ -503,6 +584,7 @@ class AdminCommands(commands.Cog):
         
         # Check if model already exists (case-insensitive)
         if model.lower() in [m.lower() for m in existing_models]:
+            logger.warning(f"Model '{model}' already exists, attempted to add by {ctx.author.name}")
             await ctx.send(f"❌ Model '{model}' already exists!")
             return
         
@@ -515,8 +597,10 @@ class AdminCommands(commands.Cog):
         success = await file_handlers.save_json(settings.MODELS_DATA_FILE, model_data)
         
         if success:
+            logger.info(f"Model '{model}' added by {ctx.author.name}")
             await ctx.send(f"✅ Model '{model}' added!")
         else:
+            logger.error(f"Failed to add model '{model}' by {ctx.author.name}")
             await ctx.send("❌ Failed to save model data. Please try again later.")
     
     @commands.command(name="remove-model")
@@ -526,7 +610,11 @@ class AdminCommands(commands.Cog):
         
         Usage: !remove-model peanut
         """
+        # Log command usage
+        logger.info(f"User {ctx.author.name} ({ctx.author.id}) used remove-model command for model '{model}'")
+        
         if not model or len(model.strip()) == 0:
+            logger.warning(f"Empty model name provided for removal by {ctx.author.name}")
             await ctx.send("❌ Model name cannot be empty.")
             return
             
@@ -546,6 +634,7 @@ class AdminCommands(commands.Cog):
                 break
                 
         if normalized_model is None:
+            logger.warning(f"Model '{model}' doesn't exist, attempted to remove by {ctx.author.name}")
             await ctx.send(f"❌ Model '{model}' doesn't exist!")
             return
         
@@ -556,8 +645,10 @@ class AdminCommands(commands.Cog):
         success = await file_handlers.save_json(settings.MODELS_DATA_FILE, model_data)
         
         if success:
+            logger.info(f"Model '{normalized_model}' removed by {ctx.author.name}")
             await ctx.send(f"✅ Model '{normalized_model}' removed!")
         else:
+            logger.error(f"Failed to remove model '{normalized_model}' by {ctx.author.name}")
             await ctx.send("❌ Failed to save model data. Please try again later.")
 
     @commands.command(name="list-models")
@@ -567,6 +658,9 @@ class AdminCommands(commands.Cog):
         
         Usage: !list-models
         """
+        # Log command usage
+        logger.info(f"User {ctx.author.name} ({ctx.author.id}) used list-models command")
+        
         guild_id = str(ctx.guild.id)
         
         # Load model data
@@ -574,6 +668,7 @@ class AdminCommands(commands.Cog):
         guild_models = model_data.get(guild_id, [])
         
         if not guild_models:
+            logger.info(f"No models configured for guild {guild_id} when {ctx.author.name} requested list")
             await ctx.send("❌ No models have been configured yet.")
             return
             
@@ -590,7 +685,8 @@ class AdminCommands(commands.Cog):
             value="\n".join(f"• {model}" for model in guild_models),
             inline=False
         )
-            
+        
+        logger.info(f"Listed {len(guild_models)} models for guild {guild_id} requested by {ctx.author.name}")
         await ctx.send(embed=embed)
 
 async def setup(bot):

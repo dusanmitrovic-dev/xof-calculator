@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [0.18.0] - 2025-02-27
+### Added
+- Log command usage
+    - Admin commands
+
 ## [0.17.0] - 2025-02-27
 ### Changed
 - update `summary` command:

@@ -126,7 +126,11 @@
 ### Basic Logging
 
 - [x]  Set up logging configuration
-- [ ]  Log command usage
+- [ ] Log command usage
+    - [x] (v0.18.0) Admin commands
+    - [ ] Report commands
+    - [ ] Calculation commands
+    - [ ] Calculate slash commands
 - [ ]  Log calculation results
 - [x]  Log errors with stack traces
 - [x]  Implement log rotation (5MB)
