@@ -112,9 +112,9 @@
     - [x]  Sort rules by ascending value (double check)
     - [x]  Check for overlapping ranges (double check)
     - [x]  Validate bonus amounts (double check)
-- [ ]  Add permission checks
-    - [ ]  Verify admin status
-    - [ ]  Check command permissions
+- [x]  Add permission checks
+    - [x]  Verify admin status
+    - [x]  Check command permissions
 - [x]  Implement proper error messages
 
 ### Date & Time Handling
