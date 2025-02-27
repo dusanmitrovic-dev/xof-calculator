@@ -151,7 +151,8 @@ class CalculatorCommands(commands.Cog):
     async def total(self, ctx, period: str, from_date: Optional[str] = None, to_date: Optional[str] = None, sender: Optional[str] = None):
         """
         Calculate total earnings for a period and optional date range
-        Usage: !total "January 2023" 01/01/2023 31/01/2023 @User
+
+        Usage: !total weekly 01/01/2023 27/02/2025 @User
         """
         guild_id = str(ctx.guild.id)
         
@@ -203,8 +204,8 @@ class CalculatorCommands(commands.Cog):
             await ctx.send(f"No earnings recorded for {sender} in {period}.")
             return
         
-        # Calculate total
-        total_earnings = calculations.get_total_earnings(
+        # Calculate gross and total
+        gross_revenue, total_earnings = calculations.get_total_earnings(
             earnings_list, 
             period.lower(),
             from_date,
@@ -217,12 +218,18 @@ class CalculatorCommands(commands.Cog):
         # Create and send embed
         embed = discord.Embed(
             title="💰 Total Earnings",
-            description=f"**{sender}**'s total earnings for {period} {date_range}:",
+            description=f"**{sender}**'s total earnings for "{period}" period {date_range}:",
             color=discord.Color.green()
         )
         
         embed.add_field(
-            name="💸 Total Cut", 
+            name="Total Gross", 
+            value=f"${float(gross_revenue):,.2f}", 
+            inline=False
+        )
+
+        embed.add_field(
+            name="Total Cut", 
             value=f"${float(total_earnings):,.2f}", 
             inline=False
         )

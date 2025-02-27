@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [0.14.0] - 2025-02-27
+### Changed
+- `total` command update:
+    - usage example updated,
+    - added total gross.
+
 ## [0.13.0] - 2025-02-26
 ### Changed
 - Rename `calculatebonuslist` to `list-bonus-rules` for better clarity.

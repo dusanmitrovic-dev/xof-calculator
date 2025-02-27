@@ -98,6 +98,7 @@
     - `calculate`: Calculate earnings based on revenue, role, and shift
         - [x]  Store role in earnings as well (detailed logs for that specific shift with role tracking)
     - `total`: Calculate total earnings for a period and optional date range
+        - [x] (v0.14.0) Add total gross calculation
 
 ### Reporting Functionality
 

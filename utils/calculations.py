@@ -111,5 +111,6 @@ def get_total_earnings(earnings_data: List[Dict], period: str, from_date: Option
             logger.error(f"Date parsing error: {e}")
     
     # Sum total cuts
+    gross = sum(Decimal(str(entry.get("gross_revenue", 0))) for entry in filtered_data)
     total = sum(Decimal(str(entry.get("total_cut", 0))) for entry in filtered_data)
-    return total.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+    return gross.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP), total.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
