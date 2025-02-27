@@ -21,6 +21,9 @@ class ReportCommands(commands.Cog):
 
         Usage: !summary weekly 01/01/2023 31/01/2023
         """
+        # Log command usage
+        logger.info(f"User {ctx.author.name} ({ctx.author.id}) used summary command with period={period}, from_date={from_date}, to_date={to_date}")
+        
         guild_id = str(ctx.guild.id)
         
         # Validate period
@@ -29,16 +32,19 @@ class ReportCommands(commands.Cog):
         matched_period = validators.validate_period(period, valid_periods)
         
         if matched_period is None:
+            logger.warning(f"Invalid period '{period}' provided by {ctx.author.name}")
             await ctx.send(f"❌ Period '{period}' not configured! Admins: use !set-period.")
             return
         period = matched_period
         
         # Validate dates if provided
         if from_date and not validators.validate_date_format(from_date, settings.DATE_FORMAT):
+            logger.warning(f"Invalid from_date format '{from_date}' provided by {ctx.author.name}")
             await ctx.send(f"❌ Invalid from_date format. Please use {settings.DATE_FORMAT}.")
             return
         
         if to_date and not validators.validate_date_format(to_date, settings.DATE_FORMAT):
+            logger.warning(f"Invalid to_date format '{to_date}' provided by {ctx.author.name}")
             await ctx.send(f"❌ Invalid to_date format. Please use {settings.DATE_FORMAT}.")
             return
         
@@ -56,6 +62,7 @@ class ReportCommands(commands.Cog):
                     all_entries.append(entry_with_sender)
         
         if not all_entries:
+            logger.info(f"No earnings found for period '{period}' in guild {guild_id}")
             await ctx.send(f"No earnings recorded for {period}.")
             return
         
@@ -70,6 +77,7 @@ class ReportCommands(commands.Cog):
             ]
         
         if not all_entries:
+            logger.info(f"No earnings found for period '{period}' in date range {from_date} - {to_date}")
             await ctx.send(f"No earnings recorded for {period} in the specified date range.")
             return
         
@@ -78,6 +86,9 @@ class ReportCommands(commands.Cog):
         total_paid = sum(entry.get("total_cut", 0) for entry in all_entries)
         user_count = len(set(entry.get("sender") for entry in all_entries))
         entry_count = len(all_entries)
+        
+        # Log summary results
+        logger.info(f"Summary report for period '{period}': {entry_count} entries, {user_count} users, ${total_gross} gross, ${total_paid} total cut")
         
         # Date range display
         date_range = f"from {from_date} to {to_date}" if from_date and to_date else "for all time"

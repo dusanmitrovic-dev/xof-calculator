@@ -56,21 +56,21 @@
 
 - [x] (v0.0.19) Create `cogs/admin.py` for admin commands
 - [x] (v0.0.20) New admin commands:
-    - [x]  `calculateroleset`: set a role's percentage cut
-        - [x] (v0.6.0) Change to `setrole` or `set-role`
-    - [x]  `calculateshiftset`: add a valid shift name
+    - [x] `calculateroleset`: set a role's percentage cut
+        - [x](v0.6.0) Change to `setrole` or `set-role`
+    - [x] `calculateshiftset`: add a valid shift name
         - [x] (v0.7.0)  Change to `setshift` or `set-shift`
-    - [x]  `calculateperiodset`: add a valid period name
+    - [x] `calculateperiodset`: add a valid period name
         - [x] (v0.8.0) Change to `setperiod` or `set-period`
-    - [x]  `calculatebonus`: set a bonus rule for a revenue range
+    - [x] `calculatebonus`: set a bonus rule for a revenue range
         - [x] (v0.9.0) Change to `setbonus` or `set-bonus-rule`
-    - [x]  `calculateroleslist`: list all configured roles and their percentages
+    - [x] `calculateroleslist`: list all configured roles and their percentages
         - [x] (v0.10.0) Change to `listroles` or `list-roles`
-    - [x]  `calculateshiftslist`: list all configured shifts
+    - [x] `calculateshiftslist`: list all configured shifts
         - [x] (v0.11.0) Change to `listshifts` or `list-shifts`
-    - [x]  `calculateperiodslist`: list all configured periods
+    - [x] `calculateperiodslist`: list all configured periods
         - [x] (v0.12.0) Change to `listperiods` or `list-periods`
-    - [x]  `calculatebonuslist`: list all configured bonus rules
+    - [x] `calculatebonuslist`: list all configured bonus rules
         - [x] (v0.13.0)  Change to `listbonus` or `list-bonus-rules`
     - [x] (v0.2.0) `set-model`: add a new model (`set-model peanut`)
     - [x] (v0.2.0) `list-models`: list all available models
@@ -96,7 +96,7 @@
 - [x] (v0.0.21) Create `cogs/calculator.py` for calculator commands
 - [x] New calculator commands:
     - `calculate`: Calculate earnings based on revenue, role, and shift
-        - [x]  Store role in earnings as well (detailed logs for that specific shift with role tracking)
+        - [x] Store role in earnings as well (detailed logs for that specific shift with role tracking)
     - `total`: Calculate total earnings for a period and optional date range
         - [x] (v0.14.0) Add total gross calculation
 
@@ -128,7 +128,7 @@
 - [x] Set up logging configuration
 - [ ] Log command usage
     - [x] (v0.18.0) Admin commands
-    - [ ] Report commands
+    - [x] (v0.20.0) Report commands
     - [x] (v0.19.0) Calculation commands and results
     - [ ] Calculate slash commands and results
 - [x] Log errors with stack traces
@@ -138,7 +138,7 @@
 
 ### Code Organization
 
-- [x]  Split into modules
+- [x] Split into modules
     - [x] `admin.py` (admin command logic cogs)
     - [x] `calculator.py` (calculator logic cogs)
     - [x] `reports.py` (reports logic cogs)
@@ -146,8 +146,8 @@
     - [x] `validators.py` (helpers)
     - [x] `settings.py` (configuration)
     - [x] `calculations.py` (business logic)
-- [x]  Create `main.py` as entry point
-- [x]  Convert to Discord.py Cogs
+- [x] Create `main.py` as entry point
+- [x] Convert to Discord.py Cogs
 
 ### Configuration Management
 
@@ -178,8 +178,8 @@
     - [ ] Add thousand separators
     - [ ] Consistent formatting
     - [ ] Color coding
-- [ ]  Add confirmation reactions
-- [ ]  Implement command cooldowns
+- [ ] Add confirmation reactions
+- [ ] Implement command cooldowns
 
 ## FUTURE IMPROVEMENTS
 

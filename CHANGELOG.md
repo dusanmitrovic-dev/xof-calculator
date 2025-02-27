@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [0.20.0] - 2025-02-27
+### Added
+- Log command usage
+    - Report commands
+
 ## [0.19.0] - 2025-02-27
 ### Added
 - Log command usage
