@@ -108,9 +108,9 @@
 
 ### Command Safety & Validation
 
-- [ ]  Fix bonus calculation logic
-    - [ ]  Sort rules by ascending value (double check)
-    - [ ]  Check for overlapping ranges (double check)
+- [x]  Fix bonus calculation logic
+    - [x]  Sort rules by ascending value (double check)
+    - [x]  Check for overlapping ranges (double check)
     - [x]  Validate bonus amounts (double check)
 - [ ]  Add permission checks
     - [ ]  Verify admin status
