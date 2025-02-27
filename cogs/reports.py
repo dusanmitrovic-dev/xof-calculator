@@ -29,7 +29,7 @@ class ReportCommands(commands.Cog):
         matched_period = validators.validate_period(period, valid_periods)
         
         if matched_period is None:
-            await ctx.send(f"❌ Period '{period}' not configured! Admins: use !calculateperiodset.")
+            await ctx.send(f"❌ Period '{period}' not configured! Admins: use !set-period.")
             return
         period = matched_period
         
