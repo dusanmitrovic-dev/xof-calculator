@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [0.16.0] - 2025-02-27
+### Changed
+- update `summary` command:
+    - Fields are now inline.
+
 ## [0.15.0] - 2025-02-27
 ### Removed
 - update `summary` command:
