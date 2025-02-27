@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [0.15.0] - 2025-02-27
+### Removed
+- update `summary` command:
+    - removed "Date Range" field.
+
 ## [0.14.3] - 2025-02-27
 ### Fixed
 - update `summary` command period not set use-case.
