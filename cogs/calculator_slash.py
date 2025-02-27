@@ -25,6 +25,8 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
     )
     async def calculate_slash(self, interaction: discord.Interaction):
         """Interactive workflow to calculate earnings"""
+        # Log command usage
+        logger.info(f"User {interaction.user.name} ({interaction.user.id}) started calculate workflow")
         
         # Start the interactive workflow
         await self.start_period_selection(interaction)
@@ -38,6 +40,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         valid_periods = period_data.get(guild_id, [])
         
         if not valid_periods:
+            logger.warning(f"No periods configured for guild {guild_id}")
             await interaction.response.send_message("❌ No periods configured! Admins: use !calculateperiodset.", ephemeral=True)
             return
         
@@ -47,6 +50,9 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
     
     async def show_shift_selection(self, interaction: discord.Interaction, period: str):
         """Second step: Shift selection"""
+        # Log period selection
+        logger.info(f"User {interaction.user.name} ({interaction.user.id}) selected period: {period}")
+        
         guild_id = str(interaction.guild_id)
         
         # Load shift data
@@ -54,6 +60,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         valid_shifts = shift_data.get(guild_id, [])
         
         if not valid_shifts:
+            logger.warning(f"No shifts configured for guild {guild_id}")
             await interaction.response.send_message("❌ No shifts configured! Admins: use !calculateshiftset.", ephemeral=True)
             return
         
@@ -63,12 +70,16 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
     
     async def show_role_selection(self, interaction: discord.Interaction, period: str, shift: str):
         """Third step: Role selection"""
+        # Log shift selection
+        logger.info(f"User {interaction.user.name} ({interaction.user.id}) selected shift: {shift}")
+        
         guild_id = str(interaction.guild_id)
         
         # Load role data
         role_data = await file_handlers.load_json(settings.ROLE_DATA_FILE, settings.DEFAULT_ROLE_DATA)
         
         if guild_id not in role_data or not role_data[guild_id]:
+            logger.warning(f"No roles configured for guild {guild_id}")
             await interaction.response.edit_message(content="❌ No roles configured! Admins: use !calculateroleset.", view=None)
             return
         
@@ -81,6 +92,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                 configured_roles.append(role)
         
         if not configured_roles:
+            logger.warning(f"No configured roles found in guild {guild_id}")
             await interaction.response.edit_message(content="❌ No roles configured! Admins: use !calculateroleset.", view=None)
             return
         
@@ -90,12 +102,18 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
     
     async def show_revenue_input(self, interaction: discord.Interaction, period: str, shift: str, role: discord.Role):
         """Fourth step: Revenue input"""
+        # Log role selection
+        logger.info(f"User {interaction.user.name} ({interaction.user.id}) selected role: {role.name} ({role.id})")
+        
         # Create revenue input modal
         modal = RevenueInputModal(self, period, shift, role)
         await interaction.response.send_modal(modal)
     
     async def show_model_selection(self, interaction: discord.Interaction, period: str, shift: str, role: discord.Role, gross_revenue: Decimal):
         """Fifth step: Model selection"""
+        # Log revenue input
+        logger.info(f"User {interaction.user.name} ({interaction.user.id}) entered gross revenue: ${gross_revenue}")
+        
         guild_id = str(interaction.guild_id)
         # Load models data
         models_data = await file_handlers.load_json(settings.MODELS_DATA_FILE, settings.DEFAULT_MODELS_DATA)
@@ -103,6 +121,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         valid_models = models_data.get(guild_id, [])
         
         if not valid_models:
+            logger.warning(f"No models configured for guild {guild_id}")
             await interaction.response.send_message("❌ No models configured! Admins: use !set-model.", ephemeral=True)
             return
         
@@ -113,6 +132,9 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
     async def preview_calculation(self, interaction: discord.Interaction, period: str, shift: str, role: discord.Role, 
                                 gross_revenue: Decimal, selected_models: List[str]):
         """Preview calculation and show confirmation options"""
+        # Log selected models
+        logger.info(f"User {interaction.user.name} ({interaction.user.id}) selected models: {', '.join(selected_models) if selected_models else 'None'}")
+        
         guild_id = str(interaction.guild_id)
         
         # Get role percentage from configuration
@@ -139,6 +161,9 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             percentage,
             bonus_rule_objects
         )
+        
+        # Log calculation preview
+        logger.info(f"Calculation preview for {interaction.user.name}: Gross=${results['gross_revenue']}, Net=${results['net_revenue']}, Total Cut=${results['total_cut']}")
         
         # Process models
         models_list = ", ".join(selected_models) if selected_models else ""
@@ -176,7 +201,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             results
         )
         
-        # await interaction.edit_original_response(content="Preview ready! Please check the new message to confirm your calculation.", view=None)
         await interaction.edit_original_response(
             content="Please review your calculation and confirm:", 
             embed=embed, 
@@ -201,7 +225,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             earnings_data[sender] = []
         
         # Add new entry
-        earnings_data[sender].append({
+        new_entry = {
             "date": current_date,
             "total_cut": float(results["total_cut"]),
             "gross_revenue": float(results["gross_revenue"]),
@@ -209,7 +233,12 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             "shift": shift,
             "role": role.name,
             "models": models_list
-        })
+        }
+        
+        earnings_data[sender].append(new_entry)
+        
+        # Log final calculation
+        logger.info(f"Final calculation for {interaction.user.name} ({interaction.user.id}): Gross=${results['gross_revenue']}, Total Cut=${results['total_cut']}, Period={period}, Shift={shift}, Role={role.name}")
         
         # Save updated earnings data
         success = await file_handlers.save_json(settings.EARNINGS_FILE, earnings_data)
@@ -250,6 +279,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
 
         await interaction.delete_original_response()
 
+# View classes remain unchanged
 class PeriodSelectionView(ui.View):
     def __init__(self, cog, periods):
         super().__init__(timeout=180)
@@ -316,6 +346,7 @@ class RevenueInputModal(ui.Modal, title="Enter Gross Revenue"):
         gross_revenue = validators.parse_money(revenue_str)
         
         if gross_revenue is None:
+            logger.warning(f"User {interaction.user.name} ({interaction.user.id}) entered invalid revenue format: {revenue_str}")
             await interaction.response.send_message("❌ Invalid revenue format. Please use a valid number.", ephemeral=True)
             return
         
@@ -475,17 +506,15 @@ class ConfirmationView(ui.View):
         confirm_button.callback = self.on_confirm
         self.add_item(confirm_button)
         
-        # Add retry button
-        # retry_button = ui.Button(label="Retry Workflow", style=discord.ButtonStyle.primary)
-        # retry_button.callback = self.on_retry
-        # self.add_item(retry_button)
-        
         # Add cancel button
         cancel_button = ui.Button(label="Cancel", style=discord.ButtonStyle.danger)
         cancel_button.callback = self.on_cancel
         self.add_item(cancel_button)
     
     async def on_confirm(self, interaction: discord.Interaction):
+        # Log confirmation decision
+        logger.info(f"User {interaction.user.name} ({interaction.user.id}) confirmed calculation")
+        
         # Finalize and post the calculation to everyone
         await self.cog.finalize_calculation(
             interaction,
@@ -497,12 +526,10 @@ class ConfirmationView(ui.View):
             self.results
         )
     
-    # async def on_retry(self, interaction: discord.Interaction):
-    #     # Start the workflow from the beginning
-    #     await interaction.response.edit_message(content="Restarting workflow...", embed=None, view=None)
-    #     await self.cog.start_period_selection(interaction)
-    
     async def on_cancel(self, interaction: discord.Interaction):
+        # Log cancellation
+        logger.info(f"User {interaction.user.name} ({interaction.user.id}) cancelled calculation")
+        
         # Just cancel the workflow
         await interaction.response.edit_message(content="Calculation cancelled.", embed=None, view=None)
 

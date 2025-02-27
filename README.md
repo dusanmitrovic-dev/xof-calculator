@@ -129,9 +129,8 @@
 - [ ] Log command usage
     - [x] (v0.18.0) Admin commands
     - [ ] Report commands
-    - [ ] Calculation commands
-    - [ ] Calculate slash commands
-- [ ]  Log calculation results
+    - [x] (v0.19.0)Calculation commands and results
+    - [ ] Calculate slash commands and results
 - [x]  Log errors with stack traces
 - [x]  Implement log rotation (5MB)
 
