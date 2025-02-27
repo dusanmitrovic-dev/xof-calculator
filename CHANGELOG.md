@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [0.17.0] - 2025-02-27
+### Changed
+- update `summary` command:
+    - Rearranged fields.
+
 ## [0.16.0] - 2025-02-27
 ### Changed
 - update `summary` command:
