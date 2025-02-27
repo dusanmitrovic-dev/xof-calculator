@@ -113,86 +113,86 @@
     - [x]  Check for overlapping ranges (double check)
     - [x]  Validate bonus amounts (double check)
 - [x]  Add permission checks
-    - [x]  Verify admin status
-    - [x]  Check command permissions
-- [x]  Implement proper error messages
+    - [x] Verify admin status
+    - [x] Check command permissions
+- [x] Implement proper error messages
 
 ### Date & Time Handling
 
-- [x]  Fix date range calculations
-- [x]  Validate date formats
-- [x]  Standardize date display
+- [x] Fix date range calculations
+- [x] Validate date formats
+- [x] Standardize date display
 
 ### Basic Logging
 
-- [x]  Set up logging configuration
+- [x] Set up logging configuration
 - [ ] Log command usage
     - [x] (v0.18.0) Admin commands
     - [ ] Report commands
-    - [x] (v0.19.0)Calculation commands and results
+    - [x] (v0.19.0) Calculation commands and results
     - [ ] Calculate slash commands and results
-- [x]  Log errors with stack traces
-- [x]  Implement log rotation (5MB)
+- [x] Log errors with stack traces
+- [x] Implement log rotation (5MB)
 
 ## MEDIUM PRIORITY (Structure)
 
 ### Code Organization
 
 - [x]  Split into modules
-    - [x]  `admin.py` (admin command logic cogs)
-    - [x]  `calculator.py` (calculator logic cogs)
-    - [x]  `reports.py` (reports logic cogs)
-    - [x]  `file_helpers.py` (helpers)
-    - [x]  `validators.py` (helpers)
-    - [x]  `settings.py` (configuration)
-    - [x]  `calculations.py` (business logic)
+    - [x] `admin.py` (admin command logic cogs)
+    - [x] `calculator.py` (calculator logic cogs)
+    - [x] `reports.py` (reports logic cogs)
+    - [x] `file_helpers.py` (helpers)
+    - [x] `validators.py` (helpers)
+    - [x] `settings.py` (configuration)
+    - [x] `calculations.py` (business logic)
 - [x]  Create `main.py` as entry point
 - [x]  Convert to Discord.py Cogs
 
 ### Configuration Management
 
-- [ ]  Add config reload function (maybe)
-- [ ]  Create config validation
-- [ ]  Optimize lookups
-    - [ ]  Use dictionaries instead of lists
-    - [ ]  Case-insensitive matching
+- [ ] Add config reload function (maybe)
+- [ ] Create config validation
+- [ ] Optimize lookups
+    - [ ] Use dictionaries instead of lists
+    - [ ] Case-insensitive matching
 
 ## USER EXPERIENCE
 
 ### Command Improvements
 
-- [ ]  New well-thought command names
+- [ ] New well-thought command names
 - [x] Add management commands
     - [x] (v0.2.0) `remove-model`
     - [x] (v0.3.0) `remove-role`
     - [x] (v0.3.0) `remove-shift`
     - [x] (v0.3.0) `remove-period`
     - [x] (v0.3.0) `remove-bonus-rule`
-- [ ]  Add help messages
-    - [ ]  Usage examples
-    - [ ]  Parameter descriptions
+- [ ] Add help messages
+    - [ ] Usage examples
+    - [ ] Parameter descriptions
 
 ### Display Enhancements
 
-- [ ]  Improve embeds
-    - [ ]  Add thousand separators
-    - [ ]  Consistent formatting
-    - [ ]  Color coding
+- [ ] Improve embeds
+    - [ ] Add thousand separators
+    - [ ] Consistent formatting
+    - [ ] Color coding
 - [ ]  Add confirmation reactions
 - [ ]  Implement command cooldowns
 
 ## FUTURE IMPROVEMENTS
 
-- [ ]  Better image display in `calculate` command
+- [ ] Better image display in `calculate` command
     - Like button that opens up `stash` with attachments
-- [ ]  Basic report generation
-- [ ]  CSV/JSON data export
-- [ ]  Bulk calculations
-- [ ]  Simple statistics commands
-- [ ]  Documentation
-    - [ ]  `README.md`
-    - [ ]  Setup guide
-    - [ ]  Command reference
+- [ ] Basic report generation
+- [ ] CSV/JSON data export
+- [ ] Bulk calculations
+- [ ] Simple statistics commands
+- [ ] Documentation
+    - [ ] `README.md`
+    - [ ] Setup guide
+    - [ ] Command reference
 
 ---
 
