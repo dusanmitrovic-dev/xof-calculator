@@ -29,7 +29,7 @@ class CalculatorCommands(commands.Cog):
         matched_period = validators.validate_period(period, valid_periods)
         
         if matched_period is None:
-            await ctx.send(f"❌ Period '{period}' not configured! Admins: use !calculateperiodset.")
+            await ctx.send(f"❌ Period '{period}' not configured! Admins: use !set-period.")
             return
         period = matched_period
         
@@ -39,14 +39,14 @@ class CalculatorCommands(commands.Cog):
         matched_shift = validators.validate_shift(shift, valid_shifts)
         
         if matched_shift is None:
-            await ctx.send(f"❌ Shift '{shift}' not configured! Admins: use !calculateshiftset.")
+            await ctx.send(f"❌ Shift '{shift}' not configured! Admins: use !set-shift.")
             return
         shift = matched_shift
         
         # Validate role
         role_data = await file_handlers.load_json(settings.ROLE_DATA_FILE, settings.DEFAULT_ROLE_DATA)
         if guild_id not in role_data or str(role.id) not in role_data[guild_id]:
-            await ctx.send(f"⚠ {role.name} not configured! Admins: use !calculateroleset.")
+            await ctx.send(f"⚠ {role.name} not configured! Admins: use !set-role.")
             return
         
         # Parse revenue

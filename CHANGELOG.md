@@ -2,9 +2,13 @@
 
 ## [Unreleased]
 
+## [0.14.2] - 2025-02-27
+### Fixed
+- update `calculate` command period, shift, role not set use-case.
+
 ## [0.14.1] - 2025-02-27
 ### Fixed
-- update `total` command period not set use-case
+- update `total` command period not set use-case.
 
 ## [0.14.0] - 2025-02-27
 ### Changed
