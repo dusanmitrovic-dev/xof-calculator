@@ -19,6 +19,7 @@ class CalculatorCommands(commands.Cog):
     async def calculate(self, ctx, period: str, shift: str, role: discord.Role, gross_revenue: str, *, models: str = "None"):
         """
         Calculate earnings based on revenue, role, and shift
+        
         Usage: !calculate weekly night @Expert 1269.69 peanut
         """
         guild_id = str(ctx.guild.id)
@@ -218,7 +219,7 @@ class CalculatorCommands(commands.Cog):
         # Create and send embed
         embed = discord.Embed(
             title="💰 Total Earnings",
-            description=f"**{sender}**'s total earnings for "{period}" period {date_range}:",
+            description=f"**{sender}**'s total earnings for {period} period {date_range}:",
             color=discord.Color.green()
         )
         

@@ -92,7 +92,7 @@ class ReportCommands(commands.Cog):
         embed.add_field(name="Total Entries", value=str(entry_count), inline=True)
         embed.add_field(name="Total Users", value=str(user_count), inline=True)
         embed.add_field(name="Gross Revenue", value=f"${total_gross:,.2f}", inline=True)
-        embed.add_field(name="Total Paid", value=f"${total_paid:,.2f}", inline=True)
+        embed.add_field(name="Total Chatter Cut", value=f"${total_paid:,.2f}", inline=True)
         embed.add_field(name="Platform Fee", value=f"${(total_gross * 0.2):,.2f}", inline=True)
         embed.add_field(name="Date Range", value=date_range, inline=False)
         
