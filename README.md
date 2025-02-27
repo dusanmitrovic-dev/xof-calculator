@@ -119,7 +119,6 @@
 
 ### Date & Time Handling
 
-- [ ]  Add time zone support (Is it really necessary?)
 - [x]  Fix date range calculations
 - [x]  Validate date formats
 - [x]  Standardize date display
