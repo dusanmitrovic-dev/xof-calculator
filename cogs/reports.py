@@ -18,7 +18,8 @@ class ReportCommands(commands.Cog):
     async def summary(self, ctx, period: str, from_date: Optional[str] = None, to_date: Optional[str] = None):
         """
         Generate a summary report for all earnings in a period
-        Usage: !summary "January 2023" 01/01/2023 31/01/2023
+
+        Usage: !summary weekly 01/01/2023 31/01/2023
         """
         guild_id = str(ctx.guild.id)
         
