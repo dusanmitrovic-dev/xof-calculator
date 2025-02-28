@@ -169,7 +169,7 @@
     - [x] (v0.3.0) `remove-period`
     - [x] (v0.3.0) `remove-bonus-rule`
 - [ ] Add help messages
-    - [ ] Usage examples
+    - [x] Usage examples
     - [ ] Parameter descriptions
 
 ### Display Enhancements
