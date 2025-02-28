@@ -14,6 +14,7 @@ logger = logging.getLogger("xof_calculator.calculator")
 class CalculatorCommands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        logger.info("CalculatorCommands cog initialized")
 
     @commands.command(name="calculate")
     async def calculate(self, ctx, period: str, shift: str, role: discord.Role, gross_revenue: str, *, models: str = "None"):
@@ -22,6 +23,7 @@ class CalculatorCommands(commands.Cog):
         
         Usage: !calculate weekly night @Expert 1269.69 peanut
         """
+        logger.info(f"Calculate command: {ctx.author} - {period}/{shift}/{role.name}/{gross_revenue}")
         guild_id = str(ctx.guild.id)
         
         # Validate period
@@ -30,6 +32,7 @@ class CalculatorCommands(commands.Cog):
         matched_period = validators.validate_period(period, valid_periods)
         
         if matched_period is None:
+            logger.warning(f"Invalid period '{period}' for guild {guild_id}")
             await ctx.send(f"❌ Period '{period}' not configured! Admins: use !set-period.")
             return
         period = matched_period
@@ -40,6 +43,7 @@ class CalculatorCommands(commands.Cog):
         matched_shift = validators.validate_shift(shift, valid_shifts)
         
         if matched_shift is None:
+            logger.warning(f"Invalid shift '{shift}' for guild {guild_id}")
             await ctx.send(f"❌ Shift '{shift}' not configured! Admins: use !set-shift.")
             return
         shift = matched_shift
@@ -47,12 +51,14 @@ class CalculatorCommands(commands.Cog):
         # Validate role
         role_data = await file_handlers.load_json(settings.ROLE_DATA_FILE, settings.DEFAULT_ROLE_DATA)
         if guild_id not in role_data or str(role.id) not in role_data[guild_id]:
+            logger.warning(f"Role {role.name} ({role.id}) not configured for guild {guild_id}")
             await ctx.send(f"⚠ {role.name} not configured! Admins: use !set-role.")
             return
         
         # Parse revenue
         gross_revenue_decimal = validators.parse_money(gross_revenue)
         if gross_revenue_decimal is None:
+            logger.warning(f"Invalid revenue format: {gross_revenue}")
             await ctx.send("❌ Invalid revenue format. Please use a valid number.")
             return
         
@@ -83,9 +89,9 @@ class CalculatorCommands(commands.Cog):
         try:
             await ctx.message.delete()
         except discord.errors.Forbidden:
-            logger.warning(f"Missing permission to delete messages in {ctx.guild.name}")
+            logger.warning(f"Missing permission to delete messages in guild {guild_id}")
         except Exception as e:
-            logger.error(f"Error deleting message: {e}")
+            logger.error(f"Error deleting message: {str(e)}")
         
         # Calculate earnings
         results = calculations.calculate_earnings(
@@ -107,7 +113,7 @@ class CalculatorCommands(commands.Cog):
             earnings_data[sender] = []
         
         # Add new entry
-        earnings_data[sender].append({
+        new_entry = {
             "date": current_date,
             "total_cut": float(results["total_cut"]),
             "gross_revenue": float(results["gross_revenue"]),
@@ -115,7 +121,8 @@ class CalculatorCommands(commands.Cog):
             "shift": shift,
             "role": role.name,
             "models": models_list
-        })
+        }
+        earnings_data[sender].append(new_entry)
         
         # Save updated earnings data
         success = await file_handlers.save_json(settings.EARNINGS_FILE, earnings_data)
@@ -146,7 +153,12 @@ class CalculatorCommands(commands.Cog):
             embed.add_field(name=name, value=value, inline=inline)
         
         # Send the embed with images
-        await ctx.send(embed=embed, files=valid_images)
+        try:
+            await ctx.send(embed=embed, files=valid_images)
+            logger.info(f"Earnings calculation completed for {ctx.author}")
+        except Exception as e:
+            logger.error(f"Error sending calculation results: {str(e)}")
+            await ctx.send("⚠ Error sending calculation results. Please try again or contact an admin.")
     
     @commands.command(name="total")
     async def total(self, ctx, period: str, from_date: Optional[str] = None, to_date: Optional[str] = None, sender: Optional[str] = None):
@@ -155,6 +167,7 @@ class CalculatorCommands(commands.Cog):
 
         Usage: !total weekly 01/01/2023 27/02/2025 @User
         """
+        logger.info(f"Total command: {ctx.author} - {period} from {from_date} to {to_date} for {sender or 'self'}")
         guild_id = str(ctx.guild.id)
         
         # Validate period
@@ -163,16 +176,19 @@ class CalculatorCommands(commands.Cog):
         matched_period = validators.validate_period(period, valid_periods)
         
         if matched_period is None:
+            logger.warning(f"Invalid period '{period}' for guild {guild_id}")
             await ctx.send(f"❌ Period '{period}' not configured! Admins: use !set-period.")
             return
         period = matched_period
         
         # Validate dates if provided
         if from_date and not validators.validate_date_format(from_date, settings.DATE_FORMAT):
+            logger.warning(f"Invalid from_date format: {from_date}")
             await ctx.send(f"❌ Invalid from_date format. Please use {settings.DATE_FORMAT}.")
             return
         
         if to_date and not validators.validate_date_format(to_date, settings.DATE_FORMAT):
+            logger.warning(f"Invalid to_date format: {to_date}")
             await ctx.send(f"❌ Invalid to_date format. Please use {settings.DATE_FORMAT}.")
             return
         
@@ -180,9 +196,9 @@ class CalculatorCommands(commands.Cog):
         try:
             await ctx.message.delete()
         except discord.errors.Forbidden:
-            logger.warning(f"Missing permission to delete messages in {ctx.guild.name}")
+            logger.warning(f"Missing permission to delete messages in guild {guild_id}")
         except Exception as e:
-            logger.error(f"Error deleting message: {e}")
+            logger.error(f"Error deleting message: {str(e)}")
         
         # Determine sender
         if sender is None:
@@ -192,6 +208,7 @@ class CalculatorCommands(commands.Cog):
         earnings_data = await file_handlers.load_json(settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS)
         
         if sender not in earnings_data:
+            logger.warning(f"No earnings recorded for {sender}")
             await ctx.send(f"No earnings recorded for {sender}.")
             return
         
@@ -202,16 +219,22 @@ class CalculatorCommands(commands.Cog):
         ]
         
         if not earnings_list:
+            logger.warning(f"No {period} earnings recorded for {sender}")
             await ctx.send(f"No earnings recorded for {sender} in {period}.")
             return
         
         # Calculate gross and total
-        gross_revenue, total_earnings = calculations.get_total_earnings(
-            earnings_list, 
-            period.lower(),
-            from_date,
-            to_date
-        )
+        try:
+            gross_revenue, total_earnings = calculations.get_total_earnings(
+                earnings_list, 
+                period.lower(),
+                from_date,
+                to_date
+            )
+        except Exception as e:
+            logger.error(f"Error calculating totals: {str(e)}")
+            await ctx.send("❌ Error calculating totals. Please check logs.")
+            return
         
         # Prepare date range display
         date_range = f"from {from_date} to {to_date}" if from_date and to_date else "for all time"
@@ -235,7 +258,13 @@ class CalculatorCommands(commands.Cog):
             inline=False
         )
         
-        await ctx.send(embed=embed)
+        try:
+            await ctx.send(embed=embed)
+            logger.info(f"Total earnings calculation completed for {sender}")
+        except Exception as e:
+            logger.error(f"Error sending total results: {str(e)}")
+            await ctx.send("⚠ Error sending calculation results. Please try again or contact an admin.")
 
 async def setup(bot):
     await bot.add_cog(CalculatorCommands(bot))
+    logger.info("CalculatorCommands cog registered")
