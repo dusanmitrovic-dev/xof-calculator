@@ -149,14 +149,6 @@
 - [x] Create `main.py` as entry point
 - [x] Convert to Discord.py Cogs
 
-### Configuration Management
-
-- [ ] Add config reload function (maybe)
-- [ ] Create config validation
-- [ ] Optimize lookups
-    - [ ] Use dictionaries instead of lists
-    - [ ] Case-insensitive matching
-
 ## USER EXPERIENCE
 
 ### Command Improvements
