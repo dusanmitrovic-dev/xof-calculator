@@ -178,7 +178,7 @@
     - [ ] Add thousand separators
     - [ ] Consistent formatting
     - [ ] Color coding
-- [ ] Add confirmation reactions
+- [x] Add confirmation reactions
 - [ ] Implement command cooldowns
 
 ## FUTURE IMPROVEMENTS
