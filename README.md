@@ -161,7 +161,7 @@
 
 ### Command Improvements
 
-- [ ] New well-thought command names
+- [x] New well-thought command names
 - [x] Add management commands
     - [x] (v0.2.0) `remove-model`
     - [x] (v0.3.0) `remove-role`
