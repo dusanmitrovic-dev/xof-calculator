@@ -188,7 +188,7 @@
 - [ ] Basic report generation
 - [ ] CSV/JSON data export
 - [ ] Bulk calculations
-- [ ] Simple statistics commands
+- [x] Simple statistics commands (`summary`)
 - [ ] Documentation
     - [ ] `README.md`
     - [ ] Setup guide
