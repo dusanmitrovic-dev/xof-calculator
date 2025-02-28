@@ -93,6 +93,7 @@
         - [x] (v0.4.1) Fix preview ephemeral not being deleted
         - [x] (v0.5.0) Add pagination to model select view
             - [ ] Do any other use-cases need pagination?
+        - [ ] Add back button functionality for each step of the wizard
 - [x] (v0.0.21) Create `cogs/calculator.py` for calculator commands
 - [x] New calculator commands:
     - `calculate`: Calculate earnings based on revenue, role, and shift
