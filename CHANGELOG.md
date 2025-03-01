@@ -2,11 +2,16 @@
 
 ## [Unreleased]
 
-## [0.22.0] - 2025-02-27
+## [0.23.0] - 2025-03-01
+### Added
+- New admin command:
+    - `admin-export-earnings-csv`
+
+## [0.22.0] - 2025-03-01
 ### Added
 - Admin slash commands support.
 
-## [0.21.0] - 2025-02-27
+## [0.21.0] - 2025-02-28
 ### Added
 - Log command usage
     - Calculator commands.
