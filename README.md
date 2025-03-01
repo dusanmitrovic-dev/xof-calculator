@@ -93,8 +93,28 @@
         - [x] (v0.5.0) Add pagination to model select view
             - [ ] Do any other use-cases need pagination?
 - [x] (v0.22.0) Add admin slash commands support
-    -[x] (v0.23.0) new `admin-export-earnings-csv` command
-    -[x] (v0.24.0) new `admin-export-earnings-json` command
+    - [x] (v0.23.0) `admin-export-earnings-csv` command
+    - [x] (v0.24.0) `admin-export-earnings-json` command
+    - [x] (v0.25.0) `/admin-export-earnings-csv`: Export all earnings data as CSV
+    - [x] (v0.25.0) `/admin-export-earnings-json`: Export all earnings data as JSON
+    - [x] (v0.25.0) `/set-role`: Set a role's percentage cut
+    - [x] (v0.25.0) `/remove-role`: Remove a role's percentage configuration
+    - [x] (v0.25.0) `/list-roles`: List configured roles and percentages
+    - [x] (v0.25.0) `/set-shift`: Add a valid shift name
+    - [x] (v0.25.0) `/remove-shift`: Remove a shift configuration
+    - [x] (v0.25.0) `/list-shifts`: List configured shifts
+    - [x] (v0.25.0) `/set-period`: Add a valid period name
+    - [x] (v0.25.0) `/remove-period`: Remove a period configuration
+    - [x] (v0.25.0) `/list-periods`: List configured periods
+    - [x] (v0.25.0) `/set-bonus-rule`: Set a bonus rule for a revenue range
+    - [x] (v0.25.0) `/remove-bonus-rule`: Remove a bonus rule for a revenue range
+    - [x] (v0.25.0) `/list-bonus-rules`: List configured bonus rules
+    - [x] (v0.25.0) `/set-model`: Add a valid model name
+    - [x] (v0.25.0) `/remove-model`: Remove a model configuration
+    - [x] (v0.25.0) `/list-models`: List configured models
+    - [x] (v0.25.0) `/clear-earnings`: Clear all earnings data (with confirmation)
+    - [x] (v0.25.0) `/reset-config`: Reset all configuration files (with confirmation)
+    - [x] (v0.25.0) `/restore-latest-backup`: Restore the latest backup (with confirmation)
 - [x] (v0.0.21) Create `cogs/calculator.py` for calculator commands
 - [x] New calculator commands:
     - `calculate`: Calculate earnings based on revenue, role, and shift

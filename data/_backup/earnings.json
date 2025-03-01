@@ -1,0 +1,31 @@
+{
+    "<@1177277640118370388>": [
+        {
+            "date": "01/03/2025",
+            "total_cut": 6.4,
+            "gross_revenue": 123.0,
+            "period": "weekly",
+            "shift": "dusk",
+            "role": "Developer",
+            "models": "kitana"
+        },
+        {
+            "date": "01/03/2025",
+            "total_cut": 74.06,
+            "gross_revenue": 1232.0,
+            "period": "weekly",
+            "shift": "dawn",
+            "role": "Developer",
+            "models": "Amelia"
+        },
+        {
+            "date": "01/03/2025",
+            "total_cut": 1880.69,
+            "gross_revenue": 32321.0,
+            "period": "weekly",
+            "shift": "dawn",
+            "role": "Developer",
+            "models": "Amelia"
+        }
+    ]
+}
