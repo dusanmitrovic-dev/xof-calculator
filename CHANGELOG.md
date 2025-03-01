@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.27.0] - 2025-03-01
+### Added
+- Calculate commands now have parameter descriptions
+
 ## [0.26.0] - 2025-03-01
 ### Added
 - Admin commands now have parameter descriptions.

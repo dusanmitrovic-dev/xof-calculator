@@ -187,6 +187,8 @@
     - [ ] Parameter descriptions
         - [x] (v0.26.0) Admin commands
         - [ ] Calculate commands
+            - [ ] Even tho set not displaying it for `calculate`
+            - [x] (v0.27.0) `total` parameters set
 
 ### Display Enhancements
 

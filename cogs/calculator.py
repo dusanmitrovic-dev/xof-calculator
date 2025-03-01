@@ -17,7 +17,7 @@ class CalculatorCommands(commands.Cog):
         logger.info("CalculatorCommands cog initialized")
 
     @commands.command(name="calculate")
-    async def calculate(self, ctx, period: str, shift: str, role: discord.Role, gross_revenue: str, *, models: str = "None"):
+    async def calculate(self, ctx, period: str, shift: str, role: discord.Role, gross_revenue: str, *, models: str):
         """
         Calculate earnings based on revenue, role, and shift
         
@@ -161,7 +161,7 @@ class CalculatorCommands(commands.Cog):
             await ctx.send("⚠ Error sending calculation results. Please try again or contact an admin.")
     
     @commands.command(name="total")
-    async def total(self, ctx, period: str, from_date: Optional[str] = None, to_date: Optional[str] = None, sender: Optional[str] = None):
+    async def total(self, ctx, period: str = commands.parameter(description="The period to calculate for (e.g., 'weekly')"), from_date: Optional[str] = commands.parameter(description="The start date (e.g., '01/01/2023')"), to_date: Optional[str] = commands.parameter(description="The end date (e.g., '27/02/2025')"), sender: Optional[str] = commands.parameter(description="The sender to calculate for (e.g., '@User')")):
         """
         Calculate total earnings for a period and optional date range
 
