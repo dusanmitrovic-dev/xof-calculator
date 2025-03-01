@@ -189,6 +189,7 @@
         - [ ] Calculate commands
             - [ ] Even tho set not displaying it for `calculate`
             - [x] (v0.27.0) `total` parameters set
+    - [ ] Add detailed help messages for all commands
 
 ### Display Enhancements
 
@@ -219,3 +220,4 @@
 - Web admin dashboard (will see if needed like admin dashboard)
     - Adding and removing roles, shifts etc. over web page
 - Charts/visualizations
+
