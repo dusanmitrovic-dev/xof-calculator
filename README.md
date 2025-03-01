@@ -56,7 +56,7 @@
 - [x] (v0.0.19) Create `cogs/admin.py` for admin commands
 - [x] (v0.0.20) New admin commands:
     - [x] `calculateroleset`: set a role's percentage cut
-        - [x](v0.6.0) Change to `setrole` or `set-role`
+        - [x] (v0.6.0) Change to `setrole` or `set-role`
     - [x] `calculateshiftset`: add a valid shift name
         - [x] (v0.7.0)  Change to `setshift` or `set-shift`
     - [x] `calculateperiodset`: add a valid period name
@@ -185,24 +185,25 @@
 - [ ] Add help messages
     - [x] Usage examples
     - [ ] Parameter descriptions
+        - [x] (v0.26.0) Admin commands
+        - [ ] Calculate commands
 
 ### Display Enhancements
 
 - [ ] Improve embeds
-    - [ ] Add thousand separators
-    - [ ] Consistent formatting
-    - [ ] Color coding
+    - Different ways of representing calculate responses?
 - [x] Add confirmation reactions
-- [ ] Implement command cooldowns
 
 ## FUTURE IMPROVEMENTS
 
 - [ ] Better image display in `calculate` command
     - Like button that opens up `stash` with attachments
 - [ ] Basic report generation
-- [ ] CSV/JSON data export
+- [x] (v0.23.0) CSV data export
+- [x] (v0.24.0) JSON data export
 - [ ] Bulk calculations
-- [x] Simple statistics commands (`summary`)
+- [x] Simple statistics commands
+    - [x] `summary`
 - [ ] Documentation
     - [ ] `README.md`
     - [ ] Setup guide

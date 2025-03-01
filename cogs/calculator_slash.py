@@ -42,7 +42,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         
         if not valid_periods:
             logger.warning(f"No periods configured for guild {guild_id}")
-            await interaction.response.send_message("❌ No periods configured! Admins: use !calculateperiodset.", ephemeral=True)
+            await interaction.response.send_message("❌ No periods configured! Admins: use !set-period.", ephemeral=True)
             return
         
         # Create period selection view
@@ -62,7 +62,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         
         if not valid_shifts:
             logger.warning(f"No shifts configured for guild {guild_id}")
-            await interaction.response.send_message("❌ No shifts configured! Admins: use !calculateshiftset.", ephemeral=True)
+            await interaction.response.send_message("❌ No shifts configured! Admins: use !set-shift.", ephemeral=True)
             return
         
         # Create shift selection view
@@ -81,7 +81,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         
         if guild_id not in role_data or not role_data[guild_id]:
             logger.warning(f"No roles configured for guild {guild_id}")
-            await interaction.response.edit_message(content="❌ No roles configured! Admins: use !calculateroleset.", view=None)
+            await interaction.response.edit_message(content="❌ No roles configured! Admins: use !set-role.", view=None)
             return
         
         # Get roles for this guild that are in the configuration
@@ -94,7 +94,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         
         if not configured_roles:
             logger.warning(f"No configured roles found in guild {guild_id}")
-            await interaction.response.edit_message(content="❌ No roles configured! Admins: use !calculateroleset.", view=None)
+            await interaction.response.edit_message(content="❌ No roles configured! Admins: use !set-role.", view=None)
             return
         
         # Create role selection view

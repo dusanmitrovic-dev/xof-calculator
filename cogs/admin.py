@@ -18,7 +18,7 @@ class AdminCommands(commands.Cog):
         return ctx.author.guild_permissions.administrator
     
     @commands.command(name="set-role")
-    async def role_set(self, ctx, role: discord.Role, percentage: str):
+    async def role_set(self, ctx, role: discord.Role = commands.parameter(description="The role to set the percentage for"), percentage: str = commands.parameter(description="The percentage cut for the role")):
         """
         Set a role's percentage cut (Admin only)
         
@@ -57,7 +57,7 @@ class AdminCommands(commands.Cog):
             await ctx.send("❌ Failed to save role data. Please try again later.")
 
     @commands.command(name="remove-role")
-    async def role_remove(self, ctx, role: discord.Role):
+    async def role_remove(self, ctx, role: discord.Role = commands.parameter(description="The role to remove the percentage for")):
         """
         Remove a role's percentage configuration (Admin only)
         
@@ -92,7 +92,7 @@ class AdminCommands(commands.Cog):
             await ctx.send("❌ Failed to save role data. Please try again later.")
     
     @commands.command(name="set-shift")
-    async def shift_set(self, ctx, *, shift: str):
+    async def shift_set(self, ctx, *, shift: str = commands.parameter(description="The shift name to add")):
         """
         Add a valid shift name (Admin only)
         
@@ -136,7 +136,7 @@ class AdminCommands(commands.Cog):
             await ctx.send("❌ Failed to save shift data. Please try again later.")
     
     @commands.command(name="remove-shift")
-    async def shift_remove(self, ctx, *, shift: str):
+    async def shift_remove(self, ctx, *, shift: str = commands.parameter(description="The shift name to remove")):
         """
         Remove a shift configuration (Admin only)
         
@@ -179,7 +179,7 @@ class AdminCommands(commands.Cog):
             await ctx.send("❌ Failed to save shift data. Please try again later.")
     
     @commands.command(name="set-period")
-    async def period_set(self, ctx, *, period: str):
+    async def period_set(self, ctx, *, period: str = commands.parameter(description="The period name to add")):
         """
         Add a valid period name (Admin only)
         
@@ -223,7 +223,7 @@ class AdminCommands(commands.Cog):
             await ctx.send("❌ Failed to save period data. Please try again later.")
     
     @commands.command(name="remove-period")
-    async def period_remove(self, ctx, *, period: str):
+    async def period_remove(self, ctx, *, period: str = commands.parameter(description="The period name to remove")):
         """
         Remove a period configuration (Admin only)
         
@@ -266,7 +266,7 @@ class AdminCommands(commands.Cog):
             await ctx.send("❌ Failed to save period data. Please try again later.")
 
     @commands.command(name="set-bonus-rule")
-    async def bonus_set(self, ctx, from_str: str, to_str: str, bonus_str: str):
+    async def bonus_set(self, ctx, from_str: str = commands.parameter(description="The lower bound of the revenue range (e.g., 1000)"), to_str: str = commands.parameter(description="The upper bound of the revenue range (e.g., 2000)"), bonus_str: str = commands.parameter(description="The bonus amount for the range (e.g., 50)")):
         """
         Set a bonus rule for a revenue range (Admin only)
         
@@ -336,7 +336,7 @@ class AdminCommands(commands.Cog):
             await ctx.send("❌ Failed to save bonus rule. Please try again later.")
 
     @commands.command(name="remove-bonus-rule")
-    async def bonus_remove(self, ctx, from_str: str, to_str: str):
+    async def bonus_remove(self, ctx, from_str: str = commands.parameter(description="The lower bound of the revenue range (e.g., 1000)"), to_str: str = commands.parameter(description="The upper bound of the revenue range (e.g., 2000)")):
         """
         Remove a bonus rule for a specific revenue range (Admin only)
         
@@ -560,7 +560,7 @@ class AdminCommands(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command(name="set-model")
-    async def model_set(self, ctx, *, model: str):
+    async def model_set(self, ctx, *, model: str = commands.parameter(description="The model name to add")):
         """
         Add a valid model name (Admin only)
         
@@ -604,7 +604,7 @@ class AdminCommands(commands.Cog):
             await ctx.send("❌ Failed to save model data. Please try again later.")
     
     @commands.command(name="remove-model")
-    async def model_remove(self, ctx, *, model: str):
+    async def model_remove(self, ctx, *, model: str = commands.parameter(description="The model name to remove")):
         """
         Remove a model configuration (Admin only)
         
