@@ -1,3 +1,5 @@
+import io
+import json
 import discord
 import logging
 
@@ -18,9 +20,9 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         name="admin-export-earnings-csv",
         description="[Admin] Export all earnings data as CSV"
     )
-    async def export_earnings(self, interaction: discord.Interaction):  # Add self parameter
+    async def export_earnings_csv(self, interaction: discord.Interaction):
         """
-        Admin-only command to export earnings data
+        Admin-only command to export earnings data as CSV
         
         Usage: /admin-export-earnings-csv
         """
@@ -45,13 +47,49 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             )
             
             await interaction.response.send_message(
-                "📊 Full earnings export:",
+                "📊 Full earnings export (CSV):",
                 file=csv_file,
                 ephemeral=True
             )
         except Exception as e:
-            logger.error(f"Export error: {str(e)}")
-            await interaction.response.send_message("❌ Failed to generate export. Check logs.", ephemeral=True)
+            logger.error(f"Export CSV error: {str(e)}")
+            await interaction.response.send_message("❌ Failed to generate CSV export. Check logs.", ephemeral=True)
+
+    @app_commands.default_permissions(administrator=True)
+    @app_commands.command(
+        name="admin-export-earnings-json",
+        description="[Admin] Export all earnings data as JSON"
+    )
+    async def export_earnings_json(self, interaction: discord.Interaction):
+        """
+        Admin-only command to export earnings data as JSON
+        
+        Usage: /admin-export-earnings-json
+        """
+        if not interaction.user.guild_permissions.administrator:
+            await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=True)
+            return
+        
+        try:
+            earnings_data = await file_handlers.load_json(settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS)
+            
+            # Create JSON content
+            json_content = json.dumps(earnings_data, indent=4)
+            
+            # Create file object
+            json_file = discord.File(
+                io.BytesIO(json_content.encode('utf-8')),
+                filename="full_earnings_export.json"
+            )
+            
+            await interaction.response.send_message(
+                "📊 Full earnings export (JSON):",
+                file=json_file,
+                ephemeral=True
+            )
+        except Exception as e:
+            logger.error(f"Export JSON error: {str(e)}")
+            await interaction.response.send_message("❌ Failed to generate JSON export. Check logs.", ephemeral=True)
 
 async def setup(bot):
     await bot.add_cog(AdminSlashCommands(bot))

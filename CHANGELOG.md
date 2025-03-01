@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [0.24.0] - 2025-03-01
+### Added
+- New admin command:
+    - `admin-export-earnings-json`
+
 ## [0.23.0] - 2025-03-01
 ### Added
 - New admin command:

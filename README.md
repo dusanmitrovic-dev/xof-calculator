@@ -94,6 +94,7 @@
             - [ ] Do any other use-cases need pagination?
 - [x] (v0.22.0) Add admin slash commands support
     -[x] (v0.23.0) new `admin-export-earnings-csv` command
+    -[x] (v0.24.0) new `admin-export-earnings-json` command
 - [x] (v0.0.21) Create `cogs/calculator.py` for calculator commands
 - [x] New calculator commands:
     - `calculate`: Calculate earnings based on revenue, role, and shift
