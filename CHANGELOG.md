@@ -2,25 +2,29 @@
 
 ## [Unreleased]
 
+## [0.22.0] - 2025-02-27
+### Added
+- Admin slash commands support.
+
 ## [0.21.0] - 2025-02-27
 ### Added
 - Log command usage
-    - Calculator commands
+    - Calculator commands.
 
 ## [0.20.0] - 2025-02-27
 ### Added
 - Log command usage
-    - Report commands
+    - Report commands.
 
 ## [0.19.0] - 2025-02-27
 ### Added
 - Log command usage
-    - Calculator slash commands
+    - Calculator slash commands.
 
 ## [0.18.0] - 2025-02-27
 ### Added
 - Log command usage
-    - Admin commands
+    - Admin commands.
 
 ## [0.17.0] - 2025-02-27
 ### Changed

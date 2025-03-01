@@ -38,7 +38,6 @@
     - [x] (v0.0.11) Validate and find a period by name (case-insensitive)
     - [x] (v0.0.12) Validate bonus rules for consistency and overlaps
     - [x] Check for negative values
-    - [ ] Verify role existence
     - [x] Sanitize string inputs
 
 ## HIGH PRIORITY (Core Functionality)
@@ -93,7 +92,7 @@
         - [x] (v0.4.1) Fix preview ephemeral not being deleted
         - [x] (v0.5.0) Add pagination to model select view
             - [ ] Do any other use-cases need pagination?
-        - [ ] Add back button functionality for each step of the wizard
+- [x] (v0.22.0) Add admin slash commands support
 - [x] (v0.0.21) Create `cogs/calculator.py` for calculator commands
 - [x] New calculator commands:
     - `calculate`: Calculate earnings based on revenue, role, and shift

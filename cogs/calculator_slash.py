@@ -1,4 +1,5 @@
 import os
+import io
 import logging
 import discord
 import asyncio
@@ -207,7 +208,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             view=view
         )
 
-    async def finalize_calculation(self, interaction: discord.Interaction, period: str, shift: str, role: discord.Role, 
+    async def finalize_calculation(self, interaction: discord.Interaction, period: str, shift: str, role: discord.Role,
                                 gross_revenue: Decimal, selected_models: List[str], results: Dict):
         """Final step: Save and display results to everyone"""
         guild_id = str(interaction.guild_id)
@@ -250,6 +251,20 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         # Create embed for public announcement
         embed = discord.Embed(title="📊 Earnings Calculation", color=0x009933)
         
+        # Add historical performance comparison
+        try:
+            all_entries = [e for e in earnings_data[sender] if e["period"] == period.lower()]
+            if len(all_entries) > 1:  # Current entry is already added
+                avg_earnings = sum(e["total_cut"] for e in all_entries[:-1]) / len(all_entries[:-1])
+                current_earnings = float(results["total_cut"])
+                performance = (current_earnings / avg_earnings) * 100 - 100
+                performance_text = f"(↑ {performance:.1f}% above average)" if performance > 0 else f"(↓ {abs(performance):.1f}% below average)"
+            else:
+                performance_text = "(First entry for this period type)"
+        except Exception as e:
+            logger.error(f"Performance calculation error: {str(e)}")
+            performance_text = "(Historical data unavailable)"
+
         # Add fields to embed
         fields = [
             ("📅 Date", current_date, True),
@@ -260,24 +275,23 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             ("💰 Gross Revenue", f"${float(results['gross_revenue']):,.2f}", True),
             ("💵 Net Revenue", f"${float(results['net_revenue']):,.2f} (80%)", True),
             ("🎁 Bonus", f"${float(results['bonus']):,.2f}", True),
-            ("💰 Total Cut", f"${float(results['total_cut']):,.2f}", True),
+            ("💰 Total Cut", f"${float(results['total_cut']):,.2f} {performance_text}", True),
             ("🎭 Models", models_list, False)
         ]
         
         for name, value, inline in fields:
             embed.add_field(name=name, value=value, inline=inline)
         
-        # Send the final result to everyone (non-ephemeral)
+        # Send the final result to everyone
         await interaction.channel.send(embed=embed)
         
         # Confirm to the user
         await interaction.response.edit_message(
-            content="✅ Calculation confirmed and posted! ", 
-            embed=None, 
+            content="✅ Calculation confirmed and posted! Check the channel for results.",
+            embed=None,
             view=None
         )
 
-        await interaction.delete_original_response()
 
 # View classes remain unchanged
 class PeriodSelectionView(ui.View):
