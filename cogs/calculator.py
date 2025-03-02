@@ -17,7 +17,7 @@ class CalculatorCommands(commands.Cog):
         logger.info("CalculatorCommands cog initialized")
 
     @commands.command(name="calculate")
-    async def calculate(self, ctx, period: str, shift: str, role: discord.Role, gross_revenue: str, *, models: str):
+    async def calculate(self, ctx, period: str = commands.parameter(description="The period to calculate for (e.g., 'weekly')"), shift: str = commands.parameter(description="The shift to calculate for (e.g., 'night')"), role: discord.Role = commands.parameter(description="The role to calculate for (e.g., '@Expert')"), gross_revenue: str = commands.parameter(description="The gross revenue (e.g., '1269.69')"), *, models: str = commands.parameter(description="The models to calculate for (e.g., 'peanut')")):
         """
         Calculate earnings based on revenue, role, and shift
         
@@ -35,6 +35,7 @@ class CalculatorCommands(commands.Cog):
             logger.warning(f"Invalid period '{period}' for guild {guild_id}")
             await ctx.send(f"❌ Period '{period}' not configured! Admins: use !set-period.")
             return
+
         period = matched_period
         
         # Validate shift
@@ -46,6 +47,7 @@ class CalculatorCommands(commands.Cog):
             logger.warning(f"Invalid shift '{shift}' for guild {guild_id}")
             await ctx.send(f"❌ Shift '{shift}' not configured! Admins: use !set-shift.")
             return
+            
         shift = matched_shift
         
         # Validate role
