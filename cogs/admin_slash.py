@@ -481,9 +481,13 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             return
         
         model_data.setdefault(guild_id, []).append(model)
-        
+
         success = await file_handlers.save_json(settings.MODELS_DATA_FILE, model_data)
-            # Model Management (continued)
+        
+        if success:
+            await interaction.response.send_message(f"✅ Model '{model}' added!")
+        else:
+            await interaction.response.send_message("❌ Failed to add model. Please try again later.")
    
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="set-model", description="[Admin] Add a valid model name")

@@ -2,18 +2,22 @@
 
 ## [Unreleased]
 
+## [0.32.0] - 2025-03-02
+### Added
+- `set-model` success and failure cases set.
+
 ## [0.31.0] - 2025-03-02
 ### Added
 - `set-model` command is saving properly to file.
 
 ## [0.30.0] - 2025-03-02
 ### Added
-- `summary` command now has parameter descriptions
+- `summary` command now has parameter descriptions.
 
 ## [0.29.0] - 2025-03-02
 ### Added
 - Admin slash command:
-    - `toggle-average` whether to show performance averages in calculation embeds
+    - `toggle-average` whether to show performance averages in calculation embeds.
 
 ## [0.28.0] - 2025-03-02
 ### Added
