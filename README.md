@@ -203,7 +203,6 @@
 
 - [ ] Better image display in `calculate` command
     - Like button that opens up `stash` with attachments
-- [ ] Basic report generation
 - [x] (v0.23.0) CSV data export
 - [x] (v0.24.0) JSON data export
 - [ ] Documentation
