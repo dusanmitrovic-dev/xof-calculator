@@ -73,7 +73,7 @@
         - [x] (v0.13.0)  Change to `listbonus` or `list-bonus-rules`
     - [x] (v0.2.0) `set-model`: add a new model (`set-model peanut`)
     - [x] (v0.2.0) `list-models`: list all available models
-    - [x] (v0.29.0) `toggle-average`toggle whether to show performance averages in calculation embeds
+    - [x] (v0.29.0) `toggle-average` whether to show performance averages in calculation embeds
 
 ### Calculator Commands
 
