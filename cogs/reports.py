@@ -35,6 +35,7 @@ class ReportCommands(commands.Cog):
             logger.warning(f"Invalid period '{period}' provided by {ctx.author.name}")
             await ctx.send(f"❌ Period '{period}' not configured! Admins: use !set-period.")
             return
+            
         period = matched_period
         
         # Validate dates if provided
