@@ -15,7 +15,7 @@ class ReportCommands(commands.Cog):
         self.bot = bot
     
     @commands.command(name="summary")
-    async def summary(self, ctx, period: str, from_date: Optional[str] = None, to_date: Optional[str] = None):
+    async def summary(self, ctx, period: str = commands.parameter(description="The period to calculate for (e.g., 'weekly')"), from_date: Optional[str] = commands.parameter(description="The start date (e.g., '01/01/2023')"), to_date: Optional[str] = commands.parameter(description="The end date (e.g., '02/03/2025')")):
         """
         Generate a summary report for all earnings in a period
 

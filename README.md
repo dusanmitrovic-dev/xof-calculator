@@ -128,6 +128,7 @@
 - [x] (v0.0.22) Add `cogs/reports.py` for reporting functionality
 - [x] New report command:
     - `summary`: Generate a summary report for all earnings in a period
+        - [x] (v0.30.0) add parameter description
 
 ### Command Safety & Validation
 

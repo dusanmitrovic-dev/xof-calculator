@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.30.0] - 2025-03-02
+### Added
+- `summary` command now has parameter descriptions
+
 ## [0.29.0] - 2025-03-02
 ### Added
 - Admin slash command:
