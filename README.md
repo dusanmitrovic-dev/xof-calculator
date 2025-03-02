@@ -31,7 +31,7 @@
 - [x] Monetary calculations
     - [x] (v0.0.7) Use Decimal for all calculations
     - [x] Implement proper rounding rules (2 decimals?)
-- [ ] Input validation
+- [x] Input validation
     - [x] (v0.0.8) Validate percentage ranges (0-100)
     - [x] (v0.0.9) Validate if a string matches the expected date format
     - [x] (v0.0.10) Validate and find a shift by name (case-insensitive)
