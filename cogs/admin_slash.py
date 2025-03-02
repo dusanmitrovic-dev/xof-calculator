@@ -453,12 +453,14 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             return
             
         embed = discord.Embed(title="Bonus Rules", color=discord.Color.green())
+        
         for rule in sorted(guild_rules, key=lambda x: x["from"]):
             embed.add_field(
                 name=f"${rule['from']} - ${rule['to']}",
                 value=f"Bonus: ${rule['amount']}",
                 inline=False
             )
+
         await interaction.response.send_message(embed=embed)
 
     # Model Management
@@ -479,6 +481,8 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             return
         
         model_data.setdefault(guild_id, []).append(model)
+        
+        success = await file_handlers.save_json(settings.MODELS_DATA_FILE, model_data)
             # Model Management (continued)
    
     @app_commands.default_permissions(administrator=True)

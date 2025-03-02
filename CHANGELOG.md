@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.31.0] - 2025-03-02
+### Added
+- `set-model` command is saving properly to file.
+
 ## [0.30.0] - 2025-03-02
 ### Added
 - `summary` command now has parameter descriptions
