@@ -248,22 +248,28 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             await interaction.followup.send("⚠ Calculation failed to save data. Please try again.", ephemeral=True)
             return
         
+        # Check if average display is enabled
+        display_settings = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
+        show_average = display_settings.get(guild_id, {}).get("show_average", False)
+        
         # Create embed for public announcement
         embed = discord.Embed(title="📊 Earnings Calculation", color=0x009933)
         
-        # Add historical performance comparison
-        try:
-            all_entries = [e for e in earnings_data[sender] if e["period"] == period.lower()]
-            if len(all_entries) > 1:  # Current entry is already added
-                avg_earnings = sum(e["total_cut"] for e in all_entries[:-1]) / len(all_entries[:-1])
-                current_earnings = float(results["total_cut"])
-                performance = (current_earnings / avg_earnings) * 100 - 100
-                performance_text = f"(↑ {performance:.1f}% above average)" if performance > 0 else f"(↓ {abs(performance):.1f}% below average)"
-            else:
-                performance_text = "(First entry for this period type)"
-        except Exception as e:
-            logger.error(f"Performance calculation error: {str(e)}")
-            performance_text = "(Historical data unavailable)"
+        # Calculate performance comparison if enabled
+        performance_text = ""
+        if show_average:
+            try:
+                all_entries = [e for e in earnings_data[sender] if e["period"] == period.lower()]
+                if len(all_entries) > 1:  # Current entry is already added
+                    avg_gross = sum(e["gross_revenue"] for e in all_entries[:-1]) / len(all_entries[:-1])
+                    current_gross = float(results["gross_revenue"])
+                    performance = (current_gross / avg_gross) * 100 - 100
+                    performance_text = f" (↑ {performance:.1f}% above average)" if performance > 0 else f" (↓ {abs(performance):.1f}% below average)"
+                else:
+                    performance_text = " (First entry for this period type)"
+            except Exception as e:
+                logger.error(f"Performance calculation error: {str(e)}")
+                performance_text = " (Historical data unavailable)"
 
         # Add fields to embed
         fields = [
@@ -272,10 +278,10 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             ("📥 Shift", shift, True),
             ("🎯 Role", role.name, True),
             ("⌛ Period", period, True),
-            ("💰 Gross Revenue", f"${float(results['gross_revenue']):,.2f}", True),
+            ("💰 Gross Revenue", f"${float(results['gross_revenue']):,.2f}{performance_text}", True),
             ("💵 Net Revenue", f"${float(results['net_revenue']):,.2f} (80%)", True),
             ("🎁 Bonus", f"${float(results['bonus']):,.2f}", True),
-            ("💰 Total Cut", f"${float(results['total_cut']):,.2f} {performance_text}", True),
+            ("💰 Total Cut", f"${float(results['total_cut']):,.2f}", True),
             ("🎭 Models", models_list, False)
         ]
         

@@ -2,9 +2,18 @@
 
 ## [Unreleased]
 
+## [0.29.0] - 2025-03-02
+### Added
+- Admin slash command:
+    - `toggle-average` whether to show performance averages in calculation embeds
+
+## [0.28.0] - 2025-03-02
+### Added
+- Calculate commands now have parameter descriptions.
+
 ## [0.27.0] - 2025-03-01
 ### Added
-- Calculate commands now have parameter descriptions
+- Calculate commands now have parameter descriptions.
 
 ## [0.26.0] - 2025-03-01
 ### Added
@@ -276,7 +285,7 @@
 
 ## [0.0.12] - 2025-02-24
 ### Added
-- Implemented v`alidate_bonus_rules` function in `validators.py` for validation of bonus rules for consistency and overlaps.
+- Implemented `validate_bonus_rules` function in `validators.py` for validation of bonus rules for consistency and overlaps.
 
 ## [0.0.11] - 2025-02-24
 ### Added
