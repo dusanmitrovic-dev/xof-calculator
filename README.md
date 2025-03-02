@@ -150,7 +150,7 @@
 ### Basic Logging
 
 - [x] Set up logging configuration
-- [ ] Log command usage
+- [x] Log command usage
     - [x] (v0.18.0) Admin commands
     - [x] (v0.20.0) Report commands
     - [x] (v0.21.0) Calculation commands and results
