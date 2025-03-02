@@ -206,7 +206,6 @@
 - [ ] Basic report generation
 - [x] (v0.23.0) CSV data export
 - [x] (v0.24.0) JSON data export
-- [ ] Bulk calculations
 - [ ] Documentation
     - [ ] `README.md`
     - [ ] Setup guide
