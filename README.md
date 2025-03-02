@@ -21,7 +21,7 @@
     - [x] (v0.0.5) `save_json()` with atomic writes
     - [x] Implement file locking
     - [x] Add automatic backups before writes
-    - [ ] Add automatic cloud backups before writes
+- [ ] Add automatic cloud backups before writes
 - [x] Add try-except blocks for all file operations
 - [x] Implement file existence checks
 
