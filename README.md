@@ -191,7 +191,7 @@
         - [ ] Calculate commands
             - [ ] Even tho set not displaying it for `calculate`
             - [x] (v0.27.0) `total` parameters set
-    - [ ] Add detailed help messages for all commands
+    - [ ] Add detailed help messages for all commands (double check)
 
 ### Display Enhancements
 
