@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.42.0] - 2025-03-03
+### Changed
+- `remove-shift` command has better error handling now.
+
 ## [0.41.0] - 2025-03-03
 ### Changed
 - `set-shift` command has better error handling now.

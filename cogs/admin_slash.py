@@ -253,22 +253,26 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=True)
             return
         
-        guild_id = str(interaction.guild.id)
-        shift_data = await file_handlers.load_json(settings.SHIFT_DATA_FILE, settings.DEFAULT_SHIFT_DATA)
-        existing_shifts = shift_data.get(guild_id, [])
-        
-        normalized_shift = validators.validate_shift(shift, existing_shifts)
-        if normalized_shift is None:
-            await interaction.response.send_message(f"❌ Shift '{shift}' doesn't exist!")
-            return
-        
-        shift_data[guild_id].remove(normalized_shift)
-        success = await file_handlers.save_json(settings.SHIFT_DATA_FILE, shift_data)
-        
-        if success:
-            await interaction.response.send_message(f"✅ Shift '{normalized_shift}' removed!")
-        else:
-            await interaction.response.send_message("❌ Failed to save shift data. Please try again later.")
+        try:
+            guild_id = str(interaction.guild.id)
+            shift_data = await file_handlers.load_json(settings.SHIFT_DATA_FILE, settings.DEFAULT_SHIFT_DATA)
+            existing_shifts = shift_data.get(guild_id, [])
+            
+            normalized_shift = validators.validate_shift(shift, existing_shifts)
+            if normalized_shift is None:
+                await interaction.response.send_message(f"❌ Shift '{shift}' doesn't exist!")
+                return
+            
+            shift_data[guild_id].remove(normalized_shift)
+            success = await file_handlers.save_json(settings.SHIFT_DATA_FILE, shift_data)
+            
+            if success:
+                await interaction.response.send_message(f"✅ Shift '{normalized_shift}' removed!")
+            else:
+                await interaction.response.send_message("❌ Failed to save shift data. Please try again later.")
+        except Exception as e:
+            logger.error(f"Error in remove_shift: {str(e)}")
+            await interaction.response.send_message("❌ An unexpected error occurred. See logs for details.", ephemeral=True)
 
     # Period Management
     @app_commands.default_permissions(administrator=True)
