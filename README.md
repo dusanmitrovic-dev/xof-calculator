@@ -200,8 +200,9 @@
     - Different ways of representing calculate responses?
 - [x] Add confirmation reactions
 
-### Pre v1.0.0 release fixes
+### Pre v1.0.0 release fixes and improvements
 - [x] (v0.32.1) removed slash `set-model` command duplicate method.
+- [ ] Each backup will have separate restore command
 
 ## FUTURE IMPROVEMENTS
 
