@@ -468,31 +468,6 @@ class AdminSlashCommands(commands.Cog, name="admin"):
     @app_commands.command(name="set-model", description="[Admin] Add a valid model name")
     @app_commands.describe(model="The name of the model to add")
     async def set_model(self, interaction: discord.Interaction, model: str):
-        if not model.strip():
-            await interaction.response.send_message("❌ Model name cannot be empty.")
-            return
-            
-        guild_id = str(interaction.guild.id)
-        model_data = await file_handlers.load_json(settings.MODELS_DATA_FILE, settings.DEFAULT_MODELS_DATA)
-        existing_models = model_data.get(guild_id, [])
-        
-        if model.lower() in [m.lower() for m in existing_models]:
-            await interaction.response.send_message(f"❌ Model '{model}' already exists!")
-            return
-        
-        model_data.setdefault(guild_id, []).append(model)
-
-        success = await file_handlers.save_json(settings.MODELS_DATA_FILE, model_data)
-        
-        if success:
-            await interaction.response.send_message(f"✅ Model '{model}' added!")
-        else:
-            await interaction.response.send_message("❌ Failed to add model. Please try again later.")
-   
-    @app_commands.default_permissions(administrator=True)
-    @app_commands.command(name="set-model", description="[Admin] Add a valid model name")
-    @app_commands.describe(model="The name of the model to add")
-    async def set_model(self, interaction: discord.Interaction, model: str):
         if not interaction.user.guild_permissions.administrator:
             await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=True)
             return

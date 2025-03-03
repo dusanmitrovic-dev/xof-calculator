@@ -199,6 +199,9 @@
     - Different ways of representing calculate responses?
 - [x] Add confirmation reactions
 
+### Pre v1.0.0 release fixes
+- [x] (v0.32.1) remove slash `set-model` command duplicate method.
+
 ## FUTURE IMPROVEMENTS
 
 - [ ] Better image display in `calculate` command

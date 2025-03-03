@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.32.1] - 2025-03-03
+### Removed
+- `set-model` duplicate method slash command.
+
 ## [0.32.0] - 2025-03-02
 ### Added
 - `set-model` success and failure cases set.
