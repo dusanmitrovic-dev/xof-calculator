@@ -212,6 +212,7 @@
 - [x] (v0.40.0) `remove-role` better error handling
 - [x] (v0.41.0) `set-shift` better error handling
 - [x] (v0.42.0) `remove-shift` better error handling
+- [x] (v0.43.0) `set-period` better error handling
 
 ## FUTURE IMPROVEMENTS
 

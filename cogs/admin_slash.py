@@ -283,25 +283,29 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=True)
             return
         
-        if not period.strip():
-            await interaction.response.send_message("❌ Period name cannot be empty.")
-            return
+        try:
+            if not period.strip():
+                await interaction.response.send_message("❌ Period name cannot be empty.")
+                return
+                
+            guild_id = str(interaction.guild.id)
+            period_data = await file_handlers.load_json(settings.PERIOD_DATA_FILE, settings.DEFAULT_PERIOD_DATA)
+            existing_periods = period_data.get(guild_id, [])
             
-        guild_id = str(interaction.guild.id)
-        period_data = await file_handlers.load_json(settings.PERIOD_DATA_FILE, settings.DEFAULT_PERIOD_DATA)
-        existing_periods = period_data.get(guild_id, [])
-        
-        if validators.validate_period(period, existing_periods) is not None:
-            await interaction.response.send_message(f"❌ Period '{period}' already exists!")
-            return
-        
-        period_data.setdefault(guild_id, []).append(period)
-        success = await file_handlers.save_json(settings.PERIOD_DATA_FILE, period_data)
-        
-        if success:
-            await interaction.response.send_message(f"✅ Period '{period}' added!")
-        else:
-            await interaction.response.send_message("❌ Failed to save period data. Please try again later.")
+            if validators.validate_period(period, existing_periods) is not None:
+                await interaction.response.send_message(f"❌ Period '{period}' already exists!")
+                return
+            
+            period_data.setdefault(guild_id, []).append(period)
+            success = await file_handlers.save_json(settings.PERIOD_DATA_FILE, period_data)
+            
+            if success:
+                await interaction.response.send_message(f"✅ Period '{period}' added!")
+            else:
+                await interaction.response.send_message("❌ Failed to save period data. Please try again later.")
+        except Exception as e:
+            logger.error(f"Error in set_period: {str(e)}")
+            await interaction.response.send_message("❌ An unexpected error occurred. See logs for details.", ephemeral=True)
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="remove-period", description="[Admin] Remove a period configuration")
