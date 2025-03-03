@@ -11,7 +11,7 @@
 - `toggle-average` command has better error handling now.
 
 ## [0.33.0] - 2025-03-03
-### Removed
+### Changed
 - `clear-earnings` command message updated.
 
 ## [0.32.1] - 2025-03-03
