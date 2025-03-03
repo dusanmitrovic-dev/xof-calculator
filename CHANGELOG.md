@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.35.0] - 2025-03-03
+### Changed
+- `admin-export-earnings-csv` command renamed to `export-earnings-csv` for simplicity
+
 ## [0.34.0] - 2025-03-03
 ### Removed
 - `toggle-average` command has better error handling now.

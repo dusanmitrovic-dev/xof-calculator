@@ -63,7 +63,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(
-        name="admin-export-earnings-csv",
+        name="export-earnings-csv",
         description="[Admin] Export all earnings data as CSV"
     )
     async def export_earnings_csv(self, interaction: discord.Interaction):
