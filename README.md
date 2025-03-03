@@ -192,6 +192,7 @@
             - [ ] Even tho set not displaying it for `calculate`
             - [x] (v0.27.0) `total` parameters set
     - [ ] Add detailed help messages for all commands (double check)
+- [ ] All admin slash commands are to be ephemeral
 
 ### Display Enhancements
 
@@ -200,7 +201,7 @@
 - [x] Add confirmation reactions
 
 ### Pre v1.0.0 release fixes
-- [x] (v0.32.1) remove slash `set-model` command duplicate method.
+- [x] (v0.32.1) removed slash `set-model` command duplicate method.
 
 ## FUTURE IMPROVEMENTS
 
