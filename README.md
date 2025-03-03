@@ -205,6 +205,7 @@
 - [ ] Each backup will have separate restore command
 - [x] (v0.34.0) `toggle-average` better error handling
 - [x] (v0.35.0) `admin-export-earnings-csv` command renamed to `export-earnings-csv` for simplicity
+- [x] (v0.36.0) `export-earnings-csv` command usage updated to follow new command name
 
 ## FUTURE IMPROVEMENTS
 

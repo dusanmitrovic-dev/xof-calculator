@@ -70,7 +70,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         """
         Admin-only command to export earnings data as CSV
         
-        Usage: /admin-export-earnings-csv
+        Usage: /export-earnings-csv
         """
         if not interaction.user.guild_permissions.administrator:
             await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=True)

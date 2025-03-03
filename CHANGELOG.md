@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.36.0] - 2025-03-03
+### Changed
+- `export-earnings-csv` command usage updated to follow new command name
+
 ## [0.35.0] - 2025-03-03
 ### Changed
 - `admin-export-earnings-csv` command renamed to `export-earnings-csv` for simplicity.
