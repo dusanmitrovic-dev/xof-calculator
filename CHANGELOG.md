@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.33.0] - 2025-03-03
+### Removed
+- `clear-earnings` command message updated.
+
 ## [0.32.1] - 2025-03-03
 ### Removed
 - `set-model` duplicate method slash command.

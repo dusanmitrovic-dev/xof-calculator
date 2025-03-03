@@ -545,7 +545,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             earnings_data = await file_handlers.load_json(settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS)
             earnings_data[guild_id] = {}
             await file_handlers.save_json(settings.EARNINGS_FILE, earnings_data)
-            await interaction.response.send_message("✅ Earnings data cleared.", ephemeral=True)
+            await interaction.response.send_message(f"✅ All earnings data for the guild with ID ({guild_id}) has been successfully cleared.", ephemeral=True)
 
         view.children[0].callback = button_callback
         await interaction.response.send_message("⚠️ Are you sure you want to clear all earnings data?", view=view, ephemeral=True)
