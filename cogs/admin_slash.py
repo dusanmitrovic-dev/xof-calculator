@@ -146,31 +146,35 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=True)
             return
         
-        logger.info(f"User {interaction.user.name} ({interaction.user.id}) used set-role command for role {role.name} with percentage {percentage}")
-        
-        percentage_decimal = validators.validate_percentage(percentage)
-        if percentage_decimal is None:
-            logger.warning(f"Invalid percentage '{percentage}' provided by {interaction.user.name}")
-            await interaction.response.send_message("❌ Percentage must be a valid number between 0 and 100.")
-            return
-        
-        guild_id = str(interaction.guild.id)
-        role_id = str(role.id)
-        
-        role_data = await file_handlers.load_json(settings.ROLE_DATA_FILE, settings.DEFAULT_ROLE_DATA)
-        
-        if guild_id not in role_data:
-            role_data[guild_id] = {}
-        role_data[guild_id][role_id] = float(percentage_decimal)
-        
-        success = await file_handlers.save_json(settings.ROLE_DATA_FILE, role_data)
-        
-        if success:
-            logger.info(f"Role {role.name} ({role_id}) percentage set to {percentage_decimal}% by {interaction.user.name}")
-            await interaction.response.send_message(f"✅ {role.name} now has {percentage_decimal}% cut!")
-        else:
-            logger.error(f"Failed to save role data for {role.name} ({role_id}) by {interaction.user.name}")
-            await interaction.response.send_message("❌ Failed to save role data. Please try again later.")
+        try:
+            logger.info(f"User {interaction.user.name} ({interaction.user.id}) used set-role command for role {role.name} with percentage {percentage}")
+            
+            percentage_decimal = validators.validate_percentage(percentage)
+            if percentage_decimal is None:
+                logger.warning(f"Invalid percentage '{percentage}' provided by {interaction.user.name}")
+                await interaction.response.send_message("❌ Percentage must be a valid number between 0 and 100.")
+                return
+            
+            guild_id = str(interaction.guild.id)
+            role_id = str(role.id)
+            
+            role_data = await file_handlers.load_json(settings.ROLE_DATA_FILE, settings.DEFAULT_ROLE_DATA)
+            
+            if guild_id not in role_data:
+                role_data[guild_id] = {}
+            role_data[guild_id][role_id] = float(percentage_decimal)
+            
+            success = await file_handlers.save_json(settings.ROLE_DATA_FILE, role_data)
+            
+            if success:
+                logger.info(f"Role {role.name} ({role_id}) percentage set to {percentage_decimal}% by {interaction.user.name}")
+                await interaction.response.send_message(f"✅ {role.name} now has {percentage_decimal}% cut!")
+            else:
+                logger.error(f"Failed to save role data for {role.name} ({role_id}) by {interaction.user.name}")
+                await interaction.response.send_message("❌ Failed to save role data. Please try again later.")
+        except Exception as e:
+            logger.error(f"Error in set_role: {str(e)}")
+            await interaction.response.send_message("❌ An unexpected error occurred. See logs for details.", ephemeral=True)
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="remove-role", description="[Admin] Remove a role's percentage configuration")

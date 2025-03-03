@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.39.0] - 2025-03-03
+### Added
+- `set-role` command has better error handling now.
+
 ## [0.38.0] - 2025-03-03
 ### Changed
 - `export-earnings-json` command usage updated to follow new command name
