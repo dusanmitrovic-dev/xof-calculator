@@ -20,7 +20,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
     def __init__(self, bot):
         self.bot = bot
 
-    @app_commands.command(
+     @app_commands.command(
         name="toggle-average",
         description="Toggle whether to show performance averages in calculation embeds"
     )
@@ -32,30 +32,34 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             await interaction.response.send_message("❌ You need administrator permissions to use this command.", ephemeral=True)
             return
         
-        guild_id = str(interaction.guild_id)
-        
-        # Load settings data
-        settings_data = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
-        
-        # Initialize guild settings if they don't exist
-        if guild_id not in settings_data:
-            settings_data[guild_id] = {"show_average": False}
-        
-        # Toggle the show_average setting
-        current_setting = settings_data[guild_id].get("show_average", False)
-        settings_data[guild_id]["show_average"] = not current_setting
-        new_setting = settings_data[guild_id]["show_average"]
-        
-        # Save updated settings
-        success = await file_handlers.save_json(settings.DISPLAY_SETTINGS_FILE, settings_data)
-        
-        if success:
-            status = "enabled" if new_setting else "disabled"
-            logger.info(f"User {interaction.user.name} ({interaction.user.id}) {status} average display for guild {guild_id}")
-            await interaction.response.send_message(f"✅ Performance average display is now **{status}**.", ephemeral=True)
-        else:
-            logger.error(f"Failed to save display settings for guild {guild_id}")
-            await interaction.response.send_message("❌ Failed to update settings. Please try again.", ephemeral=True)
+        try:
+            guild_id = str(interaction.guild_id)
+            
+            # Load settings data
+            settings_data = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
+            
+            # Initialize guild settings if they don't exist
+            if guild_id not in settings_data:
+                settings_data[guild_id] = {"show_average": False}
+            
+            # Toggle the show_average setting
+            current_setting = settings_data[guild_id].get("show_average", False)
+            settings_data[guild_id]["show_average"] = not current_setting
+            new_setting = settings_data[guild_id]["show_average"]
+            
+            # Save updated settings
+            success = await file_handlers.save_json(settings.DISPLAY_SETTINGS_FILE, settings_data)
+            
+            if success:
+                status = "enabled" if new_setting else "disabled"
+                logger.info(f"User {interaction.user.name} ({interaction.user.id}) {status} average display for guild {guild_id}")
+                await interaction.response.send_message(f"✅ Performance average display is now **{status}**.", ephemeral=True)
+            else:
+                logger.error(f"Failed to save display settings for guild {guild_id}")
+                await interaction.response.send_message("❌ Failed to update settings. Please try again.", ephemeral=True)
+        except Exception as e:
+            logger.error(f"Error in toggle_average: {str(e)}")
+            await interaction.response.send_message("❌ An unexpected error occurred. See logs for details.", ephemeral=True)
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(

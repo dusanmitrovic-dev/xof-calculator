@@ -203,6 +203,7 @@
 ### Pre v1.0.0 release fixes and improvements
 - [x] (v0.32.1) removed slash `set-model` command duplicate method.
 - [ ] Each backup will have separate restore command
+- [x] (v0.34.0) `toggle-average` better error handling
 
 ## FUTURE IMPROVEMENTS
 
