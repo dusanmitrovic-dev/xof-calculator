@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.38.0] - 2025-03-03
+### Changed
+- `export-earnings-json` command usage updated to follow new command name
+
 ## [0.37.0] - 2025-03-03
 ### Changed
 - `admin-export-earnings-json` command renamed to `export-earnings-json` for simplicity.

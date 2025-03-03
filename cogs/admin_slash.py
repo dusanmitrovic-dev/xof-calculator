@@ -110,7 +110,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         """
         Admin-only command to export earnings data as JSON
         
-        Usage: /admin-export-earnings-json
+        Usage: /export-earnings-json
         """
         if not interaction.user.guild_permissions.administrator:
             await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=True)
