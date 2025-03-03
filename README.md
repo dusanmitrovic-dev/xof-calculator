@@ -210,6 +210,7 @@
 - [x] (v0.38.0) `export-earnings-json` command usage updated to follow new command name
 - [x] (v0.39.0) `set-role` better error handling
 - [x] (v0.40.0) `remove-role` better error handling
+- [x] (v0.41.0) `set-shift` better error handling
 
 ## FUTURE IMPROVEMENTS
 

@@ -219,27 +219,31 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=True)
             return
         
-        logger.info(f"User {interaction.user.name} used set-shift command for shift '{shift}'")
-        
-        if not shift.strip():
-            await interaction.response.send_message("❌ Shift name cannot be empty.")
-            return
+        try:
+            logger.info(f"User {interaction.user.name} used set-shift command for shift '{shift}'")
             
-        guild_id = str(interaction.guild.id)
-        shift_data = await file_handlers.load_json(settings.SHIFT_DATA_FILE, settings.DEFAULT_SHIFT_DATA)
-        existing_shifts = shift_data.get(guild_id, [])
-        
-        if validators.validate_shift(shift, existing_shifts) is not None:
-            await interaction.response.send_message(f"❌ Shift '{shift}' already exists!")
-            return
-        
-        shift_data.setdefault(guild_id, []).append(shift)
-        success = await file_handlers.save_json(settings.SHIFT_DATA_FILE, shift_data)
-        
-        if success:
-            await interaction.response.send_message(f"✅ Shift '{shift}' added!")
-        else:
-            await interaction.response.send_message("❌ Failed to save shift data. Please try again later.")
+            if not shift.strip():
+                await interaction.response.send_message("❌ Shift name cannot be empty.")
+                return
+                
+            guild_id = str(interaction.guild.id)
+            shift_data = await file_handlers.load_json(settings.SHIFT_DATA_FILE, settings.DEFAULT_SHIFT_DATA)
+            existing_shifts = shift_data.get(guild_id, [])
+            
+            if validators.validate_shift(shift, existing_shifts) is not None:
+                await interaction.response.send_message(f"❌ Shift '{shift}' already exists!")
+                return
+            
+            shift_data.setdefault(guild_id, []).append(shift)
+            success = await file_handlers.save_json(settings.SHIFT_DATA_FILE, shift_data)
+            
+            if success:
+                await interaction.response.send_message(f"✅ Shift '{shift}' added!")
+            else:
+                await interaction.response.send_message("❌ Failed to save shift data. Please try again later.")
+        except Exception as e:
+            logger.error(f"Error in set_shift: {str(e)}")
+            await interaction.response.send_message("❌ An unexpected error occurred. See logs for details.", ephemeral=True)
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="remove-shift", description="[Admin] Remove a shift configuration")
