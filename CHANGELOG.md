@@ -3,20 +3,20 @@
 ## [Unreleased]
 
 ## [0.41.0] - 2025-03-03
-### Added
+### Changed
 - `set-shift` command has better error handling now.
 
 ## [0.40.0] - 2025-03-03
-### Added
+### Changed
 - `remove-role` command has better error handling now.
 
 ## [0.39.0] - 2025-03-03
-### Added
+### Changed
 - `set-role` command has better error handling now.
 
 ## [0.38.0] - 2025-03-03
 ### Changed
-- `export-earnings-json` command usage updated to follow new command name
+- `export-earnings-json` command usage updated to follow new command name.
 
 ## [0.37.0] - 2025-03-03
 ### Changed
@@ -24,14 +24,14 @@
 
 ## [0.36.0] - 2025-03-03
 ### Changed
-- `export-earnings-csv` command usage updated to follow new command name
+- `export-earnings-csv` command usage updated to follow new command name.
 
 ## [0.35.0] - 2025-03-03
 ### Changed
 - `admin-export-earnings-csv` command renamed to `export-earnings-csv` for simplicity.
 
 ## [0.34.0] - 2025-03-03
-### Added
+### Changed
 - `toggle-average` command has better error handling now.
 
 ## [0.33.0] - 2025-03-03
