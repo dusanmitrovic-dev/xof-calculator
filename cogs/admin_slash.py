@@ -103,7 +103,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(
-        name="admin-export-earnings-json",
+        name="export-earnings-json",
         description="[Admin] Export all earnings data as JSON"
     )
     async def export_earnings_json(self, interaction: discord.Interaction):
