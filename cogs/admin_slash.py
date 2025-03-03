@@ -184,27 +184,31 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=True)
             return
         
-        logger.info(f"User {interaction.user.name} ({interaction.user.id}) used remove-role command for role {role.name}")
-        
-        guild_id = str(interaction.guild.id)
-        role_id = str(role.id)
-        
-        role_data = await file_handlers.load_json(settings.ROLE_DATA_FILE, settings.DEFAULT_ROLE_DATA)
-        
-        if guild_id not in role_data or role_id not in role_data[guild_id]:
-            logger.warning(f"Role {role.name} ({role_id}) not found in configuration")
-            await interaction.response.send_message(f"❌ {role.name} does not have a configured percentage.")
-            return
-        
-        del role_data[guild_id][role_id]
-        success = await file_handlers.save_json(settings.ROLE_DATA_FILE, role_data)
-        
-        if success:
-            logger.info(f"Role {role.name} ({role_id}) removed from configuration")
-            await interaction.response.send_message(f"✅ {role.name} has been removed from percentage configuration!")
-        else:
-            logger.error(f"Failed to remove role {role.name} ({role_id})")
-            await interaction.response.send_message("❌ Failed to save role data. Please try again later.")
+        try:
+            logger.info(f"User {interaction.user.name} ({interaction.user.id}) used remove-role command for role {role.name}")
+            
+            guild_id = str(interaction.guild.id)
+            role_id = str(role.id)
+            
+            role_data = await file_handlers.load_json(settings.ROLE_DATA_FILE, settings.DEFAULT_ROLE_DATA)
+            
+            if guild_id not in role_data or role_id not in role_data[guild_id]:
+                logger.warning(f"Role {role.name} ({role_id}) not found in configuration")
+                await interaction.response.send_message(f"❌ {role.name} does not have a configured percentage.")
+                return
+            
+            del role_data[guild_id][role_id]
+            success = await file_handlers.save_json(settings.ROLE_DATA_FILE, role_data)
+            
+            if success:
+                logger.info(f"Role {role.name} ({role_id}) removed from configuration")
+                await interaction.response.send_message(f"✅ {role.name} has been removed from percentage configuration!")
+            else:
+                logger.error(f"Failed to remove role {role.name} ({role_id})")
+                await interaction.response.send_message("❌ Failed to save role data. Please try again later.")
+        except Exception as e:
+            logger.error(f"Error in remove_role: {str(e)}")
+            await interaction.response.send_message("❌ An unexpected error occurred. See logs for details.", ephemeral=True)
 
     # Shift Management
     @app_commands.default_permissions(administrator=True)
