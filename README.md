@@ -201,9 +201,18 @@
 - [x] Add confirmation reactions
 
 ### Pre v1.0.0 release fixes and improvements
-- [x] (v0.32.1) removed slash `set-model` command duplicate method.
+- [x] (v0.32.1) removed slash `set-model` command duplicate method
 - [ ] Each backup will have separate restore command
-- [x] (v0.34.0) `toggle-average` better error handling
+- [x] (❌) (v0.34.0) `toggle-average` better error handling
+- [x] (v0.35.0) `admin-export-earnings-csv` command renamed to `export-earnings-csv` for simplicity
+- [x] (v0.36.0) `export-earnings-csv` command usage updated to follow new command name
+- [x] (v0.37.0) `admin-export-earnings-json` command renamed to `export-earnings-json` for simplicity
+- [x] (v0.38.0) `export-earnings-json` command usage updated to follow new command name
+- [x] (❌) (v0.39.0) `set-role` better error handling
+- [x] (❌) (v0.40.0) `remove-role` better error handling
+- [x] (❌) (v0.41.0) `set-shift` better error handling
+- [x] (❌) (v0.42.0) `remove-shift` better error handling
+- [x] (❌) (v0.43.0) `set-period` better error handling
 
 ## FUTURE IMPROVEMENTS
 

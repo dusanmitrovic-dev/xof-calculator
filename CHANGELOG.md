@@ -2,12 +2,55 @@
 
 ## [Unreleased]
 
+## [0.44.0] - 2025-03-04
+### Rollback
+- Rolled back to `v0.34.0` due to unnecessary error handling that already exists in `main.py`,
+- removing unnecessary `v0.34.0` error handling,
+- using new command names from newer versions,
+- fixing up todo tasks to follow the rollback.
+
+## [0.43.0] - 2025-03-03
+### Changed
+- `set-period` command has better error handling now.
+
+## [0.42.0] - 2025-03-03
+### Changed
+- `remove-shift` command has better error handling now.
+
+## [0.41.0] - 2025-03-03
+### Changed
+- `set-shift` command has better error handling now.
+
+## [0.40.0] - 2025-03-03
+### Changed
+- `remove-role` command has better error handling now.
+
+## [0.39.0] - 2025-03-03
+### Changed
+- `set-role` command has better error handling now.
+
+## [0.38.0] - 2025-03-03
+### Changed
+- `export-earnings-json` command usage updated to follow new command name.
+
+## [0.37.0] - 2025-03-03
+### Changed
+- `admin-export-earnings-json` command renamed to `export-earnings-json` for simplicity.
+
+## [0.36.0] - 2025-03-03
+### Changed
+- `export-earnings-csv` command usage updated to follow new command name.
+
+## [0.35.0] - 2025-03-03
+### Changed
+- `admin-export-earnings-csv` command renamed to `export-earnings-csv` for simplicity.
+
 ## [0.34.0] - 2025-03-03
-### Removed
+### Changed
 - `toggle-average` command has better error handling now.
 
 ## [0.33.0] - 2025-03-03
-### Removed
+### Changed
 - `clear-earnings` command message updated.
 
 ## [0.32.1] - 2025-03-03
