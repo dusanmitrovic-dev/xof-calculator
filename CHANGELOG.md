@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## [0.44.0] - 2025-03-04
+### Rollback
+- Rolled back to `v0.34.0` due to unnecessary error handling that already exists in `main.py`,
+- removing unnecessary `v0.34.0` error handling,
+- using new command names from newer versions,
+- fixing up todo tasks to follow the rollback.
+
 ## [0.43.0] - 2025-03-03
 ### Changed
 - `set-period` command has better error handling now.

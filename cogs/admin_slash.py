@@ -32,34 +32,30 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             await interaction.response.send_message("❌ You need administrator permissions to use this command.", ephemeral=True)
             return
         
-        try:
-            guild_id = str(interaction.guild_id)
-            
-            # Load settings data
-            settings_data = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
-            
-            # Initialize guild settings if they don't exist
-            if guild_id not in settings_data:
-                settings_data[guild_id] = {"show_average": False}
-            
-            # Toggle the show_average setting
-            current_setting = settings_data[guild_id].get("show_average", False)
-            settings_data[guild_id]["show_average"] = not current_setting
-            new_setting = settings_data[guild_id]["show_average"]
-            
-            # Save updated settings
-            success = await file_handlers.save_json(settings.DISPLAY_SETTINGS_FILE, settings_data)
-            
-            if success:
-                status = "enabled" if new_setting else "disabled"
-                logger.info(f"User {interaction.user.name} ({interaction.user.id}) {status} average display for guild {guild_id}")
-                await interaction.response.send_message(f"✅ Performance average display is now **{status}**.", ephemeral=True)
-            else:
-                logger.error(f"Failed to save display settings for guild {guild_id}")
-                await interaction.response.send_message("❌ Failed to update settings. Please try again.", ephemeral=True)
-        except Exception as e:
-            logger.error(f"Error in toggle_average: {str(e)}")
-            await interaction.response.send_message("❌ An unexpected error occurred. See logs for details.", ephemeral=True)
+        guild_id = str(interaction.guild_id)
+        
+        # Load settings data
+        settings_data = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
+        
+        # Initialize guild settings if they don't exist
+        if guild_id not in settings_data:
+            settings_data[guild_id] = {"show_average": False}
+        
+        # Toggle the show_average setting
+        current_setting = settings_data[guild_id].get("show_average", False)
+        settings_data[guild_id]["show_average"] = not current_setting
+        new_setting = settings_data[guild_id]["show_average"]
+        
+        # Save updated settings
+        success = await file_handlers.save_json(settings.DISPLAY_SETTINGS_FILE, settings_data)
+        
+        if success:
+            status = "enabled" if new_setting else "disabled"
+            logger.info(f"User {interaction.user.name} ({interaction.user.id}) {status} average display for guild {guild_id}")
+            await interaction.response.send_message(f"✅ Performance average display is now **{status}**.", ephemeral=True)
+        else:
+            logger.error(f"Failed to save display settings for guild {guild_id}")
+            await interaction.response.send_message("❌ Failed to update settings. Please try again.", ephemeral=True)
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(
@@ -76,30 +72,26 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=True)
             return
         
-        try:
-            earnings_data = await file_handlers.load_json(settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS)
-            
-            # Create CSV content
-            csv_content = "User,Date,Total Cut,Gross Revenue,Period,Shift,Role,Models\n"
-            for user, entries in earnings_data.items():
-                for entry in entries:
-                    csv_content += f'"{user}",{entry["date"]},{entry["total_cut"]},{entry["gross_revenue"]},'
-                    csv_content += f'{entry["period"]},{entry["shift"]},{entry["role"]},"{entry.get("models", "")}"\n'
-            
-            # Create file object
-            csv_file = discord.File(
-                io.BytesIO(csv_content.encode('utf-8')),
-                filename="full_earnings_export.csv"
-            )
-            
-            await interaction.response.send_message(
-                "📊 Full earnings export (CSV):",
-                file=csv_file,
-                ephemeral=True
-            )
-        except Exception as e:
-            logger.error(f"Export CSV error: {str(e)}")
-            await interaction.response.send_message("❌ Failed to generate CSV export. Check logs.", ephemeral=True)
+        earnings_data = await file_handlers.load_json(settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS)
+        
+        # Create CSV content
+        csv_content = "User,Date,Total Cut,Gross Revenue,Period,Shift,Role,Models\n"
+        for user, entries in earnings_data.items():
+            for entry in entries:
+                csv_content += f'"{user}",{entry["date"]},{entry["total_cut"]},{entry["gross_revenue"]},'
+                csv_content += f'{entry["period"]},{entry["shift"]},{entry["role"]},"{entry.get("models", "")}"\n'
+        
+        # Create file object
+        csv_file = discord.File(
+            io.BytesIO(csv_content.encode('utf-8')),
+            filename="full_earnings_export.csv"
+        )
+        
+        await interaction.response.send_message(
+            " Full earnings export (CSV):",
+            file=csv_file,
+            ephemeral=True
+        )
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(
@@ -116,26 +108,22 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=True)
             return
         
-        try:
-            earnings_data = await file_handlers.load_json(settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS)
-            
-            # Create JSON content
-            json_content = json.dumps(earnings_data, indent=4)
-            
-            # Create file object
-            json_file = discord.File(
-                io.BytesIO(json_content.encode('utf-8')),
-                filename="full_earnings_export.json"
-            )
-            
-            await interaction.response.send_message(
-                "📊 Full earnings export (JSON):",
-                file=json_file,
-                ephemeral=True
-            )
-        except Exception as e:
-            logger.error(f"Export JSON error: {str(e)}")
-            await interaction.response.send_message("❌ Failed to generate JSON export. Check logs.", ephemeral=True)
+        earnings_data = await file_handlers.load_json(settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS)
+        
+        # Create JSON content
+        json_content = json.dumps(earnings_data, indent=4)
+        
+        # Create file object
+        json_file = discord.File(
+            io.BytesIO(json_content.encode('utf-8')),
+            filename="full_earnings_export.json"
+        )
+        
+        await interaction.response.send_message(
+            " Full earnings export (JSON):",
+            file=json_file,
+            ephemeral=True
+        )
 
     # Role Management
     @app_commands.default_permissions(administrator=True)
