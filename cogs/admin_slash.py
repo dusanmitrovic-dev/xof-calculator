@@ -698,9 +698,9 @@ class AdminSlashCommands(commands.Cog, name="admin"):
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="restore-earnings-backup", description="[Admin] Restore the latest earnings configuration backup")
     async def restore_earnings_backup(self, interaction: discord.Interaction):
-        backup_file = f"{settings.EARNINGS_FILE}.bak"
+        backup_file = os.path.join(settings.DATA_DIRECTORY, f"{settings.EARNINGS_FILE}.bak")
         if os.path.exists(backup_file):
-            shutil.copy2(settings.EARNINGS_FILE, backup_file)
+            shutil.copy2(backup_file, os.path.join(settings.DATA_DIRECTORY, settings.EARNINGS_FILE))
             await interaction.response.send_message("✅ Earnings configuration backup restored successfully.", ephemeral=True)
         else:
             await interaction.response.send_message("❌ No earnings configuration backup found.", ephemeral=True)

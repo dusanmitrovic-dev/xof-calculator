@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.51.0] - 2025-03-04
+### Fixed
+- `restore-earnings-backup` command fixed.
+
 ## [0.50.0] - 2025-03-04
 ### Fixed
 - `restore-role-backup` command fixed.
