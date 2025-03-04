@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.54.0] - 2025-03-04
+### Added
+- Added confirm and cancel buttons for reset and restore commands.
+
 ## [0.53.0] - 2025-03-04
 ### Added
 - New admin slash command `restore-models-backup`.

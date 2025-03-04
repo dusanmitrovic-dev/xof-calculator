@@ -627,99 +627,219 @@ class AdminSlashCommands(commands.Cog, name="admin"):
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="reset-shift-config", description="[Admin] Reset shift configuration")
     async def reset_shift_config(self, interaction: discord.Interaction):
-        await file_handlers.save_json(settings.SHIFT_DATA_FILE, settings.DEFAULT_SHIFT_DATA)
-        await interaction.response.send_message("✅ Shift configuration reset.", ephemeral=True)
+        async def reset_action(interaction: discord.Interaction):
+            await file_handlers.save_json(settings.SHIFT_DATA_FILE, settings.DEFAULT_SHIFT_DATA)
+            await interaction.response.edit_message(content="✅ Shift configuration reset.", view=None)
+
+        view = ConfirmButton(reset_action, interaction.user.id)
+        await interaction.response.send_message(
+            "⚠️ Are you sure you want to reset the shift configuration? This will delete all existing shift.", 
+            view=view, 
+            ephemeral=True
+        )
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="reset-period-config", description="[Admin] Reset period configuration")
     async def reset_period_config(self, interaction: discord.Interaction):
-        await file_handlers.save_json(settings.PERIOD_DATA_FILE, settings.DEFAULT_PERIOD_DATA)
-        await interaction.response.send_message("✅ Period configuration reset.", ephemeral=True)
+        async def reset_action(interaction: discord.Interaction):
+            await file_handlers.save_json(settings.PERIOD_DATA_FILE, settings.DEFAULT_PERIOD_DATA)
+            await interaction.response.edit_message(content="✅ Period configuration reset.", view=None)
+
+        view = ConfirmButton(reset_action, interaction.user.id)
+        await interaction.response.send_message(
+            "⚠️ Are you sure you want to reset the period configuration? This will delete all existing period.", 
+            view=view, 
+            ephemeral=True
+        )
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="reset-role-config", description="[Admin] Reset role configuration")
     async def reset_role_config(self, interaction: discord.Interaction):
-        await file_handlers.save_json(settings.ROLE_DATA_FILE, settings.DEFAULT_ROLE_DATA)
-        await interaction.response.send_message("✅ Role configuration reset.", ephemeral=True)
+        async def reset_action(interaction: discord.Interaction):
+            await file_handlers.save_json(settings.ROLE_DATA_FILE, settings.DEFAULT_ROLE_DATA)
+            await interaction.response.edit_message(content="✅ Role configuration reset.", view=None)
+
+        view = ConfirmButton(reset_action, interaction.user.id)
+        await interaction.response.send_message(
+            "⚠️ Are you sure you want to reset the role configuration? This will delete all existing roles.", 
+            view=view, 
+            ephemeral=True
+        )
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="reset-bonus-config", description="[Admin] Reset bonus rules configuration")
     async def reset_bonus_config(self, interaction: discord.Interaction):
-        await file_handlers.save_json(settings.BONUS_RULES_FILE, settings.DEFAULT_BONUS_RULES)
-        await interaction.response.send_message("✅ Bonus rules configuration reset.", ephemeral=True)
+        async def reset_action(interaction: discord.Interaction):
+            await file_handlers.save_json(settings.BONUS_RULES_FILE, settings.DEFAULT_BONUS_RULES)
+            await interaction.response.edit_message(content="✅ Bonus rules configuration reset.", view=None)
+
+        view = ConfirmButton(reset_action, interaction.user.id)
+        await interaction.response.send_message(
+            "⚠️ Are you sure you want to reset the bonus rules configuration? This will delete all existing bonus rules.", 
+            view=view, 
+            ephemeral=True
+        )
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="reset-earnings-config", description="[Admin] Reset earnings configuration")
     async def reset_earnings_config(self, interaction: discord.Interaction):
-        await file_handlers.save_json(settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS)
-        await interaction.response.send_message("✅ Earnings configuration reset.", ephemeral=True)
+        async def reset_action(interaction: discord.Interaction):
+            await file_handlers.save_json(settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS)
+            await interaction.response.edit_message(content="✅ Earnings configuration reset.", view=None)
+
+        view = ConfirmButton(reset_action, interaction.user.id)
+        await interaction.response.send_message(
+            "⚠️ Are you sure you want to reset all earnings data? This will delete all existing earnings entries.", 
+            view=view, 
+            ephemeral=True
+        )
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="reset-models-config", description="[Admin] Reset models configuration")
     async def reset_models_config(self, interaction: discord.Interaction):
-        await file_handlers.save_json(settings.MODELS_DATA_FILE, settings.DEFAULT_MODELS_DATA)
-        await interaction.response.send_message("✅ Models configuration reset.", ephemeral=True)
+        async def reset_action(interaction: discord.Interaction):
+            await file_handlers.save_json(settings.MODELS_DATA_FILE, settings.DEFAULT_MODELS_DATA)
+            await interaction.response.edit_message(content="✅ Models configuration reset.", view=None)
 
-    # Restore Individual Backup Files
+        view = ConfirmButton(reset_action, interaction.user.id)
+        await interaction.response.send_message(
+            "⚠️ Are you sure you want to reset the models configuration? This will delete all existing models.", 
+            view=view, 
+            ephemeral=True
+        )
+
+    # Restore Backup Methods
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="restore-shift-backup", description="[Admin] Restore the latest shift configuration backup")
     async def restore_shift_backup(self, interaction: discord.Interaction):
-        backup_file = os.path.join(settings.DATA_DIRECTORY, f"{settings.SHIFT_DATA_FILE}.bak")
-        if os.path.exists(backup_file):
-            shutil.copy2(backup_file, os.path.join(settings.DATA_DIRECTORY, settings.SHIFT_DATA_FILE))
-            await interaction.response.send_message("✅ Shift configuration backup restored successfully.", ephemeral=True)
-        else:
-            await interaction.response.send_message("❌ No shift configuration backup found.", ephemeral=True)
+        async def restore_action(interaction: discord.Interaction):
+            backup_file = os.path.join(settings.DATA_DIRECTORY, f"{settings.SHIFT_DATA_FILE}.bak")
+            if os.path.exists(backup_file):
+                shutil.copy2(backup_file, os.path.join(settings.DATA_DIRECTORY, settings.SHIFT_DATA_FILE))
+                await interaction.response.edit_message(content="✅ Shift configuration backup restored successfully.", view=None)
+            else:
+                await interaction.response.edit_message(content="❌ No shift configuration backup found.", view=None)
 
-    @app_commands.default_permissions(administrator=True)
-    @app_commands.command(name="restore-bonus-backup", description="[Admin] Restore the latest bonus rules configuration backup")
-    async def restore_bonus_backup(self, interaction: discord.Interaction):
-        backup_file = os.path.join(settings.DATA_DIRECTORY, f"{settings.BONUS_RULES_FILE}.bak")
-        if os.path.exists(backup_file):
-            shutil.copy2(backup_file, os.path.join(settings.DATA_DIRECTORY, settings.BONUS_RULES_FILE))
-            await interaction.response.send_message("✅ Bonus rules configuration backup restored successfully.", ephemeral=True)
-        else:
-            await interaction.response.send_message("❌ No bonus rules configuration backup found.", ephemeral=True)
+        view = ConfirmButton(restore_action, interaction.user.id)
+        await interaction.response.send_message(
+            "⚠️ Are you sure you want to restore the shift configuration backup? This will replace the current configuration.", 
+            view=view, 
+            ephemeral=True
+        )
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="restore-period-backup", description="[Admin] Restore the latest period configuration backup")
     async def restore_period_backup(self, interaction: discord.Interaction):
-        backup_file = os.path.join(settings.DATA_DIRECTORY, f"{settings.PERIOD_DATA_FILE}.bak")
-        if os.path.exists(backup_file):
-            shutil.copy2(backup_file, os.path.join(settings.DATA_DIRECTORY, settings.PERIOD_DATA_FILE))
-            await interaction.response.send_message("✅ Period configuration backup restored successfully.", ephemeral=True)
-        else:
-            await interaction.response.send_message("❌ No period configuration backup found.", ephemeral=True)
+        async def restore_action(interaction: discord.Interaction):
+            backup_file = os.path.join(settings.DATA_DIRECTORY, f"{settings.PERIOD_DATA_FILE}.bak")
+            if os.path.exists(backup_file):
+                shutil.copy2(backup_file, os.path.join(settings.DATA_DIRECTORY, settings.PERIOD_DATA_FILE))
+                await interaction.response.edit_message(content="✅ Period configuration backup restored successfully.", view=None)
+            else:
+                await interaction.response.edit_message(content="❌ No period configuration backup found.", view=None)
+
+        view = ConfirmButton(restore_action, interaction.user.id)
+        await interaction.response.send_message(
+            "⚠️ Are you sure you want to restore the period configuration backup? This will replace the current configuration.", 
+            view=view, 
+            ephemeral=True
+        )
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="restore-role-backup", description="[Admin] Restore the latest role configuration backup")
     async def restore_role_backup(self, interaction: discord.Interaction):
-        backup_file = os.path.join(settings.DATA_DIRECTORY, f"{settings.ROLE_DATA_FILE}.bak")
-        if os.path.exists(backup_file):
-            shutil.copy2(backup_file, os.path.join(settings.DATA_DIRECTORY, settings.ROLE_DATA_FILE))
-            await interaction.response.send_message("✅ Role configuration backup restored successfully.", ephemeral=True)
-        else:
-            await interaction.response.send_message("❌ No role configuration backup found.", ephemeral=True)
+        async def restore_action(interaction: discord.Interaction):
+            backup_file = os.path.join(settings.DATA_DIRECTORY, f"{settings.ROLE_DATA_FILE}.bak")
+            if os.path.exists(backup_file):
+                shutil.copy2(backup_file, os.path.join(settings.DATA_DIRECTORY, settings.ROLE_DATA_FILE))
+                await interaction.response.edit_message(content="✅ Role configuration backup restored successfully.", view=None)
+            else:
+                await interaction.response.edit_message(content="❌ No role configuration backup found.", view=None)
+
+        view = ConfirmButton(restore_action, interaction.user.id)
+        await interaction.response.send_message(
+            "⚠️ Are you sure you want to restore the role configuration backup? This will replace the current configuration.", 
+            view=view, 
+            ephemeral=True
+        )
+
+    @app_commands.default_permissions(administrator=True)
+    @app_commands.command(name="restore-bonus-backup", description="[Admin] Restore the latest bonus rules configuration backup")
+    async def restore_bonus_backup(self, interaction: discord.Interaction):
+        async def restore_action(interaction: discord.Interaction):
+            backup_file = os.path.join(settings.DATA_DIRECTORY, f"{settings.BONUS_RULES_FILE}.bak")
+            if os.path.exists(backup_file):
+                shutil.copy2(backup_file, os.path.join(settings.DATA_DIRECTORY, settings.BONUS_RULES_FILE))
+                await interaction.response.edit_message(content="✅ Bonus rules configuration backup restored successfully.", view=None)
+            else:
+                await interaction.response.edit_message(content="❌ No bonus rules configuration backup found.", view=None)
+
+        view = ConfirmButton(restore_action, interaction.user.id)
+        await interaction.response.send_message(
+            "⚠️ Are you sure you want to restore the bonus rules configuration backup? This will replace the current configuration.", 
+            view=view, 
+            ephemeral=True
+        )
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="restore-earnings-backup", description="[Admin] Restore the latest earnings configuration backup")
     async def restore_earnings_backup(self, interaction: discord.Interaction):
-        backup_file = os.path.join(settings.DATA_DIRECTORY, f"{settings.EARNINGS_FILE}.bak")
-        if os.path.exists(backup_file):
-            shutil.copy2(backup_file, os.path.join(settings.DATA_DIRECTORY, settings.EARNINGS_FILE))
-            await interaction.response.send_message("✅ Earnings configuration backup restored successfully.", ephemeral=True)
-        else:
-            await interaction.response.send_message("❌ No earnings configuration backup found.", ephemeral=True)
+        async def restore_action(interaction: discord.Interaction):
+            backup_file = os.path.join(settings.DATA_DIRECTORY, f"{settings.EARNINGS_FILE}.bak")
+            if os.path.exists(backup_file):
+                shutil.copy2(backup_file, os.path.join(settings.DATA_DIRECTORY, settings.EARNINGS_FILE))
+                await interaction.response.edit_message(content="✅ Earnings configuration backup restored successfully.", view=None)
+            else:
+                await interaction.response.edit_message(content="❌ No earnings configuration backup found.", view=None)
+
+        view = ConfirmButton(restore_action, interaction.user.id)
+        await interaction.response.send_message(
+            "⚠️ Are you sure you want to restore the earnings configuration backup? This will replace the current configuration.", 
+            view=view, 
+            ephemeral=True
+        )
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="restore-models-backup", description="[Admin] Restore the latest models configuration backup")
     async def restore_models_backup(self, interaction: discord.Interaction):
-        backup_file = os.path.join(settings.DATA_DIRECTORY, f"{settings.MODELS_DATA_FILE}.bak")
-        if os.path.exists(backup_file):
-            shutil.copy2(backup_file, os.path.join(settings.DATA_DIRECTORY, settings.MODELS_DATA_FILE))
-            await interaction.response.send_message("✅ Models configuration backup restored successfully.", ephemeral=True)
-        else:
-            await interaction.response.send_message("❌ No models configuration backup found.", ephemeral=True)
+        async def restore_action(interaction: discord.Interaction):
+            backup_file = os.path.join(settings.DATA_DIRECTORY, f"{settings.MODELS_DATA_FILE}.bak")
+            if os.path.exists(backup_file):
+                shutil.copy2(backup_file, os.path.join(settings.DATA_DIRECTORY, settings.MODELS_DATA_FILE))
+                await interaction.response.edit_message(content="✅ Models configuration backup restored successfully.", view=None)
+            else:
+                await interaction.response.edit_message(content="❌ No models configuration backup found.", view=None)
+
+        view = ConfirmButton(restore_action, interaction.user.id)
+        await interaction.response.send_message(
+            "⚠️ Are you sure you want to restore the models configuration backup? This will replace the current configuration.", 
+            view=view, 
+            ephemeral=True
+        )
+
+class ConfirmButton(discord.ui.View):
+    def __init__(self, action_callback, user_id: int):
+        super().__init__()
+        self.action_callback = action_callback
+        self.user_id = user_id
+
+    @discord.ui.button(label="Confirm", style=discord.ButtonStyle.red)
+    async def confirm_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if interaction.user.id != self.user_id:
+            await interaction.response.send_message("You cannot use this button.", ephemeral=True)
+            return
+        
+        await self.action_callback(interaction)
+        self.stop()
+
+    @discord.ui.button(label="Cancel", style=discord.ButtonStyle.green)
+    async def cancel_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if interaction.user.id != self.user_id:
+            await interaction.response.send_message("You cannot use this button.", ephemeral=True)
+            return
+        
+        await interaction.response.edit_message(content="Action cancelled.", view=None)
+        self.stop()
 
 async def setup(bot):
     await bot.add_cog(AdminSlashCommands(bot))
