@@ -4,6 +4,8 @@ from typing import Dict, Any, List, Optional
 # Bot configuration
 BOT_PREFIX = "!"
 
+VERSION = "1.0.0"
+
 # File paths
 DATA_DIRECTORY = "data"
 ROLE_DATA_FILE = "role_percentages.json"

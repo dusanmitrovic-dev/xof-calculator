@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## [0.55.0] - 2025-03-04
+### Added
+- changes:
+    - new /help command for slash commands,
+    - new /view-earnings command that returns 25 latest entries for earnings,
+    - removed residual backup data files that were forgotten in previous versions.
+
 ## [0.54.0] - 2025-03-04
 ### Added
 - Added confirm and cancel buttons for reset and restore commands.

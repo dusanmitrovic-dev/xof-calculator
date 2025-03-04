@@ -298,6 +298,44 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             view=None
         )
 
+    @app_commands.command(
+        name="view-earnings",
+        description="View your earnings or earnings of a specified user"
+    )
+    async def view_earnings(self, interaction: discord.Interaction, user: Optional[discord.User] = None):
+        """Command to view earnings for yourself or a specified user"""
+        # Determine the target user
+        target_user = user if user else interaction.user
+        guild_id = str(interaction.guild.id)
+        
+        # Load earnings data
+        earnings_data = await file_handlers.load_json(settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS)
+        
+        # Check if the user has any earnings data
+        user_earnings = earnings_data.get(target_user.mention, [])[:25]
+        
+        if not user_earnings:
+            await interaction.response.send_message(f"❌ No earnings data found for {target_user.mention}.", ephemeral=True)
+            return
+        
+        # Create an embed to display earnings
+        embed = discord.Embed(title=f"📊 Earnings for {target_user.display_name} ({len(user_earnings)} entries)\n===============================", color=0x009933)
+        
+        for entry in user_earnings:
+            embed.add_field(
+                name=f"📅 {entry['date']} - {entry['period'].capitalize()}",
+                value=f"Gross Revenue: ${entry['gross_revenue']}\n"
+                      f"Total Cut: ${entry['total_cut']}\n"
+                      f"Shift: {entry['shift']}\n"
+                      f"Role: {entry['role']}\n"
+                      f"Models: {entry['models'] or 'None'}"
+                      f"\n===============================",
+                inline=False
+            )
+        
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+
+
 
 # View classes remain unchanged
 class PeriodSelectionView(ui.View):
