@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+## [0.47.0] - 2025-03-04
+### Fixed
+- `restore-bonus-backup` command fixed.
+
+## [0.46.0] - 2025-03-04
+### Fixed
+- Indentation on line 23 in `admin_slash.py.
+
 ## [0.45.0] - 2025-03-04
 ### Added
 New admin slash commands:
