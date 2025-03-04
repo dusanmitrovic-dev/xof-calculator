@@ -16,7 +16,7 @@
 
 ## [0.48.0] - 2025-03-04
 ### Fixed
-- `restore-shift-backup` command fixed.
+- `restore-shift-backup` command fixed, correct file path is being used.
 
 ## [0.47.0] - 2025-03-04
 ### Fixed
