@@ -654,6 +654,12 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         await file_handlers.save_json(settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS)
         await interaction.response.send_message("✅ Earnings configuration reset.", ephemeral=True)
 
+    @app_commands.default_permissions(administrator=True)
+    @app_commands.command(name="reset-models-config", description="[Admin] Reset models configuration")
+    async def reset_models_config(self, interaction: discord.Interaction):
+        await file_handlers.save_json(settings.MODELS_DATA_FILE, settings.DEFAULT_MODELS_DATA)
+        await interaction.response.send_message("✅ Models configuration reset.", ephemeral=True)
+
     # Restore Individual Backup Files
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="restore-shift-backup", description="[Admin] Restore the latest shift configuration backup")

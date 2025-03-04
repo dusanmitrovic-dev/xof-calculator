@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.52.0] - 2025-03-04
+### Added
+- New admin slash command `reset-models-config`.
+
 ## [0.51.0] - 2025-03-04
 ### Fixed
 - `restore-earnings-backup` command fixed, correct file path is being used.
