@@ -225,8 +225,8 @@
     - [x] (v0.45.0) `restore-role-backup`,
     - [x] (v0.45.0) `restore-bonus-backup`,
     - [x] (v0.45.0) `restore-earnings-backup`.
-- [x] (v0.54.0) `help` list slash commands for admins and normal users
-- [x] (v0.54.0) `view-earnings` view your earnings or earnings of a specified user
+- [x] (v0.55.0) `help` list slash commands for admins and normal users
+- [x] (v0.55.0) `view-earnings` view your earnings or earnings of a specified user
 
 ## FUTURE IMPROVEMENTS
 
