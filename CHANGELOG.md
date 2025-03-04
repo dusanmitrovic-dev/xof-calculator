@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.49.0] - 2025-03-04
+### Fixed
+- `restore-period-backup` command fixed.
+
 ## [0.48.0] - 2025-03-04
 ### Fixed
 - `restore-shift-backup` command fixed.

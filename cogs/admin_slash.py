@@ -676,6 +676,16 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             await interaction.response.send_message("❌ No bonus rules configuration backup found.", ephemeral=True)
 
     @app_commands.default_permissions(administrator=True)
+    @app_commands.command(name="restore-period-backup", description="[Admin] Restore the latest period configuration backup")
+    async def restore_period_backup(self, interaction: discord.Interaction):
+        backup_file = os.path.join(settings.DATA_DIRECTORY, f"{settings.PERIOD_DATA_FILE}.bak")
+        if os.path.exists(backup_file):
+            shutil.copy2(backup_file, os.path.join(settings.DATA_DIRECTORY, settings.PERIOD_DATA_FILE))
+            await interaction.response.send_message("✅ Period configuration backup restored successfully.", ephemeral=True)
+        else:
+            await interaction.response.send_message("❌ No period configuration backup found.", ephemeral=True)
+
+    @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="restore-role-backup", description="[Admin] Restore the latest role configuration backup")
     async def restore_role_backup(self, interaction: discord.Interaction):
         backup_file = f"{settings.ROLE_DATA_FILE}.bak"
