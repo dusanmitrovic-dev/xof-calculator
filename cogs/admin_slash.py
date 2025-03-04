@@ -623,5 +623,102 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         view.children[0].callback = button_callback
         await interaction.response.send_message("⚠️ Are you sure you want to restore the latest backup? This will overwrite current data.", view=view, ephemeral=True)
 
+    # Reset Individual Config Files
+    @app_commands.default_permissions(administrator=True)
+    @app_commands.command(name="reset-shift-config", description="[Admin] Reset shift configuration")
+    async def reset_shift_config(self, interaction: discord.Interaction):
+        await self.file_handlers.save_json(self.settings.SHIFT_DATA_FILE, self.settings.DEFAULT_SHIFT_DATA)
+        await interaction.response.send_message("✅ Shift configuration reset.", ephemeral=True)
+
+    @app_commands.default_permissions(administrator=True)
+    @app_commands.command(name="reset-period-config", description="[Admin] Reset period configuration")
+    async def reset_period_config(self, interaction: discord.Interaction):
+        await self.file_handlers.save_json(self.settings.PERIOD_DATA_FILE, self.settings.DEFAULT_PERIOD_DATA)
+        await interaction.response.send_message("✅ Period configuration reset.", ephemeral=True)
+
+    @app_commands.default_permissions(administrator=True)
+    @app_commands.command(name="reset-role-config", description="[Admin] Reset role configuration")
+    async def reset_role_config(self, interaction: discord.Interaction):
+        await self.file_handlers.save_json(self.settings.ROLE_DATA_FILE, self.settings.DEFAULT_ROLE_DATA)
+        await interaction.response.send_message("✅ Role configuration reset.", ephemeral=True)
+
+    @app_commands.default_permissions(administrator=True)
+    @app_commands.command(name="reset-bonus-config", description="[Admin] Reset bonus rules configuration")
+    async def reset_bonus_config(self, interaction: discord.Interaction):
+        await self.file_handlers.save_json(self.settings.BONUS_RULES_FILE, self.settings.DEFAULT_BONUS_RULES)
+        await interaction.response.send_message("✅ Bonus rules configuration reset.", ephemeral=True)
+
+    @app_commands.default_permissions(administrator=True)
+    @app_commands.command(name="reset-earnings-config", description="[Admin] Reset earnings configuration")
+    async def reset_earnings_config(self, interaction: discord.Interaction):
+        await self.file_handlers.save_json(self.settings.EARNINGS_FILE, self.settings.DEFAULT_EARNINGS)
+        await interaction.response.send_message("✅ Earnings configuration reset.", ephemeral=True)
+
+
+    # Restore Individual Backup Files
+    @app_commands.default_permissions(administrator=True)
+    @app_commands.command(name="restore-shift-backup", description="[Admin] Restore the latest shift configuration backup")
+    async def restore_shift_backup(self, interaction: discord.Interaction):
+        backup_file = f"{self.settings.SHIFT_DATA_FILE}.bak"
+        try:
+            if os.path.exists(backup_file):
+                shutil.copy2(backup_file, self.settings.SHIFT_DATA_FILE)
+                await interaction.response.send_message("✅ Shift configuration backup restored successfully.", ephemeral=True)
+            else:
+                await interaction.response.send_message("❌ No shift configuration backup found.", ephemeral=True)
+        except Exception as e:
+            await interaction.response.send_message(f"❌ Failed to restore shift configuration backup: {str(e)}", ephemeral=True)
+
+    @app_commands.default_permissions(administrator=True)
+    @app_commands.command(name="restore-period-backup", description="[Admin] Restore the latest period configuration backup")
+    async def restore_period_backup(self, interaction: discord.Interaction):
+        backup_file = f"{self.settings.PERIOD_DATA_FILE}.bak"
+        try:
+            if os.path.exists(backup_file):
+                shutil.copy2(backup_file, self.settings.PERIOD_DATA_FILE)
+                await interaction.response.send_message("✅ Period configuration backup restored successfully.", ephemeral=True)
+            else:
+                await interaction.response.send_message("❌ No period configuration backup found.", ephemeral=True)
+        except Exception as e:
+            await interaction.response.send_message(f"❌ Failed to restore period configuration backup: {str(e)}", ephemeral=True)
+
+    @app_commands.default_permissions(administrator=True)
+    @app_commands.command(name="restore-role-backup", description="[Admin] Restore the latest role configuration backup")
+    async def restore_role_backup(self, interaction: discord.Interaction):
+        backup_file = f"{self.settings.ROLE_DATA_FILE}.bak"
+        try:
+            if os.path.exists(backup_file):
+                shutil.copy2(backup_file, self.settings.ROLE_DATA_FILE)
+                await interaction.response.send_message("✅ Role configuration backup restored successfully.", ephemeral=True)
+            else:
+                await interaction.response.send_message("❌ No role configuration backup found.", ephemeral=True)
+        except Exception as e:
+            await interaction.response.send_message(f"❌ Failed to restore role configuration backup: {str(e)}", ephemeral=True)
+
+    @app_commands.default_permissions(administrator=True)
+    @app_commands.command(name="restore-bonus-backup", description="[Admin] Restore the latest bonus rules configuration backup")
+    async def restore_bonus_backup(self, interaction: discord.Interaction):
+        backup_file = f"{self.settings.BONUS_RULES_FILE}.bak"
+        try:
+            if os.path.exists(backup_file):
+                shutil.copy2(backup_file, self.settings.BONUS_RULES_FILE)
+                await interaction.response.send_message("✅ Bonus rules configuration backup restored successfully.", ephemeral=True)
+            else:
+                await interaction.response.send_message("❌ No bonus rules configuration backup found.", ephemeral=True)
+        except Exception as e:
+            await interaction.response.send_message(f"❌ Failed to restore bonus rules configuration backup: {str(e)}", ephemeral=True)
+
+    @app_commands.default_permissions(administrator=True)
+    @app_commands.command(name="restore-earnings-backup", description="[Admin] Restore the latest earnings configuration backup")
+    async def restore_earnings_backup(self, interaction: discord.Interaction):
+        backup_file = f"{self.settings.EARNINGS_FILE}.bak"
+        try:
+            if os.path.exists(backup_file):
+                shutil.copy2(backup_file, self.settings.EARNINGS_FILE)
+                await interaction.response.send_message("✅ Earnings configuration backup restored successfully.", ephemeral=True)
+            else:
+                await interaction.response.send_message("❌ No earnings configuration backup found.", ephemeral=True)
+        except Exception as e:
+            await interaction.response.send_message(f"❌ Failed to restore earnings configuration backup: {str(e)}", ephemeral=True)
 async def setup(bot):
     await bot.add_cog(AdminSlashCommands(bot))

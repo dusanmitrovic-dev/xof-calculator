@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+## [0.45.0] - 2025-03-04
+### Added
+New admin slash commands:
+- Reset Individual Config Files:
+    - reset-shift-config,
+    - reset-period-config,
+    - reset-role-config,
+    - reset-bonus-config,
+    - reset-earnings-config,
+- Restore Individual Backup Files:
+    - restore-shift-backup,
+    - restore-period-backup,
+    - restore-role-backup,
+    - restore-bonus-backup,
+    - restore-earnings-backup.
+
 ## [0.44.0] - 2025-03-04
 ### Rollback
 - Rolled back to `v0.34.0` due to unnecessary error handling that already exists in `main.py`,

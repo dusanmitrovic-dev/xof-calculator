@@ -213,6 +213,18 @@
 - [x] (❌) (v0.41.0) `set-shift` better error handling
 - [x] (❌) (v0.42.0) `remove-shift` better error handling
 - [x] (❌) (v0.43.0) `set-period` better error handling
+- [x] (v0.45.0) Reset Individual Config Files:
+    - [x] (v0.45.0) reset-shift-config,
+    - [x] (v0.45.0) reset-period-config,
+    - [x] (v0.45.0) reset-role-config,
+    - [x] (v0.45.0) reset-bonus-config,
+    - [x] (v0.45.0) reset-earnings-config,
+- [x] (v0.45.0) Restore Individual Backup Files:
+    - [x] (v0.45.0) restore-shift-backup,
+    - [x] (v0.45.0) restore-period-backup,
+    - [x] (v0.45.0) restore-role-backup,
+    - [x] (v0.45.0) restore-bonus-backup,
+    - [x] (v0.45.0) restore-earnings-backup.
 
 ## FUTURE IMPROVEMENTS
 
