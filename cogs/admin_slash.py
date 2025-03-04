@@ -686,17 +686,6 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             await interaction.response.send_message("❌ No role configuration backup found.", ephemeral=True)
 
     @app_commands.default_permissions(administrator=True)
-    @app_commands.command(name="restore-bonus-backup", description="[Admin] Restore the latest bonus rules configuration backup")
-    async def restore_bonus_backup(self, interaction: discord.Interaction):
-        backup_file = os.path.join(settings.DATA_DIRECTORY, f"{settings.BONUS_RULES_FILE}.bak")
-        print(backup_file)
-        if os.path.exists(backup_file):
-            shutil.copy2(backup_file, settings.BONUS_RULES_FILE)
-            await interaction.response.send_message("✅ Bonus rules configuration backup restored successfully.", ephemeral=True)
-        else:
-            await interaction.response.send_message("❌ No bonus rules configuration backup found.", ephemeral=True)
-
-    @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="restore-earnings-backup", description="[Admin] Restore the latest earnings configuration backup")
     async def restore_earnings_backup(self, interaction: discord.Interaction):
         backup_file = f"{settings.EARNINGS_FILE}.bak"
