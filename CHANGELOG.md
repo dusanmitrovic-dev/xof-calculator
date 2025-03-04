@@ -12,7 +12,7 @@
 
 ## [0.49.0] - 2025-03-04
 ### Fixed
-- `restore-period-backup` command fixed.
+- `restore-period-backup` command fixed, correct file path is being used.
 
 ## [0.48.0] - 2025-03-04
 ### Fixed
