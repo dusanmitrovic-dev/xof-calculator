@@ -134,31 +134,35 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=True)
             return
         
-        logger.info(f"User {interaction.user.name} ({interaction.user.id}) used set-role command for role {role.name} with percentage {percentage}")
-        
-        percentage_decimal = validators.validate_percentage(percentage)
-        if percentage_decimal is None:
-            logger.warning(f"Invalid percentage '{percentage}' provided by {interaction.user.name}")
-            await interaction.response.send_message("❌ Percentage must be a valid number between 0 and 100.")
-            return
-        
-        guild_id = str(interaction.guild.id)
-        role_id = str(role.id)
-        
-        role_data = await file_handlers.load_json(settings.ROLE_DATA_FILE, settings.DEFAULT_ROLE_DATA)
-        
-        if guild_id not in role_data:
-            role_data[guild_id] = {}
-        role_data[guild_id][role_id] = float(percentage_decimal)
-        
-        success = await file_handlers.save_json(settings.ROLE_DATA_FILE, role_data)
-        
-        if success:
-            logger.info(f"Role {role.name} ({role_id}) percentage set to {percentage_decimal}% by {interaction.user.name}")
-            await interaction.response.send_message(f"✅ {role.name} now has {percentage_decimal}% cut!")
-        else:
-            logger.error(f"Failed to save role data for {role.name} ({role_id}) by {interaction.user.name}")
-            await interaction.response.send_message("❌ Failed to save role data. Please try again later.")
+        try:
+            logger.info(f"User {interaction.user.name} ({interaction.user.id}) used set-role command for role {role.name} with percentage {percentage}")
+            
+            percentage_decimal = validators.validate_percentage(percentage)
+            if percentage_decimal is None:
+                logger.warning(f"Invalid percentage '{percentage}' provided by {interaction.user.name}")
+                await interaction.response.send_message("❌ Percentage must be a valid number between 0 and 100.")
+                return
+            
+            guild_id = str(interaction.guild.id)
+            role_id = str(role.id)
+            
+            role_data = await file_handlers.load_json(settings.ROLE_DATA_FILE, settings.DEFAULT_ROLE_DATA)
+            
+            if guild_id not in role_data:
+                role_data[guild_id] = {}
+            role_data[guild_id][role_id] = float(percentage_decimal)
+            
+            success = await file_handlers.save_json(settings.ROLE_DATA_FILE, role_data)
+            
+            if success:
+                logger.info(f"Role {role.name} ({role_id}) percentage set to {percentage_decimal}% by {interaction.user.name}")
+                await interaction.response.send_message(f"✅ {role.name} now has {percentage_decimal}% cut!")
+            else:
+                logger.error(f"Failed to save role data for {role.name} ({role_id}) by {interaction.user.name}")
+                await interaction.response.send_message("❌ Failed to save role data. Please try again later.")
+        except Exception as e:
+            logger.error(f"Error in set_role: {str(e)}")
+            await interaction.response.send_message("❌ An unexpected error occurred. See logs for details.", ephemeral=True)
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="remove-role", description="[Admin] Remove a role's percentage configuration")
@@ -168,27 +172,31 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=True)
             return
         
-        logger.info(f"User {interaction.user.name} ({interaction.user.id}) used remove-role command for role {role.name}")
-        
-        guild_id = str(interaction.guild.id)
-        role_id = str(role.id)
-        
-        role_data = await file_handlers.load_json(settings.ROLE_DATA_FILE, settings.DEFAULT_ROLE_DATA)
-        
-        if guild_id not in role_data or role_id not in role_data[guild_id]:
-            logger.warning(f"Role {role.name} ({role_id}) not found in configuration")
-            await interaction.response.send_message(f"❌ {role.name} does not have a configured percentage.")
-            return
-        
-        del role_data[guild_id][role_id]
-        success = await file_handlers.save_json(settings.ROLE_DATA_FILE, role_data)
-        
-        if success:
-            logger.info(f"Role {role.name} ({role_id}) removed from configuration")
-            await interaction.response.send_message(f"✅ {role.name} has been removed from percentage configuration!")
-        else:
-            logger.error(f"Failed to remove role {role.name} ({role_id})")
-            await interaction.response.send_message("❌ Failed to save role data. Please try again later.")
+        try:
+            logger.info(f"User {interaction.user.name} ({interaction.user.id}) used remove-role command for role {role.name}")
+            
+            guild_id = str(interaction.guild.id)
+            role_id = str(role.id)
+            
+            role_data = await file_handlers.load_json(settings.ROLE_DATA_FILE, settings.DEFAULT_ROLE_DATA)
+            
+            if guild_id not in role_data or role_id not in role_data[guild_id]:
+                logger.warning(f"Role {role.name} ({role_id}) not found in configuration")
+                await interaction.response.send_message(f"❌ {role.name} does not have a configured percentage.")
+                return
+            
+            del role_data[guild_id][role_id]
+            success = await file_handlers.save_json(settings.ROLE_DATA_FILE, role_data)
+            
+            if success:
+                logger.info(f"Role {role.name} ({role_id}) removed from configuration")
+                await interaction.response.send_message(f"✅ {role.name} has been removed from percentage configuration!")
+            else:
+                logger.error(f"Failed to remove role {role.name} ({role_id})")
+                await interaction.response.send_message("❌ Failed to save role data. Please try again later.")
+        except Exception as e:
+            logger.error(f"Error in remove_role: {str(e)}")
+            await interaction.response.send_message("❌ An unexpected error occurred. See logs for details.", ephemeral=True)
 
     # Shift Management
     @app_commands.default_permissions(administrator=True)
@@ -199,27 +207,31 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=True)
             return
         
-        logger.info(f"User {interaction.user.name} used set-shift command for shift '{shift}'")
-        
-        if not shift.strip():
-            await interaction.response.send_message("❌ Shift name cannot be empty.")
-            return
+        try:
+            logger.info(f"User {interaction.user.name} used set-shift command for shift '{shift}'")
             
-        guild_id = str(interaction.guild.id)
-        shift_data = await file_handlers.load_json(settings.SHIFT_DATA_FILE, settings.DEFAULT_SHIFT_DATA)
-        existing_shifts = shift_data.get(guild_id, [])
-        
-        if validators.validate_shift(shift, existing_shifts) is not None:
-            await interaction.response.send_message(f"❌ Shift '{shift}' already exists!")
-            return
-        
-        shift_data.setdefault(guild_id, []).append(shift)
-        success = await file_handlers.save_json(settings.SHIFT_DATA_FILE, shift_data)
-        
-        if success:
-            await interaction.response.send_message(f"✅ Shift '{shift}' added!")
-        else:
-            await interaction.response.send_message("❌ Failed to save shift data. Please try again later.")
+            if not shift.strip():
+                await interaction.response.send_message("❌ Shift name cannot be empty.")
+                return
+                
+            guild_id = str(interaction.guild.id)
+            shift_data = await file_handlers.load_json(settings.SHIFT_DATA_FILE, settings.DEFAULT_SHIFT_DATA)
+            existing_shifts = shift_data.get(guild_id, [])
+            
+            if validators.validate_shift(shift, existing_shifts) is not None:
+                await interaction.response.send_message(f"❌ Shift '{shift}' already exists!")
+                return
+            
+            shift_data.setdefault(guild_id, []).append(shift)
+            success = await file_handlers.save_json(settings.SHIFT_DATA_FILE, shift_data)
+            
+            if success:
+                await interaction.response.send_message(f"✅ Shift '{shift}' added!")
+            else:
+                await interaction.response.send_message("❌ Failed to save shift data. Please try again later.")
+        except Exception as e:
+            logger.error(f"Error in set_shift: {str(e)}")
+            await interaction.response.send_message("❌ An unexpected error occurred. See logs for details.", ephemeral=True)
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="remove-shift", description="[Admin] Remove a shift configuration")
@@ -229,22 +241,26 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=True)
             return
         
-        guild_id = str(interaction.guild.id)
-        shift_data = await file_handlers.load_json(settings.SHIFT_DATA_FILE, settings.DEFAULT_SHIFT_DATA)
-        existing_shifts = shift_data.get(guild_id, [])
-        
-        normalized_shift = validators.validate_shift(shift, existing_shifts)
-        if normalized_shift is None:
-            await interaction.response.send_message(f"❌ Shift '{shift}' doesn't exist!")
-            return
-        
-        shift_data[guild_id].remove(normalized_shift)
-        success = await file_handlers.save_json(settings.SHIFT_DATA_FILE, shift_data)
-        
-        if success:
-            await interaction.response.send_message(f"✅ Shift '{normalized_shift}' removed!")
-        else:
-            await interaction.response.send_message("❌ Failed to save shift data. Please try again later.")
+        try:
+            guild_id = str(interaction.guild.id)
+            shift_data = await file_handlers.load_json(settings.SHIFT_DATA_FILE, settings.DEFAULT_SHIFT_DATA)
+            existing_shifts = shift_data.get(guild_id, [])
+            
+            normalized_shift = validators.validate_shift(shift, existing_shifts)
+            if normalized_shift is None:
+                await interaction.response.send_message(f"❌ Shift '{shift}' doesn't exist!")
+                return
+            
+            shift_data[guild_id].remove(normalized_shift)
+            success = await file_handlers.save_json(settings.SHIFT_DATA_FILE, shift_data)
+            
+            if success:
+                await interaction.response.send_message(f"✅ Shift '{normalized_shift}' removed!")
+            else:
+                await interaction.response.send_message("❌ Failed to save shift data. Please try again later.")
+        except Exception as e:
+            logger.error(f"Error in remove_shift: {str(e)}")
+            await interaction.response.send_message("❌ An unexpected error occurred. See logs for details.", ephemeral=True)
 
     # Period Management
     @app_commands.default_permissions(administrator=True)
@@ -255,25 +271,29 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=True)
             return
         
-        if not period.strip():
-            await interaction.response.send_message("❌ Period name cannot be empty.")
-            return
+        try:
+            if not period.strip():
+                await interaction.response.send_message("❌ Period name cannot be empty.")
+                return
+                
+            guild_id = str(interaction.guild.id)
+            period_data = await file_handlers.load_json(settings.PERIOD_DATA_FILE, settings.DEFAULT_PERIOD_DATA)
+            existing_periods = period_data.get(guild_id, [])
             
-        guild_id = str(interaction.guild.id)
-        period_data = await file_handlers.load_json(settings.PERIOD_DATA_FILE, settings.DEFAULT_PERIOD_DATA)
-        existing_periods = period_data.get(guild_id, [])
-        
-        if validators.validate_period(period, existing_periods) is not None:
-            await interaction.response.send_message(f"❌ Period '{period}' already exists!")
-            return
-        
-        period_data.setdefault(guild_id, []).append(period)
-        success = await file_handlers.save_json(settings.PERIOD_DATA_FILE, period_data)
-        
-        if success:
-            await interaction.response.send_message(f"✅ Period '{period}' added!")
-        else:
-            await interaction.response.send_message("❌ Failed to save period data. Please try again later.")
+            if validators.validate_period(period, existing_periods) is not None:
+                await interaction.response.send_message(f"❌ Period '{period}' already exists!")
+                return
+            
+            period_data.setdefault(guild_id, []).append(period)
+            success = await file_handlers.save_json(settings.PERIOD_DATA_FILE, period_data)
+            
+            if success:
+                await interaction.response.send_message(f"✅ Period '{period}' added!")
+            else:
+                await interaction.response.send_message("❌ Failed to save period data. Please try again later.")
+        except Exception as e:
+            logger.error(f"Error in set_period: {str(e)}")
+            await interaction.response.send_message("❌ An unexpected error occurred. See logs for details.", ephemeral=True)
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="remove-period", description="[Admin] Remove a period configuration")
