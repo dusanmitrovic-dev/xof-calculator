@@ -8,7 +8,7 @@
 
 ## [0.50.0] - 2025-03-04
 ### Fixed
-- `restore-role-backup` command fixed.
+- `restore-role-backup` command fixed, correct file path is being used.
 
 ## [0.49.0] - 2025-03-04
 ### Fixed
