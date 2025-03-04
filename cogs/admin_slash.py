@@ -711,5 +711,15 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         else:
             await interaction.response.send_message("❌ No earnings configuration backup found.", ephemeral=True)
 
+    @app_commands.default_permissions(administrator=True)
+    @app_commands.command(name="restore-models-backup", description="[Admin] Restore the latest models configuration backup")
+    async def restore_models_backup(self, interaction: discord.Interaction):
+        backup_file = os.path.join(settings.DATA_DIRECTORY, f"{settings.MODELS_DATA_FILE}.bak")
+        if os.path.exists(backup_file):
+            shutil.copy2(backup_file, os.path.join(settings.DATA_DIRECTORY, settings.MODELS_DATA_FILE))
+            await interaction.response.send_message("✅ Models configuration backup restored successfully.", ephemeral=True)
+        else:
+            await interaction.response.send_message("❌ No models configuration backup found.", ephemeral=True)
+
 async def setup(bot):
     await bot.add_cog(AdminSlashCommands(bot))

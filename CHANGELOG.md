@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.53.0] - 2025-03-04
+### Added
+- New admin slash command `restore-models-backup`.
+
 ## [0.52.0] - 2025-03-04
 ### Added
 - New admin slash command `reset-models-config`.
