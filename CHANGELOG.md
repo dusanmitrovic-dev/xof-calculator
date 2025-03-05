@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.60.0] - 2025-03-05
+### Changed
+- Modified `calculate_hourly_earnings` method to align with already used logic.
+
 ## [0.59.0] - 2025-03-05
 ### Added
 - Implemented `calculate_hourly_earnings` method.

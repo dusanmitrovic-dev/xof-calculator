@@ -212,11 +212,11 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             )
         
         # Calculate earnings
-        results = calculations.calculate_earnings(
-            gross_revenue,
-            percentage,
-            bonus_rule_objects
-        )
+        # results = calculations.calculate_earnings(
+        #     gross_revenue,
+        #     percentage,
+        #     bonus_rule_objects
+        # )
         
         # Log calculation preview
         logger.info(f"Calculation preview for {interaction.user.name}: Gross=${results['gross_revenue']}, Net=${results['net_revenue']}, Total Cut=${results['total_cut']}")

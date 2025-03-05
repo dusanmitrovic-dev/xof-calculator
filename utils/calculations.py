@@ -81,9 +81,18 @@ def calculate_earnings(
 
 def calculate_hourly_earnings(hours: Decimal, hourly_rate: Decimal, bonus_rules: List[Dict[str, Decimal]]) -> Dict[str, Decimal]:
     gross_revenue = hours * hourly_rate
-    total_cut = gross_revenue
+    net_revenue = 0
+    platform_fee = 0
+    employee_cut = gross_revenue
+    bonus = 0
+    total_cut = employee_cut
     
     return {
+        "gross_revenue": gross_revenue,
+        "net_revenue": net_revenue,
+        "platform_fee": platform_fee,
+        "employee_cut": employee_cut,
+        "bonus": bonus,
         "total_cut": total_cut
     }
 
