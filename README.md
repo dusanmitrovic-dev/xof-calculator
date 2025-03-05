@@ -254,7 +254,6 @@
 - [ ] Calculate priority
     - [ ] (HIGHEST) User commission and hourly
     - [ ] (MEDIUM) Role commission and hourly
-    - [ ] (LOWEST) Percentage settings default logic (necessary?)
 - [ ] Modify existing earnings calculation to use commission settings
 - [ ] Implement rate selection logic:
   - User-specific rates with override
