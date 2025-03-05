@@ -171,7 +171,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         guild_id = str(interaction.guild_id)
         
         # Get role percentage from configuration
-        role_data = await file_handlers.load_json(settings.ROLE_DATA_FILE, settings.DEFAULT_ROLE_DATA)
+        role_data = await file_handlers.load_json(settings.ROLE_DATA_FILE, settings.DEFAULT_ROLE_DATA) # todo use new logic for commission
         percentage = Decimal(str(role_data[guild_id][str(role.id)])) # default percentage calculation
         
         # Load bonus rules
@@ -187,6 +187,29 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                 "amount": Decimal(str(rule.get("amount", 0)))
             }
             bonus_rule_objects.append(rule_obj)
+
+        # Calculate earnings based on compensation type
+        if compensation_type == "commission":
+            results = calculations.calculate_earnings(
+                gross_revenue,
+                percentage,
+                bonus_rule_objects
+            )
+        elif compensation_type == "hourly":
+            # Calculate hourly earnings
+            results = calculations.calculate_hourly_earnings(
+                gross_revenue,
+                role_data[guild_id][str(role.id)].get("hourly_rate", 0),
+                bonus_rule_objects
+            )
+        elif compensation_type == "both":
+            # Calculate both commission and hourly earnings
+            results = calculations.calculate_combined_earnings(
+                gross_revenue,
+                percentage,
+                role_data[guild_id][str(role.id)].get("hourly_rate", 0),
+                bonus_rule_objects
+            )
         
         # Calculate earnings
         results = calculations.calculate_earnings(
