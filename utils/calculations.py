@@ -79,6 +79,14 @@ def calculate_earnings(
         "total_cut": total_cut
     }
 
+def calculate_hourly_earnings(hours: Decimal, hourly_rate: Decimal, bonus_rules: List[Dict[str, Decimal]]) -> Dict[str, Decimal]:
+    gross_revenue = hours * hourly_rate
+    total_cut = gross_revenue
+    
+    return {
+        "total_cut": total_cut
+    }
+
 def get_total_earnings(earnings_data: List[Dict], period: str, from_date: Optional[str] = None, to_date: Optional[str] = None) -> Decimal:
     """
     Calculate total earnings from a list of earnings data

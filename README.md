@@ -249,10 +249,11 @@
 - [x] (v0.58.0) Add compensation step to the workflow
 
 ## Calculation Logic Integration
+- [x] (v0.59.0) `calculate_hourly_earnings` method
 - [ ] Calculate priority
     - [ ] (HIGHEST) User commission and hourly
     - [ ] (MEDIUM) Role commission and hourly
-    - [ ] (LOWEST) Percentage settings default logic
+    - [ ] (LOWEST) Percentage settings default logic (necessary?)
 - [ ] Modify existing earnings calculation to use commission settings
 - [ ] Implement rate selection logic:
   - User-specific rates with override

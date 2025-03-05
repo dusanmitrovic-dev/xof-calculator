@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.59.0] - 2025-03-05
+### Added
+- Implemented `calculate_hourly_earnings` method.
+
 ## [0.58.0] - 2025-03-05
 ### Added
 - Compensation step to the workflow.
