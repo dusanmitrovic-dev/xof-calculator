@@ -172,7 +172,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         
         # Get role percentage from configuration
         role_data = await file_handlers.load_json(settings.ROLE_DATA_FILE, settings.DEFAULT_ROLE_DATA)
-        percentage = Decimal(str(role_data[guild_id][str(role.id)]))
+        percentage = Decimal(str(role_data[guild_id][str(role.id)])) # default percentage calculation
         
         # Load bonus rules
         bonus_rules = await file_handlers.load_json(settings.BONUS_RULES_FILE, settings.DEFAULT_BONUS_RULES)

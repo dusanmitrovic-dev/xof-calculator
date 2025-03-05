@@ -249,6 +249,10 @@
 - [x] (v0.58.0) Add compensation step to the workflow
 
 ## Calculation Logic Integration
+- [ ] Calculate priority
+    - [ ] (HIGHEST) User commission and hourly
+    - [ ] (MEDIUM) Role commission and hourly
+    - [ ] (LOWEST) Percentage settings default logic
 - [ ] Modify existing earnings calculation to use commission settings
 - [ ] Implement rate selection logic:
   - User-specific rates with override
