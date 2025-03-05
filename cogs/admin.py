@@ -12,10 +12,6 @@ logger = logging.getLogger("xof_calculator.admin")
 class AdminCommands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        
-    async def cog_check(self, ctx):
-        """Check if user has administrator permissions for all commands in this cog"""
-        return ctx.author.guild_permissions.administrator
     
     @commands.command(name="set-role")
     async def role_set(self, ctx, role: discord.Role = commands.parameter(description="The role to set the percentage for"), percentage: str = commands.parameter(description="The percentage cut for the role")):
