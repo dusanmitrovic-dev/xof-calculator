@@ -43,10 +43,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
     def __init__(self, bot):
         self.bot = bot
         super().__init__()
-
-    async def cog_check(self, ctx):
-        """Check if user has administrator permissions for all commands in this cog"""
-        return ctx.author.guild_permissions.administrator
     
     # New interactive slash command
     @app_commands.command(
@@ -64,7 +60,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
 
     async def start_period_selection(self, interaction: discord.Interaction, compensation_type: str):
         """First step: Period selection"""
-        
+
         guild_id = str(interaction.guild_id)
         
         # Load period data
