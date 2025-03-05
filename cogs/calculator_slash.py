@@ -163,7 +163,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
     async def preview_calculation(self, interaction: discord.Interaction, period: str, shift: str, role: discord.Role, 
                                 gross_revenue: Decimal, selected_models: List[str], compensation_type: str):
         """Preview calculation and show confirmation options"""
-        print("COMPENSATION: ", compensation_type)
 
         # Log selected models
         logger.info(f"User {interaction.user.name} ({interaction.user.id}) selected models: {', '.join(selected_models) if selected_models else 'None'}")
