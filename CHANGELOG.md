@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.58.0] - 2025-03-05
+### Added
+- Compensation step to the workflow.
+
 ## [0.57.0] - 2025-03-05
 ### Added
 - New commands:

@@ -14,6 +14,31 @@ from utils import file_handlers, validators, calculations
 
 logger = logging.getLogger("xof_calculator.calculator")
 
+class CompensationTypeSelectionView(ui.View):
+    def __init__(self, cog):
+        super().__init__(timeout=180)
+        self.cog = cog
+        
+        # Add buttons for each compensation type
+        commission_button = ui.Button(label="Commission", style=discord.ButtonStyle.primary)
+        commission_button.callback = lambda i: self.on_compensation_selected(i, "commission")
+        self.add_item(commission_button)
+        
+        hourly_button = ui.Button(label="Hourly", style=discord.ButtonStyle.primary)
+        hourly_button.callback = lambda i: self.on_compensation_selected(i, "hourly")
+        self.add_item(hourly_button)
+        
+        both_button = ui.Button(label="Both", style=discord.ButtonStyle.primary)
+        both_button.callback = lambda i: self.on_compensation_selected(i, "both")
+        self.add_item(both_button)
+    
+    async def on_compensation_selected(self, interaction: discord.Interaction, compensation_type: str):
+        # Log compensation type selection
+        logger.info(f"User {interaction.user.name} ({interaction.user.id}) selected compensation type: {compensation_type}")
+        
+        # Proceed to period selection with the selected compensation type
+        await self.cog.start_period_selection(interaction, compensation_type)
+
 class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
     def __init__(self, bot):
         self.bot = bot
@@ -33,10 +58,11 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         # Log command usage
         logger.info(f"User {interaction.user.name} ({interaction.user.id}) started calculate workflow")
         
-        # Start the interactive workflow
-        await self.start_period_selection(interaction)
+        # Start the interactive workflow with compensation type selection
+        view = CompensationTypeSelectionView(self)
+        await interaction.response.send_message("Select a compensation type:", view=view, ephemeral=True)
 
-    async def start_period_selection(self, interaction: discord.Interaction):
+    async def start_period_selection(self, interaction: discord.Interaction, compensation_type: str):
         """First step: Period selection"""
         guild_id = str(interaction.guild_id)
         
@@ -49,11 +75,11 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             await interaction.response.send_message("❌ No periods configured! Admins: use !set-period.", ephemeral=True)
             return
         
-        # Create period selection view
-        view = PeriodSelectionView(self, valid_periods)
+        # Create period selection view, passing the compensation type
+        view = PeriodSelectionView(self, valid_periods, compensation_type)
         await interaction.response.send_message("Select a period:", view=view, ephemeral=True)
     
-    async def show_shift_selection(self, interaction: discord.Interaction, period: str):
+    async def show_shift_selection(self, interaction: discord.Interaction, period: str, compensation_type: str):
         """Second step: Shift selection"""
         # Log period selection
         logger.info(f"User {interaction.user.name} ({interaction.user.id}) selected period: {period}")
@@ -69,11 +95,11 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             await interaction.response.send_message("❌ No shifts configured! Admins: use !set-shift.", ephemeral=True)
             return
         
-        # Create shift selection view
-        view = ShiftSelectionView(self, valid_shifts, period)
+        # Create shift selection view, passing the compensation type
+        view = ShiftSelectionView(self, valid_shifts, period, compensation_type)
         await interaction.response.edit_message(content="Select a shift:", view=view)
     
-    async def show_role_selection(self, interaction: discord.Interaction, period: str, shift: str):
+    async def show_role_selection(self, interaction: discord.Interaction, period: str, shift: str, compensation_type: str):
         """Third step: Role selection"""
         # Log shift selection
         logger.info(f"User {interaction.user.name} ({interaction.user.id}) selected shift: {shift}")
@@ -102,19 +128,19 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             return
         
         # Create role selection view
-        view = RoleSelectionView(self, configured_roles, period, shift)
+        view = RoleSelectionView(self, configured_roles, period, shift, compensation_type)
         await interaction.response.edit_message(content="Select a role:", view=view)
     
-    async def show_revenue_input(self, interaction: discord.Interaction, period: str, shift: str, role: discord.Role):
+    async def show_revenue_input(self, interaction: discord.Interaction, period: str, shift: str, role: discord.Role, compensation_type: str):
         """Fourth step: Revenue input"""
         # Log role selection
         logger.info(f"User {interaction.user.name} ({interaction.user.id}) selected role: {role.name} ({role.id})")
         
         # Create revenue input modal
-        modal = RevenueInputModal(self, period, shift, role)
+        modal = RevenueInputModal(self, period, shift, role, compensation_type)
         await interaction.response.send_modal(modal)
     
-    async def show_model_selection(self, interaction: discord.Interaction, period: str, shift: str, role: discord.Role, gross_revenue: Decimal):
+    async def show_model_selection(self, interaction: discord.Interaction, period: str, shift: str, role: discord.Role, gross_revenue: Decimal, compensation_type: str):
         """Fifth step: Model selection"""
         # Log revenue input
         logger.info(f"User {interaction.user.name} ({interaction.user.id}) entered gross revenue: ${gross_revenue}")
@@ -131,12 +157,14 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             return
         
         # Create model selection view
-        view = ModelSelectionView(self, valid_models, period, shift, role, gross_revenue)
+        view = ModelSelectionView(self, valid_models, period, shift, role, gross_revenue, compensation_type)
         await interaction.response.edit_message(content="Select models (optional, you can select multiple):", view=view)
 
     async def preview_calculation(self, interaction: discord.Interaction, period: str, shift: str, role: discord.Role, 
-                                gross_revenue: Decimal, selected_models: List[str]):
+                                gross_revenue: Decimal, selected_models: List[str], compensation_type: str):
         """Preview calculation and show confirmation options"""
+        print("COMPENSATION: ", compensation_type)
+
         # Log selected models
         logger.info(f"User {interaction.user.name} ({interaction.user.id}) selected models: {', '.join(selected_models) if selected_models else 'None'}")
         
@@ -464,9 +492,10 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
 
 # View classes remain unchanged
 class PeriodSelectionView(ui.View):
-    def __init__(self, cog, periods):
+    def __init__(self, cog, periods, compensation_type):
         super().__init__(timeout=180)
         self.cog = cog
+        self.compensation_type = compensation_type
         
         # Add a button for each period (limit to 25 due to Discord UI limitations)
         for period in periods[:25]:
@@ -475,13 +504,14 @@ class PeriodSelectionView(ui.View):
             self.add_item(button)
     
     async def on_period_selected(self, interaction: discord.Interaction, period: str):
-        await self.cog.show_shift_selection(interaction, period)
+        await self.cog.show_shift_selection(interaction, period, self.compensation_type)
 
 class ShiftSelectionView(ui.View):
-    def __init__(self, cog, shifts, period):
+    def __init__(self, cog, shifts, period, compensation_type):
         super().__init__(timeout=180)
         self.cog = cog
         self.period = period
+        self.compensation_type = compensation_type
         
         # Add a button for each shift
         for shift in shifts[:25]:
@@ -490,14 +520,15 @@ class ShiftSelectionView(ui.View):
             self.add_item(button)
     
     async def on_shift_selected(self, interaction: discord.Interaction, shift: str):
-        await self.cog.show_role_selection(interaction, self.period, shift)
+        await self.cog.show_role_selection(interaction, self.period, shift, self.compensation_type)
 
 class RoleSelectionView(ui.View):
-    def __init__(self, cog, roles, period, shift):
+    def __init__(self, cog, roles, period, shift, compensation_type):
         super().__init__(timeout=180)
         self.cog = cog
         self.period = period
         self.shift = shift
+        self.compensation_type = compensation_type
         
         # Add a button for each role
         for role in roles[:25]:
@@ -506,15 +537,16 @@ class RoleSelectionView(ui.View):
             self.add_item(button)
     
     async def on_role_selected(self, interaction: discord.Interaction, role: discord.Role):
-        await self.cog.show_revenue_input(interaction, self.period, self.shift, role)
+        await self.cog.show_revenue_input(interaction, self.period, self.shift, role, self.compensation_type)
 
 class RevenueInputModal(ui.Modal, title="Enter Gross Revenue"):
-    def __init__(self, cog, period, shift, role):
+    def __init__(self, cog, period, shift, role, compensation_type):
         super().__init__()
         self.cog = cog
         self.period = period
         self.shift = shift
         self.role = role
+        self.compensation_type = compensation_type
         
         self.revenue_input = ui.TextInput(
             label="Gross Revenue (e.g. 1269.69)",
@@ -533,16 +565,17 @@ class RevenueInputModal(ui.Modal, title="Enter Gross Revenue"):
             await interaction.response.send_message("❌ Invalid revenue format. Please use a valid number.", ephemeral=True)
             return
         
-        await self.cog.show_model_selection(interaction, self.period, self.shift, self.role, gross_revenue)
+        await self.cog.show_model_selection(interaction, self.period, self.shift, self.role, gross_revenue, self.compensation_type)
 
 class ModelSelectionView(ui.View):
-    def __init__(self, cog, models, period, shift, role, gross_revenue):
+    def __init__(self, cog, models, period, shift, role, gross_revenue, compensation_type):
         super().__init__(timeout=180)
         self.cog = cog
         self.period = period
         self.shift = shift
         self.role = role
         self.gross_revenue = gross_revenue
+        self.compensation_type = compensation_type
         self.selected_models = []
         self.all_models = models
         self.current_page = 0
@@ -670,7 +703,8 @@ class ModelSelectionView(ui.View):
             self.shift, 
             self.role, 
             self.gross_revenue, 
-            self.selected_models
+            self.selected_models,
+            self.compensation_type
         )
 
 class ConfirmationView(ui.View):

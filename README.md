@@ -246,6 +246,7 @@
 - [x] (v0.57.0) Add input validation for commission percentages
 - [x] (v0.57.0) Add input validation for hourly rates
 - [x] (v0.57.0) Create backup mechanism for settings file
+- [x] (v0.58.0) Add compensation step to the workflow
 
 ## Calculation Logic Integration
 - [ ] Modify existing earnings calculation to use commission settings
