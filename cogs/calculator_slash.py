@@ -18,6 +18,10 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
     def __init__(self, bot):
         self.bot = bot
         super().__init__()
+
+    async def cog_check(self, ctx):
+        """Check if user has administrator permissions for all commands in this cog"""
+        return ctx.author.guild_permissions.administrator
     
     # New interactive slash command
     @app_commands.command(
@@ -298,42 +302,163 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             view=None
         )
 
+    # Admin command to view earnings for any user
     @app_commands.command(
-        name="view-earnings",
-        description="View your earnings or earnings of a specified user"
+        name="view-earnings-admin",
+        description="Admin command to view earnings for a specified user"
     )
-    async def view_earnings(self, interaction: discord.Interaction, user: Optional[discord.User] = None):
-        """Command to view earnings for yourself or a specified user"""
-        # Determine the target user
-        target_user = user if user else interaction.user
-        guild_id = str(interaction.guild.id)
+    @app_commands.describe(
+        user="The user whose earnings you want to view",
+        entries="Number of entries to return (max 50)"
+    )
+    @app_commands.default_permissions(administrator=True)  # Hide from non-admins
+    @app_commands.checks.has_permissions(administrator=True)  # Restrict to admins
+    async def view_earnings_admin(
+        self,
+        interaction: discord.Interaction,
+        user: discord.User,
+        entries: Optional[int] = 50
+    ):
+        """Admin command to view earnings for a specified user"""
+
+        if not interaction.user.guild_permissions.administrator:
+            await interaction.response.send_message("❌ You need administrator permissions to use this command.", ephemeral=True)
+            return
+
+        # Ensure entries is within the allowed range
+        entries = min(max(entries, 1), 50)  # Clamp between 1 and 50
         
         # Load earnings data
         earnings_data = await file_handlers.load_json(settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS)
         
         # Check if the user has any earnings data
-        user_earnings = earnings_data.get(target_user.mention, [])[:25]
+        user_earnings = earnings_data.get(user.mention, [])[:entries]
+        
+        if not user_earnings:
+            await interaction.response.send_message(f"❌ No earnings data found for {user.mention}.", ephemeral=True)
+            return
+        
+        # Create an embed to display earnings
+        embed = discord.Embed(title=f"📊 Earnings for {user.display_name} ({len(user_earnings)} entries)", color=0x009933)
+        
+        # Initialize total gross revenue and total cut
+        total_gross = 0
+        total_cut_sum = 0
+        
+        # Create a table-like structure for earnings
+        table_header = "```\n  # | Date       | Period   | Gross Revenue | Total Cut\n"
+        table_header += "----|------------|----------|---------------|-----------\n"
+        table_rows = []
+        
+        for index, entry in enumerate(user_earnings, start=1):
+            date = entry['date']
+            period = entry['period'].capitalize()
+            gross_revenue = float(entry['gross_revenue'])
+            total_cut = float(entry['total_cut'])
+            
+            # Add to totals
+            total_gross += gross_revenue
+            total_cut_sum += total_cut
+            
+            # Format the row
+            row = f"{index:3} | {date:10} | {period:8} | ${gross_revenue:13.2f} | ${total_cut:9.2f}\n"
+            table_rows.append(row)
+        
+        # Split the table into chunks of 1024 characters
+        current_chunk = table_header  # First chunk includes the header
+        for row in table_rows:
+            if len(current_chunk) + len(row) + 3 > 1024:  # +3 for the closing ```
+                # Add the current chunk to the embed
+                embed.add_field(name="", value=current_chunk + "```", inline=False)
+                # Start a new chunk without the header
+                current_chunk = "```\n"
+            current_chunk += row
+        
+        # Add the last chunk to the embed
+        if current_chunk != table_header:
+            embed.add_field(name="", value=current_chunk + "```", inline=False)
+        
+        # Add the total gross revenue and total cut at the end
+        embed.add_field(name="Total Gross Revenue", value=f"```\n${total_gross:.2f}\n```", inline=False)
+        embed.add_field(name="Total Cut", value=f"```\n${total_cut_sum:.2f}\n```", inline=False)
+        
+        await interaction.response.send_message(embed=embed)
+
+    # User command to view their own earnings
+    @app_commands.command(
+        name="view-earnings",
+        description="View your earnings"
+    )
+    @app_commands.describe(
+        entries="Number of entries to return (max 50)"
+    )
+    async def view_earnings(
+        self,
+        interaction: discord.Interaction,
+        entries: Optional[int] = 50
+    ):
+        """Command for users to view their own earnings"""
+        # Ensure entries is within the allowed range
+        entries = min(max(entries, 1), 50)  # Clamp between 1 and 50
+        
+        # Determine the target user (the user who invoked the command)
+        target_user = interaction.user
+        
+        # Load earnings data
+        earnings_data = await file_handlers.load_json(settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS)
+        
+        # Check if the user has any earnings data
+        user_earnings = earnings_data.get(target_user.mention, [])[:entries]
         
         if not user_earnings:
             await interaction.response.send_message(f"❌ No earnings data found for {target_user.mention}.", ephemeral=True)
             return
         
         # Create an embed to display earnings
-        embed = discord.Embed(title=f"📊 Earnings for {target_user.display_name} ({len(user_earnings)} entries)\n===============================", color=0x009933)
+        embed = discord.Embed(title=f"📊 Earnings for {target_user.display_name} ({len(user_earnings)} entries)", color=0x009933)
         
-        for entry in user_earnings:
-            embed.add_field(
-                name=f"📅 {entry['date']} - {entry['period'].capitalize()}",
-                value=f"Gross Revenue: ${entry['gross_revenue']}\n"
-                      f"Total Cut: ${entry['total_cut']}\n"
-                      f"Shift: {entry['shift']}\n"
-                      f"Role: {entry['role']}\n"
-                      f"Models: {entry['models'] or 'None'}"
-                      f"\n===============================",
-                inline=False
-            )
+        # Initialize total gross revenue and total cut
+        total_gross = 0
+        total_cut_sum = 0
         
-        await interaction.response.send_message(embed=embed, ephemeral=True)
+        # Create a table-like structure for earnings
+        table_header = "```\n  # | Date       | Period   | Gross Revenue | Total Cut\n"
+        table_header += "----|------------|----------|---------------|-----------\n"
+        table_rows = []
+        
+        for index, entry in enumerate(user_earnings, start=1):
+            date = entry['date']
+            period = entry['period'].capitalize()
+            gross_revenue = float(entry['gross_revenue'])
+            total_cut = float(entry['total_cut'])
+            
+            # Add to totals
+            total_gross += gross_revenue
+            total_cut_sum += total_cut
+            
+            # Format the row
+            row = f"{index:3} | {date:10} | {period:8} | ${gross_revenue:13.2f} | ${total_cut:9.2f}\n"
+            table_rows.append(row)
+        
+        # Split the table into chunks of 1024 characters
+        current_chunk = table_header  # First chunk includes the header
+        for row in table_rows:
+            if len(current_chunk) + len(row) + 3 > 1024:  # +3 for the closing ```
+                # Add the current chunk to the embed
+                embed.add_field(name="", value=current_chunk + "```", inline=False)
+                # Start a new chunk without the header
+                current_chunk = "```\n"
+            current_chunk += row
+        
+        # Add the last chunk to the embed
+        if current_chunk != table_header:
+            embed.add_field(name="", value=current_chunk + "```", inline=False)
+        
+        # Add the total gross revenue and total cut at the end
+        embed.add_field(name="Total Gross Revenue", value=f"```\n${total_gross:.2f}\n```", inline=False)
+        embed.add_field(name="Total Cut", value=f"```\n${total_cut_sum:.2f}\n```", inline=False)
+        
+        await interaction.response.send_message(embed=embed)
 
 
 

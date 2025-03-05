@@ -227,6 +227,9 @@
     - [x] (v0.45.0) `restore-earnings-backup`.
 - [x] (v0.55.0) `help` list slash commands for admins and normal users
 - [x] (v0.55.0) `view-earnings` view your earnings or earnings of a specified user
+- [x] (v0.56.0) `view-earnings` admin able to see for specific user, user only theirs
+    - [x] (v0.56.0) `view-earnings-admin` admin will see users earning entries
+    - [x] (v0.56.0) `view-earnings` user command version
 
 ## FUTURE IMPROVEMENTS
 

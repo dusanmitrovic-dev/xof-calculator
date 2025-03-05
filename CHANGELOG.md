@@ -2,7 +2,13 @@
 
 ## [Unreleased]
 
-## [0.55.0] - 2025-03-04
+## [0.56.0] - 2025-03-05
+### Changed
+- `view-earnings` split in two commands:
+    - `view-earnings-admin` admin will see users earning entries,
+    - `view-earnings` user command version.
+
+## [0.55.0] - 2025-03-05
 ### Added
 - changes:
     - new /help command for slash commands,
