@@ -248,7 +248,7 @@
 - [x] (v0.57.0) Create backup mechanism for settings file
 - [x] (v0.58.0) Add compensation step to the workflow
 - [ ] Add guild id entry that wraps data
-
+ 
 ## Calculation Logic Integration
 - [x] (v0.59.0) `calculate_hourly_earnings` method
 - [ ] Calculate priority
@@ -279,5 +279,4 @@
 - Database integration (staying with JSON) (at the very end... maybe even skip it)
 - Web admin dashboard (will see if needed like admin dashboard)
     - Adding and removing roles, shifts etc. over web page
-- Charts/visualizations
 
