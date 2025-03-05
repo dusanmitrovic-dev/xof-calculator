@@ -96,6 +96,27 @@ def calculate_hourly_earnings(hours: Decimal, hourly_rate: Decimal, bonus_rules:
         "total_cut": total_cut
     }
 
+def calculate_combined_earnings(gross_revenue: Decimal, percentage: Decimal, hourly_rate: Decimal, bonus_rules: List[Dict[str, Decimal]]) -> Dict[str, Decimal]:
+    # Calculate commission-based earnings
+    commission_earnings = calculate_earnings(gross_revenue, percentage, bonus_rules)
+    
+    # Calculate hourly earnings
+    hourly_earnings = calculate_hourly_earnings(gross_revenue, hourly_rate, bonus_rules)
+
+    net_revenue, employee_cut, platform_fee = calculate_revenue_share(gross_revenue, role_percentage)
+    
+    # Combine results
+    total_cut = commission_earnings["total_cut"] + hourly_earnings["total_cut"]
+    
+    return {
+        "gross_revenue": gross_revenue,
+        "net_revenue": net_revenue,
+        "platform_fee": platform_fee,
+        "employee_cut": employee_cut,
+        "bonus": bonus,
+        "total_cut": total_cut
+    }
+
 def get_total_earnings(earnings_data: List[Dict], period: str, from_date: Optional[str] = None, to_date: Optional[str] = None) -> Decimal:
     """
     Calculate total earnings from a list of earnings data

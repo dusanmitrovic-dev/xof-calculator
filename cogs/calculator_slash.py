@@ -171,7 +171,8 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         guild_id = str(interaction.guild_id)
         
         # Get role percentage from configuration
-        role_data = await file_handlers.load_json(settings.ROLE_DATA_FILE, settings.DEFAULT_ROLE_DATA) # todo use new logic for commission
+        
+        role_data = await file_handlers.load_json(settings.COMMISSION_SETTINGS_FILE, settings.DEFAULT_COMMISSION_SETTINGS)
         percentage = Decimal(str(role_data[guild_id][str(role.id)])) # default percentage calculation
         
         # Load bonus rules
@@ -231,6 +232,15 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         
         # Add fields to embed
         fields = [
+            (
+                "💸 Compensation",
+                {
+                    "commission": f"{percentage:.2f}%",
+                    "hourly": f"${role_data[guild_id][str(role.id)].get('hourly_rate', 0):,.2f}/h",
+                    "both": f"{percentage:.2f}% + ${role_data[guild_id][str(role.id)].get('hourly_rate', 0):,.2f}/h"
+                }[compensation_type],
+                True
+            ),
             ("📅 Date", current_date, True),
             ("✍ Sender", sender, True),
             ("📥 Shift", shift, True),
