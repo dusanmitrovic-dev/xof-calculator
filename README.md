@@ -247,6 +247,7 @@
 - [x] (v0.57.0) Add input validation for hourly rates
 - [x] (v0.57.0) Create backup mechanism for settings file
 - [x] (v0.58.0) Add compensation step to the workflow
+- [ ] Add guild id entry that wraps data
 
 ## Calculation Logic Integration
 - [x] (v0.59.0) `calculate_hourly_earnings` method

@@ -77,7 +77,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         
         # Create period selection view, passing the compensation type
         view = PeriodSelectionView(self, valid_periods, compensation_type)
-        await interaction.response.send_message("Select a period:", view=view, ephemeral=True)
+        await interaction.response.send_message(content="Select a period:", view=view)
     
     async def show_shift_selection(self, interaction: discord.Interaction, period: str, compensation_type: str):
         """Second step: Shift selection"""
@@ -520,8 +520,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         embed.add_field(name="Total Cut", value=f"```\n${total_cut_sum:.2f}\n```", inline=False)
         
         await interaction.response.send_message(embed=embed)
-
-
 
 # View classes remain unchanged
 class PeriodSelectionView(ui.View):
