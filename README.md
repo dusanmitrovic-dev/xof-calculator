@@ -231,6 +231,29 @@
     - [x] (v0.56.0) `view-earnings-admin` admin will see users earning entries
     - [x] (v0.56.0) `view-earnings` user command version
 
+# Commission Settings Implementation TODO
+
+## Configuration Commands
+- [x] (v0.57.0) Implement `/set-role-commission` command
+- [x] (v0.57.0) Implement `/set-role-hourly` command
+- [x] (v0.57.0) Implement `/set-user-commission` command
+- [x] (v0.57.0) Implement `/set-user-hourly` command
+- [x] (v0.57.0) Implement `/view-commission-settings` command
+- [ ] Make them admin slash ephemeral
+
+## Data Management
+- [x] (v0.57.0) Create `commission_settings.json` in `data/` directory
+- [x] (v0.57.0) Add input validation for commission percentages
+- [x] (v0.57.0) Add input validation for hourly rates
+- [x] (v0.57.0) Create backup mechanism for settings file
+
+## Calculation Logic Integration
+- [ ] Modify existing earnings calculation to use commission settings
+- [ ] Implement rate selection logic:
+  - User-specific rates with override
+  - Role-based fallback
+- [ ] Create helper methods to retrieve appropriate rates
+
 ## FUTURE IMPROVEMENTS
 
 - [ ] Better image display in `calculate` command

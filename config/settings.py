@@ -15,6 +15,7 @@ MODELS_DATA_FILE = "models_config.json"
 BONUS_RULES_FILE = "bonus_rules.json"
 EARNINGS_FILE = "earnings.json"
 DISPLAY_SETTINGS_FILE = "display_settings.json"
+COMMISSION_SETTINGS_FILE = "commission_settings.json"
 
 # Default settings
 DEFAULT_ROLE_DATA: Dict[str, Dict[str, float]] = {}
@@ -24,6 +25,7 @@ DEFAULT_MODELS_DATA: Dict[str, List[str]] = {}
 DEFAULT_BONUS_RULES: Dict[str, List[Dict[str, float]]] = {}
 DEFAULT_EARNINGS: Dict[str, List[Dict[str, Any]]] = {}
 DEFAULT_DISPLAY_SETTINGS: Dict[str, Dict[str, bool]] = {} 
+DEFAULT_COMMISSION_SETTINGS: Dict[str, Dict[str, float]] = {}
 
 # Date format
 DATE_FORMAT = "%d/%m/%Y"

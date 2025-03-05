@@ -20,6 +20,258 @@ class AdminSlashCommands(commands.Cog, name="admin"):
     def __init__(self, bot):
         self.bot = bot
 
+    def validate_percentage(self, value: Optional[float]) -> bool:
+        """Validate percentage input"""
+        return value is None or (isinstance(value, (int, float)) and 0 <= value <= 100)
+    
+    def validate_hourly_rate(self, value: Optional[float]) -> bool:
+        """Validate hourly rate input"""
+        return value is None or (isinstance(value, (int, float)) and value >= 0)
+    
+    @app_commands.command(name="set-role-commission")
+    @app_commands.describe(
+        role="The role to set commission for",
+        percentage="Commission percentage (0-100)"
+    )
+    async def set_role_commission(
+        self, 
+        interaction: discord.Interaction, 
+        role: discord.Role, 
+        percentage: Optional[float] = None
+    ):
+        """Set commission percentage for a specific role"""
+        # Validate input
+        if not self.validate_percentage(percentage):
+            await interaction.response.send_message(
+                "❌ Invalid percentage. Must be between 0 and 100.", 
+                ephemeral=True
+            )
+            return
+        
+        # Load existing settings
+        commission_settings = await file_handlers.load_json(settings.COMMISSION_SETTINGS_FILE, settings.DEFAULT_COMMISSION_SETTINGS)
+        
+        # Ensure 'roles' key exists
+        commission_settings.setdefault('roles', {})
+        
+        # Update role commission_settings
+        role_settings = commission_settings['roles'].get(str(role.id), {})
+        role_settings['commission_percentage'] = percentage
+        commission_settings['roles'][str(role.id)] = role_settings
+        
+        # Save updated commission_settings
+        await file_handlers.save_json(settings.COMMISSION_SETTINGS_FILE, commission_settings)
+        
+        # Respond with confirmation
+        response = f"✅ Set commission for {role.mention} to "
+        response += f"{percentage}%" if percentage is not None else "cleared"
+        await interaction.response.send_message(response)
+    
+    @app_commands.command(name="set-role-hourly")
+    @app_commands.describe(
+        role="The role to set hourly rate for",
+        rate="Hourly rate in dollars"
+    )
+    async def set_role_hourly(
+        self, 
+        interaction: discord.Interaction, 
+        role: discord.Role, 
+        rate: Optional[float] = None
+    ):
+        """Set hourly rate for a specific role"""
+        # Validate input
+        if not self.validate_hourly_rate(rate):
+            await interaction.response.send_message(
+                "❌ Invalid hourly rate. Must be a non-negative number.", 
+                ephemeral=True
+            )
+            return
+        
+        # Load existing settings
+        commission_settings = await file_handlers.load_json(settings.COMMISSION_SETTINGS_FILE, settings.DEFAULT_COMMISSION_SETTINGS)
+        
+        # Ensure 'roles' key exists
+        commission_settings.setdefault('roles', {})
+        
+        # Update role settings
+        role_settings = commission_settings['roles'].get(str(role.id), {})
+        role_settings['hourly_rate'] = rate
+        commission_settings['roles'][str(role.id)] = role_settings
+        
+        # Save updated settings
+        await file_handlers.save_json(settings.COMMISSION_SETTINGS_FILE, commission_settings)
+        
+        # Respond with confirmation
+        response = f"✅ Set hourly rate for {role.mention} to "
+        response += f"${rate}/h" if rate is not None else "cleared"
+        await interaction.response.send_message(response)
+    
+    @app_commands.command(name="set-user-commission")
+    @app_commands.describe(
+        user="The user to set commission for",
+        percentage="Commission percentage (0-100)",
+        override_role="Whether to override role settings"
+    )
+    async def set_user_commission(
+        self, 
+        interaction: discord.Interaction, 
+        user: discord.User, 
+        percentage: Optional[float] = None,
+        override_role: bool = False
+    ):
+        """Set commission percentage for a specific user"""
+        # Validate input
+        if not self.validate_percentage(percentage):
+            await interaction.response.send_message(
+                "❌ Invalid percentage. Must be between 0 and 100.", 
+                ephemeral=True
+            )
+            return
+        
+        # Load existing settings
+        commission_settings = await file_handlers.load_json(settings.COMMISSION_SETTINGS_FILE, settings.DEFAULT_COMMISSION_SETTINGS)
+        
+        # Ensure 'users' key exists
+        commission_settings.setdefault('users', {})
+        
+        # Update user settings
+        user_settings = commission_settings['users'].get(str(user.id), {})
+        user_settings['commission_percentage'] = percentage
+        user_settings['override_role'] = override_role
+        commission_settings['users'][str(user.id)] = user_settings
+        
+        # Save updated settings
+        await file_handlers.save_json(settings.COMMISSION_SETTINGS_FILE, commission_settings)
+        
+        # Respond with confirmation
+        response = f"✅ Set commission for {user.mention} to "
+        response += f"{percentage}%" if percentage is not None else "cleared"
+        response += f" (Override Role: {override_role})"
+        await interaction.response.send_message(response)
+    
+    @app_commands.command(name="set-user-hourly")
+    @app_commands.describe(
+        user="The user to set hourly rate for",
+        rate="Hourly rate in dollars",
+        override_role="Whether to override role settings"
+    )
+    async def set_user_hourly(
+        self, 
+        interaction: discord.Interaction, 
+        user: discord.User, 
+        rate: Optional[float] = None,
+        override_role: bool = False
+    ):
+        """Set hourly rate for a specific user"""
+        # Validate input
+        if not self.validate_hourly_rate(rate):
+            await interaction.response.send_message(
+                "❌ Invalid hourly rate. Must be a non-negative number.", 
+                ephemeral=True
+            )
+            return
+        
+        # Load existing settings
+        commission_settings = await file_handlers.load_json(settings.COMMISSION_SETTINGS_FILE, settings.DEFAULT_COMMISSION_SETTINGS)
+        
+        # Update user settings
+        user_settings = commission_settings['users'].get(str(user.id), {})
+        user_settings['hourly_rate'] = rate
+        user_settings['override_role'] = override_role
+        commission_settings['users'][str(user.id)] = user_settings
+        
+        # Save updated settings
+        await file_handlers.save_json(settings.COMMISSION_SETTINGS_FILE, commission_settings)
+        
+        # Respond with confirmation
+        response = f"✅ Set hourly rate for {user.mention} to "
+        response += f"${rate}/h" if rate is not None else "cleared"
+        response += f" (Override Role: {override_role})"
+        await interaction.response.send_message(response)
+    
+    @app_commands.command(name="view-commission-settings")
+    @app_commands.describe(
+        role="Optional role to view settings for",
+        user="Optional user to view settings for"
+    )
+    async def view_commission_settings(
+        self, 
+        interaction: discord.Interaction, 
+        role: Optional[discord.Role] = None,
+        user: Optional[discord.User] = None
+    ):
+        """View commission settings for a role or user"""
+        commission_settings = await file_handlers.load_json(settings.COMMISSION_SETTINGS_FILE, settings.DEFAULT_COMMISSION_SETTINGS)
+        
+        # Create an embed to display commission_settings
+        embed = discord.Embed(title="Commission Settings", color=0x009933)
+        
+        if role:
+            # View specific role commission_settings
+            role_settings = commission_settings['roles'].get(str(role.id), {})
+            embed.description = f"Settings for Role: {role.mention}"
+            embed.add_field(
+                name="Commission", 
+                value=f"{role_settings.get('commission_percentage', 'Not set')}%", 
+                inline=True
+            )
+            embed.add_field(
+                name="Hourly Rate", 
+                value=f"${role_settings.get('hourly_rate', 'Not set')}/h", 
+                inline=True
+            )
+        elif user:
+            # View specific user commission_settings
+            user_settings = commission_settings['users'].get(str(user.id), {})
+            embed.description = f"Settings for User: {user.mention}"
+            embed.add_field(
+                name="Commission", 
+                value=f"{user_settings.get('commission_percentage', 'Not set')}%", 
+                inline=True
+            )
+            embed.add_field(
+                name="Hourly Rate", 
+                value=f"${user_settings.get('hourly_rate', 'Not set')}/h", 
+                inline=True
+            )
+            embed.add_field(
+                name="Override Role", 
+                value=user_settings.get('override_role', False), 
+                inline=True
+            )
+        else:
+            # View all commission_settings summary
+            embed.description = "Summary of Commission Settings"
+            
+            # Role commission_settings summary
+            role_summary = []
+            for role_id, role_data in commission_settings['roles'].items():
+                role = interaction.guild.get_role(int(role_id))
+                if role:
+                    role_summary.append(
+                        f"{role.name}: Commission {role_data.get('commission_percentage', 'N/A')}%, "
+                        f"Hourly ${role_data.get('hourly_rate', 'N/A')}"
+                    )
+            
+            if role_summary:
+                embed.add_field(name="Role Settings", value="\n".join(role_summary), inline=False)
+            
+            # User commission_settings summary
+            user_summary = []
+            for user_id, user_data in commission_settings['users'].items():
+                member = interaction.guild.get_member(int(user_id))
+                if member:
+                    user_summary.append(
+                        f"{member.name}: Commission {user_data.get('commission_percentage', 'N/A')}%, "
+                        f"Hourly ${user_data.get('hourly_rate', 'N/A')}, "
+                        f"Override: {user_data.get('override_role', False)}"
+                    )
+            
+            if user_summary:
+                embed.add_field(name="User Settings", value="\n".join(user_summary), inline=False)
+        
+        await interaction.response.send_message(embed=embed)
+
     @app_commands.command(
         name="toggle-average",
         description="Toggle whether to show performance averages in calculation embeds"

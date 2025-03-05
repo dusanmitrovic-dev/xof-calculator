@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+## [0.57.0] - 2025-03-05
+### Added
+- New commands:
+    - `/set-role-commission`,
+    - `/set-role-hourly`,
+    - `/set-user-commission`,
+    - `/set-user-hourly`,
+    - `/view-commission-settings`.
+
 ## [0.56.0] - 2025-03-05
 ### Changed
 - `view-earnings` split in two commands:
@@ -11,8 +20,8 @@
 ## [0.55.0] - 2025-03-05
 ### Added
 - changes:
-    - new /help command for slash commands,
-    - new /view-earnings command that returns 25 latest entries for earnings,
+    - new `help` slash command for slash commands,
+    - new `view-earnings` slash command that returns 25 latest entries for earnings,
     - removed residual backup data files that were forgotten in previous versions.
 
 ## [0.54.0] - 2025-03-04
