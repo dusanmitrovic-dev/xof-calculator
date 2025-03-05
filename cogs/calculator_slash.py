@@ -64,6 +64,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
 
     async def start_period_selection(self, interaction: discord.Interaction, compensation_type: str):
         """First step: Period selection"""
+        
         guild_id = str(interaction.guild_id)
         
         # Load period data
@@ -81,6 +82,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
     
     async def show_shift_selection(self, interaction: discord.Interaction, period: str, compensation_type: str):
         """Second step: Shift selection"""
+
         # Log period selection
         logger.info(f"User {interaction.user.name} ({interaction.user.id}) selected period: {period}")
         
