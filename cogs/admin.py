@@ -572,10 +572,8 @@ class AdminCommands(commands.Cog):
             
         guild_id = str(ctx.guild.id)
         
-        # Load current model data
         model_data = await file_handlers.load_json(settings.MODELS_DATA_FILE, settings.DEFAULT_MODELS_DATA)
         
-        # Get existing models for this guild
         existing_models = model_data.get(guild_id, [])
         
         # Check if model already exists (case-insensitive)
