@@ -2,15 +2,19 @@
 
 ## [Unreleased]
 
+## [0.65.0] - 2025-03-06
+### Added
+- New `toggle-user-role-override` command.
+
 ## [0.64.0] - 2025-03-06
 ### Changed
-- (calculator_slash): fixed role logic for commission settings
-- (admin_slash): commission commands are now admin only
+- (calculator_slash): fixed role logic for commission settings,
+- (admin_slash): commission commands are now admin only.
 
 ## [0.63.0] - 2025-03-06
 ### Changed
-- (calculator_slash): compensation view now gets edited instead of staying untouched
-- (admin_slash): updated configuration commands for new `commission_settings.json` structure
+- (calculator_slash): compensation view now gets edited instead of staying untouched,
+- (admin_slash): updated configuration commands for new `commission_settings.json` structure.
 
 ## [0.62.0] - 2025-03-06
 ### Added

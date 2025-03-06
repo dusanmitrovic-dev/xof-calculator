@@ -239,6 +239,7 @@
 - [x] (v0.57.0) Implement `/set-user-commission` command
 - [x] (v0.57.0) Implement `/set-user-hourly` command
 - [x] (v0.57.0) Implement `/view-commission-settings` command
+- [x] (v0.65.0) Implement `toggle-user-role-override` command
 - [ ] Make them admin slash ephemeral
 - [x] (v0.63.0) Update configuration commands for new `commission_settings.json` structure
 - [x] (v0.63.0) Compensation view gets edited instead of staying untouched.

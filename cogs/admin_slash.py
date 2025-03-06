@@ -214,6 +214,50 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         response += f"${rate}/h" if rate is not None else "cleared"
         response += f" (Override Role: {override_role})"
         await interaction.response.send_message(response)
+
+    
+    @app_commands.command(name="toggle-user-role-override")
+    @app_commands.default_permissions(administrator=True)
+    @app_commands.describe(
+        user="The user to toggle role override for"
+    )
+    async def set_user_role_override_toggle(
+        self, 
+        interaction: discord.Interaction, 
+        user: discord.User
+    ):
+        """Toggle role override for a specific user"""
+        # Load existing settings
+        commission_settings = await file_handlers.load_json(settings.COMMISSION_SETTINGS_FILE, {})
+        
+        # Ensure guild-specific settings exist
+        guild_id = str(interaction.guild.id)
+        if guild_id not in commission_settings:
+            await interaction.response.send_message(
+                "❌ No commission settings found for this guild.", 
+                ephemeral=True
+            )
+            return
+        
+        # Ensure user settings exist
+        user_settings = commission_settings[guild_id]['users'].get(str(user.id), {})
+        if not user_settings:
+            await interaction.response.send_message(
+                "❌ No commission settings found for this user.", 
+                ephemeral=True
+            )
+            return
+        
+        # Toggle override_role
+        user_settings['override_role'] = not user_settings.get('override_role', False)
+        commission_settings[guild_id]['users'][str(user.id)] = user_settings
+        
+        # Save updated settings
+        await file_handlers.save_json(settings.COMMISSION_SETTINGS_FILE, commission_settings)
+        
+        # Respond with confirmation
+        response = f"✅ Toggled role override for {user.mention} to {user_settings['override_role']}"
+        await interaction.response.send_message(response)
     
     @app_commands.command(name="view-commission-settings")
     @app_commands.default_permissions(administrator=True)
