@@ -254,7 +254,7 @@
 - [x] Add guild id entry that wraps data
 - [x] Do hourly only get bonus for gross?
     - YES
-- [ ] Remove loggers from preview method
+- [x] (v0.67.0) Remove loggers from preview method
 - [ ] Block cases that do not have set % or $/h from attempting
     - or handle properly
 - [x] (v0.64.0) fix role logic for commission settings

@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.67.0] - 2025-03-06
+### Changed
+- Remove loggers from preview method.
+
 ## [0.66.0] - 2025-03-06
 ### Changed
 - most of admin command messages are ephemeral now,

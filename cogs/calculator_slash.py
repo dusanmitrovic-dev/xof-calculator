@@ -198,16 +198,12 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
     async def preview_calculation(self, interaction: discord.Interaction, period: str, shift: str, role: discord.Role, 
                              gross_revenue: Decimal, selected_models: List[str], compensation_type: str, hours_worked: Decimal):
         """Preview calculation and show confirmation options"""
-
-        # Log selected models
-        logger.info(f"User {interaction.user.name} ({interaction.user.id}) selected models: {', '.join(selected_models) if selected_models else 'None'}")
         
         guild_id = str(interaction.guild_id)
         logger.info(f"guild_id: {guild_id}")
         
         # Get role percentage from configuration
         role_data = await file_handlers.load_json(settings.COMMISSION_SETTINGS_FILE, settings.DEFAULT_COMMISSION_SETTINGS)
-        logger.info(f"role_data: {role_data}")
         
         # Check if guild_id exists in role_data
         if guild_id not in role_data:
@@ -216,7 +212,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             return
         
         guild_config = role_data[guild_id]
-        logger.info(f"guild_config: {guild_config}")
         
         # Check if role exists in the guild's roles configuration
         if str(role.id) not in guild_config.get("roles", {}):
@@ -226,19 +221,15 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         
         role_config = guild_config["roles"][str(role.id)]
         percentage = Decimal(str(role_config.get("commission_percentage", 0)))
-        logger.info(f"percentage: {percentage}")
         
         # Check if the user has an override
         user_config = guild_config.get("users", {}).get(str(interaction.user.id), {})
-        logger.info(f"user_config: {user_config}")
         if user_config.get("override_role", False):
             percentage = Decimal(str(user_config.get("commission_percentage", percentage)))
-            logger.info(f"override_role percentage: {percentage}")
         
         # Load bonus rules
         bonus_rules = await file_handlers.load_json(settings.BONUS_RULES_FILE, settings.DEFAULT_BONUS_RULES)
         guild_bonus_rules = bonus_rules.get(guild_id, [])
-        logger.info(f"guild_bonus_rules: {guild_bonus_rules}")
         
         # Convert to proper Decimal objects for calculations
         bonus_rule_objects = []
@@ -249,7 +240,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                 "amount": Decimal(str(rule.get("amount", 0)))
             }
             bonus_rule_objects.append(rule_obj)
-            logger.info(f"bonus_rule_object: {rule_obj}")
         
         hourly_rate = 0.0
         hours = hours_worked  
@@ -264,10 +254,8 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         elif compensation_type == "hourly":
             # Calculate hourly earnings
             hourly_rate = Decimal(str(role_config.get("hourly_rate", 0))) if role_config.get("hourly_rate") else 0
-            logger.info(f"hourly_rate: {hourly_rate}")
             if user_config.get("override_role", False):
                 hourly_rate = Decimal(str(user_config.get("hourly_rate", hourly_rate)))
-                logger.info(f"override_role hourly_rate: {hourly_rate}")
             
             results = calculations.calculate_hourly_earnings(
                 gross_revenue,
@@ -278,10 +266,8 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         elif compensation_type == "both":
             # Calculate both commission and hourly earnings
             hourly_rate = Decimal(str(role_config.get("hourly_rate", 0))) if role_config.get("hourly_rate") else 0
-            logger.info(f"hourly_rate: {hourly_rate}")
             if user_config.get("override_role", False):
                 hourly_rate = Decimal(str(user_config.get("hourly_rate", hourly_rate)))
-                logger.info(f"override_role hourly_rate: {hourly_rate}")
             
             results = calculations.calculate_combined_earnings(
                 gross_revenue,
