@@ -73,7 +73,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         # Respond with confirmation
         response = f"✅ Set commission for {role.mention} to "
         response += f"{percentage}%" if percentage is not None else "cleared"
-        await interaction.response.send_message(response)
+        await interaction.response.send_message(response, ephemeral=True)
     
     @app_commands.command(name="set-role-hourly")
     @app_commands.default_permissions(administrator=True)
@@ -118,7 +118,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         # Respond with confirmation
         response = f"✅ Set hourly rate for {role.mention} to "
         response += f"${rate}/h" if rate is not None else "cleared"
-        await interaction.response.send_message(response)
+        await interaction.response.send_message(response, ephemeral=True)
     
     @app_commands.command(name="set-user-commission")
     @app_commands.default_permissions(administrator=True)
@@ -167,7 +167,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         response = f"✅ Set commission for {user.mention} to "
         response += f"{percentage}%" if percentage is not None else "cleared"
         response += f" (Override Role: {override_role})"
-        await interaction.response.send_message(response)
+        await interaction.response.send_message(response, ephemeral=True)
     
     @app_commands.command(name="set-user-hourly")
     @app_commands.default_permissions(administrator=True)
@@ -213,8 +213,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         response = f"✅ Set hourly rate for {user.mention} to "
         response += f"${rate}/h" if rate is not None else "cleared"
         response += f" (Override Role: {override_role})"
-        await interaction.response.send_message(response)
-
+        await interaction.response.send_message(response, ephemeral=True)
     
     @app_commands.command(name="toggle-user-role-override")
     @app_commands.default_permissions(administrator=True)
@@ -257,7 +256,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         
         # Respond with confirmation
         response = f"✅ Toggled role override for {user.mention} to {user_settings['override_role']}"
-        await interaction.response.send_message(response)
+        await interaction.response.send_message(response, ephemeral=True)
     
     @app_commands.command(name="view-commission-settings")
     @app_commands.default_permissions(administrator=True)
@@ -345,7 +344,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             if user_summary:
                 embed.add_field(name="User Settings", value="\n".join(user_summary), inline=False)
         
-        await interaction.response.send_message(embed=embed)
+        await interaction.response.send_message(embed=embed, ephemeral=True)
 
     @app_commands.command(
         name="toggle-average",
@@ -483,7 +482,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             
             if success:
                 logger.info(f"Role {role.name} ({role_id}) percentage set to {percentage_decimal}% by {interaction.user.name}")
-                await interaction.response.send_message(f"✅ {role.name} now has {percentage_decimal}% cut!")
+                await interaction.response.send_message(f"✅ {role.name} now has {percentage_decimal}% cut!", ephemeral=True)
             else:
                 logger.error(f"Failed to save role data for {role.name} ({role_id}) by {interaction.user.name}")
                 await interaction.response.send_message("❌ Failed to save role data. Please try again later.")
@@ -517,7 +516,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             
             if success:
                 logger.info(f"Role {role.name} ({role_id}) removed from configuration")
-                await interaction.response.send_message(f"✅ {role.name} has been removed from percentage configuration!")
+                await interaction.response.send_message(f"✅ {role.name} has been removed from percentage configuration!", ephemeral=True)
             else:
                 logger.error(f"Failed to remove role {role.name} ({role_id})")
                 await interaction.response.send_message("❌ Failed to save role data. Please try again later.")
@@ -553,7 +552,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             success = await file_handlers.save_json(settings.SHIFT_DATA_FILE, shift_data)
             
             if success:
-                await interaction.response.send_message(f"✅ Shift '{shift}' added!")
+                await interaction.response.send_message(f"✅ Shift '{shift}' added!", ephemeral=True)
             else:
                 await interaction.response.send_message("❌ Failed to save shift data. Please try again later.")
         except Exception as e:
@@ -582,7 +581,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             success = await file_handlers.save_json(settings.SHIFT_DATA_FILE, shift_data)
             
             if success:
-                await interaction.response.send_message(f"✅ Shift '{normalized_shift}' removed!")
+                await interaction.response.send_message(f"✅ Shift '{normalized_shift}' removed!", ephemeral=True)
             else:
                 await interaction.response.send_message("❌ Failed to save shift data. Please try again later.")
         except Exception as e:
@@ -615,7 +614,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             success = await file_handlers.save_json(settings.PERIOD_DATA_FILE, period_data)
             
             if success:
-                await interaction.response.send_message(f"✅ Period '{period}' added!")
+                await interaction.response.send_message(f"✅ Period '{period}' added!", ephemeral=True)
             else:
                 await interaction.response.send_message("❌ Failed to save period data. Please try again later.")
         except Exception as e:
@@ -643,7 +642,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         success = await file_handlers.save_json(settings.PERIOD_DATA_FILE, period_data)
         
         if success:
-            await interaction.response.send_message(f"✅ Period '{normalized_period}' removed!")
+            await interaction.response.send_message(f"✅ Period '{normalized_period}' removed!", ephemeral=True)
         else:
             await interaction.response.send_message("❌ Failed to save period data. Please try again later.")
 
@@ -686,7 +685,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         success = await file_handlers.save_json(settings.BONUS_RULES_FILE, bonus_rules)
         
         if success:
-            await interaction.response.send_message(f"✅ Bonus rule added: ${float(from_num):,.2f}-${float(to_num):,.2f} → ${float(bonus_amount):,.2f}!")
+            await interaction.response.send_message(f"✅ Bonus rule added: ${float(from_num):,.2f}-${float(to_num):,.2f} → ${float(bonus_amount):,.2f}!", ephemeral=True)
         else:
             await interaction.response.send_message("❌ Failed to save bonus rule.")
 
@@ -726,7 +725,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         success = await file_handlers.save_json(settings.BONUS_RULES_FILE, bonus_rules)
         
         if success:
-            await interaction.response.send_message(f"✅ Bonus rule removed: ${float(from_num):,.2f}-${float(to_num):,.2f}")
+            await interaction.response.send_message(f"✅ Bonus rule removed: ${float(from_num):,.2f}-${float(to_num):,.2f}", ephemeral=True)
         else:
             await interaction.response.send_message("❌ Failed to remove bonus rule.")
 
@@ -748,7 +747,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             role_name = role.name if role else f"Unknown Role ({role_id})"
             embed.add_field(name=role_name, value=f"{percentage}%", inline=True)
         
-        await interaction.response.send_message(embed=embed)
+        await interaction.response.send_message(embed=embed, ephemeral=True)
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="list-shifts", description="[Admin] List configured shifts")
@@ -763,7 +762,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             
         embed = discord.Embed(title="Configured Shifts", color=discord.Color.blue())
         embed.add_field(name="Shifts", value="\n".join(f"• {shift}" for shift in guild_shifts))
-        await interaction.response.send_message(embed=embed)
+        await interaction.response.send_message(embed=embed, ephemeral=True)
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="list-periods", description="[Admin] List configured periods")
@@ -778,7 +777,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             
         embed = discord.Embed(title="Configured Periods", color=discord.Color.blue())
         embed.add_field(name="Periods", value="\n".join(f"• {period}" for period in guild_periods))
-        await interaction.response.send_message(embed=embed)
+        await interaction.response.send_message(embed=embed, ephemeral=True)
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="list-bonus-rules", description="[Admin] List configured bonus rules")
@@ -800,7 +799,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
                 inline=False
             )
 
-        await interaction.response.send_message(embed=embed)
+        await interaction.response.send_message(embed=embed, ephemeral=True)
 
     # Model Management
     @app_commands.default_permissions(administrator=True)
@@ -829,7 +828,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         success = await file_handlers.save_json(settings.MODELS_DATA_FILE, model_data)
         
         if success:
-            await interaction.response.send_message(f"✅ Model '{model}' added!")
+            await interaction.response.send_message(f"✅ Model '{model}' added!", ephemeral=True)
         else:
             await interaction.response.send_message("❌ Failed to save model data. Please try again later.")
 
@@ -854,7 +853,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         success = await file_handlers.save_json(settings.MODELS_DATA_FILE, model_data)
         
         if success:
-            await interaction.response.send_message(f"✅ Model '{normalized_model}' removed!")
+            await interaction.response.send_message(f"✅ Model '{normalized_model}' removed!", ephemeral=True)
         else:
             await interaction.response.send_message("❌ Failed to save model data. Please try again later.")
 
@@ -871,7 +870,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             
         embed = discord.Embed(title="Configured Models", color=discord.Color.blue())
         embed.add_field(name="Models", value="\n".join(f"• {model}" for model in guild_models))
-        await interaction.response.send_message(embed=embed)
+        await interaction.response.send_message(embed=embed, ephemeral=True)
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="clear-earnings", description="[Admin] Clear all earnings data")

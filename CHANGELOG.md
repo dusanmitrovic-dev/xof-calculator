@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [0.66.0] - 2025-03-06
+### Changed
+- most of admin command messages are ephemeral now,
+- `/calculate workflow` will only show roles that user has.
+
 ## [0.65.0] - 2025-03-06
 ### Added
 - New `toggle-user-role-override` command.

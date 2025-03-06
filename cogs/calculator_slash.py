@@ -154,7 +154,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         configured_roles = []
         
         for role in guild_roles:
-            if str(role.id) in role_data[guild_id]["roles"]:
+            if str(role.id) in role_data[guild_id]["roles"] and role in interaction.user.roles:
                 configured_roles.append(role)
         
         if not configured_roles:
@@ -463,8 +463,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         user="The user whose earnings you want to view",
         entries="Number of entries to return (max 50)"
     )
-    @app_commands.default_permissions(administrator=True)  # Hide from non-admins
-    @app_commands.checks.has_permissions(administrator=True)  # Restrict to admins
+    @app_commands.default_permissions(administrator=True)
     async def view_earnings_admin(
         self,
         interaction: discord.Interaction,
@@ -479,12 +478,13 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
 
         # Ensure entries is within the allowed range
         entries = min(max(entries, 1), 50)  # Clamp between 1 and 50
+        # entries = entries.sort(reverse=True)
         
         # Load earnings data
         earnings_data = await file_handlers.load_json(settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS)
         
         # Check if the user has any earnings data
-        user_earnings = earnings_data.get(user.mention, [])[:entries]
+        user_earnings = earnings_data.get(target_user.mention, [])[::-1][:entries]
         
         if not user_earnings:
             await interaction.response.send_message(f"❌ No earnings data found for {user.mention}.", ephemeral=True)
@@ -534,7 +534,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         embed.add_field(name="Total Gross Revenue", value=f"```\n${total_gross:.2f}\n```", inline=False)
         embed.add_field(name="Total Cut", value=f"```\n${total_cut_sum:.2f}\n```", inline=False)
         
-        await interaction.response.send_message(embed=embed)
+        await interaction.response.send_message(embed=embed, ephemeral=True)
 
     # User command to view their own earnings
     @app_commands.command(
@@ -560,7 +560,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         earnings_data = await file_handlers.load_json(settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS)
         
         # Check if the user has any earnings data
-        user_earnings = earnings_data.get(target_user.mention, [])[:entries]
+        user_earnings = earnings_data.get(target_user.mention, [])[::-1][:entries]
         
         if not user_earnings:
             await interaction.response.send_message(f"❌ No earnings data found for {target_user.mention}.", ephemeral=True)
@@ -610,7 +610,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         embed.add_field(name="Total Gross Revenue", value=f"```\n${total_gross:.2f}\n```", inline=False)
         embed.add_field(name="Total Cut", value=f"```\n${total_cut_sum:.2f}\n```", inline=False)
         
-        await interaction.response.send_message(embed=embed)
+        await interaction.response.send_message(embed=embed, ephemeral=True)
 
 # View classes remain unchanged
 class PeriodSelectionView(ui.View):
