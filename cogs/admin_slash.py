@@ -20,13 +20,15 @@ class AdminSlashCommands(commands.Cog, name="admin"):
     def __init__(self, bot):
         self.bot = bot
 
-    def validate_percentage(self, value: Optional[float]) -> bool:
-        """Validate percentage input"""
-        return value is None or (isinstance(value, (int, float)) and 0 <= value <= 100)
-    
-    def validate_hourly_rate(self, value: Optional[float]) -> bool:
-        """Validate hourly rate input"""
-        return value is None or (isinstance(value, (int, float)) and value >= 0)
+    def validate_percentage(self, percentage: Optional[float]) -> bool:
+        if percentage is None:
+            return True
+        return 0 <= percentage <= 100
+
+    def validate_hourly_rate(self, rate: Optional[float]) -> bool:
+        if rate is None:
+            return True
+        return rate >= 0
     
     @app_commands.command(name="set-role-commission")
     @app_commands.describe(
@@ -49,15 +51,20 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             return
         
         # Load existing settings
-        commission_settings = await file_handlers.load_json(settings.COMMISSION_SETTINGS_FILE, settings.DEFAULT_COMMISSION_SETTINGS)
+        commission_settings = await file_handlers.load_json(settings.COMMISSION_SETTINGS_FILE, {})
+        
+        # Ensure guild-specific settings exist
+        guild_id = str(interaction.guild.id)
+        if guild_id not in commission_settings:
+            commission_settings[guild_id] = {"roles": {}, "users": {}}
         
         # Ensure 'roles' key exists
-        commission_settings.setdefault('roles', {})
+        commission_settings[guild_id].setdefault('roles', {})
         
         # Update role commission_settings
-        role_settings = commission_settings['roles'].get(str(role.id), {})
+        role_settings = commission_settings[guild_id]['roles'].get(str(role.id), {})
         role_settings['commission_percentage'] = percentage
-        commission_settings['roles'][str(role.id)] = role_settings
+        commission_settings[guild_id]['roles'][str(role.id)] = role_settings
         
         # Save updated commission_settings
         await file_handlers.save_json(settings.COMMISSION_SETTINGS_FILE, commission_settings)
@@ -88,15 +95,20 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             return
         
         # Load existing settings
-        commission_settings = await file_handlers.load_json(settings.COMMISSION_SETTINGS_FILE, settings.DEFAULT_COMMISSION_SETTINGS)
+        commission_settings = await file_handlers.load_json(settings.COMMISSION_SETTINGS_FILE, {})
+        
+        # Ensure guild-specific settings exist
+        guild_id = str(interaction.guild.id)
+        if guild_id not in commission_settings:
+            commission_settings[guild_id] = {"roles": {}, "users": {}}
         
         # Ensure 'roles' key exists
-        commission_settings.setdefault('roles', {})
+        commission_settings[guild_id].setdefault('roles', {})
         
         # Update role settings
-        role_settings = commission_settings['roles'].get(str(role.id), {})
+        role_settings = commission_settings[guild_id]['roles'].get(str(role.id), {})
         role_settings['hourly_rate'] = rate
-        commission_settings['roles'][str(role.id)] = role_settings
+        commission_settings[guild_id]['roles'][str(role.id)] = role_settings
         
         # Save updated settings
         await file_handlers.save_json(settings.COMMISSION_SETTINGS_FILE, commission_settings)
@@ -129,16 +141,21 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             return
         
         # Load existing settings
-        commission_settings = await file_handlers.load_json(settings.COMMISSION_SETTINGS_FILE, settings.DEFAULT_COMMISSION_SETTINGS)
+        commission_settings = await file_handlers.load_json(settings.COMMISSION_SETTINGS_FILE, {})
+        
+        # Ensure guild-specific settings exist
+        guild_id = str(interaction.guild.id)
+        if guild_id not in commission_settings:
+            commission_settings[guild_id] = {"roles": {}, "users": {}}
         
         # Ensure 'users' key exists
-        commission_settings.setdefault('users', {})
+        commission_settings[guild_id].setdefault('users', {})
         
         # Update user settings
-        user_settings = commission_settings['users'].get(str(user.id), {})
+        user_settings = commission_settings[guild_id]['users'].get(str(user.id), {})
         user_settings['commission_percentage'] = percentage
         user_settings['override_role'] = override_role
-        commission_settings['users'][str(user.id)] = user_settings
+        commission_settings[guild_id]['users'][str(user.id)] = user_settings
         
         # Save updated settings
         await file_handlers.save_json(settings.COMMISSION_SETTINGS_FILE, commission_settings)
@@ -172,13 +189,18 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             return
         
         # Load existing settings
-        commission_settings = await file_handlers.load_json(settings.COMMISSION_SETTINGS_FILE, settings.DEFAULT_COMMISSION_SETTINGS)
+        commission_settings = await file_handlers.load_json(settings.COMMISSION_SETTINGS_FILE, {})
+        
+        # Ensure guild-specific settings exist
+        guild_id = str(interaction.guild.id)
+        if guild_id not in commission_settings:
+            commission_settings[guild_id] = {"roles": {}, "users": {}}
         
         # Update user settings
-        user_settings = commission_settings['users'].get(str(user.id), {})
+        user_settings = commission_settings[guild_id]['users'].get(str(user.id), {})
         user_settings['hourly_rate'] = rate
         user_settings['override_role'] = override_role
-        commission_settings['users'][str(user.id)] = user_settings
+        commission_settings[guild_id]['users'][str(user.id)] = user_settings
         
         # Save updated settings
         await file_handlers.save_json(settings.COMMISSION_SETTINGS_FILE, commission_settings)
@@ -201,14 +223,18 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         user: Optional[discord.User] = None
     ):
         """View commission settings for a role or user"""
-        commission_settings = await file_handlers.load_json(settings.COMMISSION_SETTINGS_FILE, settings.DEFAULT_COMMISSION_SETTINGS)
+        commission_settings = await file_handlers.load_json(settings.COMMISSION_SETTINGS_FILE, {})
+        
+        # Get guild-specific settings
+        guild_id = str(interaction.guild.id)
+        guild_settings = commission_settings.get(guild_id, {"roles": {}, "users": {}})
         
         # Create an embed to display commission_settings
         embed = discord.Embed(title="Commission Settings", color=0x009933)
         
         if role:
             # View specific role commission_settings
-            role_settings = commission_settings['roles'].get(str(role.id), {})
+            role_settings = guild_settings['roles'].get(str(role.id), {})
             embed.description = f"Settings for Role: {role.mention}"
             embed.add_field(
                 name="Commission", 
@@ -222,7 +248,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             )
         elif user:
             # View specific user commission_settings
-            user_settings = commission_settings['users'].get(str(user.id), {})
+            user_settings = guild_settings['users'].get(str(user.id), {})
             embed.description = f"Settings for User: {user.mention}"
             embed.add_field(
                 name="Commission", 
@@ -245,7 +271,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             
             # Role commission_settings summary
             role_summary = []
-            for role_id, role_data in commission_settings['roles'].items():
+            for role_id, role_data in guild_settings['roles'].items():
                 role = interaction.guild.get_role(int(role_id))
                 if role:
                     role_summary.append(
@@ -258,7 +284,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             
             # User commission_settings summary
             user_summary = []
-            for user_id, user_data in commission_settings['users'].items():
+            for user_id, user_data in guild_settings['users'].items():
                 member = interaction.guild.get_member(int(user_id))
                 if member:
                     user_summary.append(

@@ -111,7 +111,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         
         # Create period selection view, passing the compensation type and hours worked
         view = PeriodSelectionView(self, valid_periods, compensation_type, hours_worked)
-        await interaction.response.send_message(content="Select a period:", view=view)
+        await interaction.response.edit_message(content="Select a period:", view=view)
 
     # async def start_period_selection(self, interaction: discord.Interaction, compensation_type: str, hours_worked: Decimal):
     #     """First step: Period selection"""

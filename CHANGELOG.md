@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [0.63.0] - 2025-03-06
+### Changed
+- (calculator_slash): compensation view now gets edited instead of staying untouched
+- (admin_slash): updated configuration commands for new `commission_settings.json` structure
+
 ## [0.62.0] - 2025-03-06
 ### Added
 - Second working version for preview / finalize methods with compensation and real hours input data.
