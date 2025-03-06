@@ -251,7 +251,7 @@
 - [x] (v0.57.0) Add input validation for hourly rates
 - [x] (v0.57.0) Create backup mechanism for settings file
 - [x] (v0.58.0) Add compensation step to the workflow
-- [ ] Add guild id entry that wraps data
+- [x] Add guild id entry that wraps data
 - [x] Do hourly only get bonus for gross?
     - YES
 - [ ] Remove loggers from preview method
