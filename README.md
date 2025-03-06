@@ -264,8 +264,8 @@
 - [x] Calculate priority
     - [x] (HIGHEST) User commission and hourly
     - [x] (MEDIUM) Role commission and hourly
-- [ ] Modify existing earnings calculation to use commission settings
-- [ ] Implement rate selection logic:
+- [x] Modify existing earnings calculation to use commission settings 
+- [x] Implement rate selection logic:
   - User-specific rates with override
   - Role-based fallback
 - [ ] Create helper methods to retrieve appropriate rates
