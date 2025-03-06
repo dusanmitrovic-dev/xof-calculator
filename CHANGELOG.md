@@ -210,35 +210,35 @@ New admin slash commands:
 ## [0.25.0] - 2025-03-01
 ### Added
 - New admin slash commands:
-  - Data Export
-    - `/admin-export-earnings-csv`: Export all earnings data as CSV
-    - `/admin-export-earnings-json`: Export all earnings data as JSON
-  - Role Management
-    - `/set-role`: Set a role's percentage cut
-    - `/remove-role`: Remove a role's percentage configuration
-    - `/list-roles`: List configured roles and percentages
-  - Shift Management
-    - `/set-shift`: Add a valid shift name
-    - `/remove-shift`: Remove a shift configuration
-    - `/list-shifts`: List configured shifts
-  - Period Management
-    - `/set-period`: Add a valid period name
-    - `/remove-period`: Remove a period configuration
-    - `/list-periods`: List configured periods
-  - Bonus Rules Management
-    - `/set-bonus-rule`: Set a bonus rule for a revenue range
-    - `/remove-bonus-rule`: Remove a bonus rule for a revenue range
-    - `/list-bonus-rules`: List configured bonus rules
-  - Model Management
-    - `/set-model`: Add a valid model name
-    - `/remove-model`: Remove a model configuration
-    - `/list-models`: List configured models
-  - Data Management
-    - `/clear-earnings`: Clear all earnings data (with confirmation)
-    - `/reset-config`: Reset all configuration files (with confirmation)
-    - `/restore-latest-backup`: Restore the latest backup (with confirmation)
-- Added confirmation dialogs for destructive operations
-- Improved error handling and logging for administrative operations
+  - Data Export:
+    - `/admin-export-earnings-csv`: Export all earnings data as CSV,
+    - `/admin-export-earnings-json`: Export all earnings data as JSON,
+  - Role Management:
+    - `/set-role`: Set a role's percentage cut,
+    - `/remove-role`: Remove a role's percentage configuration,
+    - `/list-roles`: List configured roles and percentages,
+  - Shift Management:
+    - `/set-shift`: Add a valid shift name,
+    - `/remove-shift`: Remove a shift configuration,
+    - `/list-shifts`: List configured shifts,
+  - Period Management:
+    - `/set-period`: Add a valid period name,
+    - `/remove-period`: Remove a period configuration,
+    - `/list-periods`: List configured periods,
+  - Bonus Rules Management:
+    - `/set-bonus-rule`: Set a bonus rule for a revenue range,
+    - `/remove-bonus-rule`: Remove a bonus rule for a revenue range,
+    - `/list-bonus-rules`: List configured bonus rules,
+  - Model Management:
+    - `/set-model`: Add a valid model name,
+    - `/remove-model`: Remove a model configuration,
+    - `/list-models`: List configured models,
+  - Data Management:
+    - `/clear-earnings`: Clear all earnings data (with confirmation),
+    - `/reset-config`: Reset all configuration files (with confirmation),
+    - `/restore-latest-backup`: Restore the latest backup (with confirmation),
+- Added confirmation dialogs for destructive operations,
+- Improved error handling and logging for administrative operations.
 
 ## [0.24.0] - 2025-03-01
 ### Added
