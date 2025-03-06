@@ -79,13 +79,15 @@ def calculate_earnings(
         "total_cut": total_cut
     }
 
-def calculate_hourly_earnings(hours: Decimal, hourly_rate: Decimal, bonus_rules: List[Dict[str, Decimal]]) -> Dict[str, Decimal]:
-    gross_revenue = hours * hourly_rate
+def calculate_hourly_earnings(gross_revenue: Decimal, hours: Decimal, hourly_rate: Decimal, bonus_rules: List[Dict[str, Decimal]]) -> Dict[str, Decimal]:
+    commission_earnings = calculate_earnings(gross_revenue, 0, bonus_rules)
+    gross_revenue = gross_revenue
+    hourly_revenue = hours * hourly_rate
     net_revenue = 0
     platform_fee = 0
-    employee_cut = gross_revenue
-    bonus = 0
-    total_cut = employee_cut
+    employee_cut = hourly_revenue
+    bonus = commission_earnings["bonus"]
+    total_cut = employee_cut + bonus
     
     return {
         "gross_revenue": gross_revenue,
@@ -96,24 +98,22 @@ def calculate_hourly_earnings(hours: Decimal, hourly_rate: Decimal, bonus_rules:
         "total_cut": total_cut
     }
 
-def calculate_combined_earnings(gross_revenue: Decimal, percentage: Decimal, hourly_rate: Decimal, bonus_rules: List[Dict[str, Decimal]]) -> Dict[str, Decimal]:
+def calculate_combined_earnings(gross_revenue: Decimal, percentage: Decimal, hours: Decimal, hourly_rate: Decimal, bonus_rules: List[Dict[str, Decimal]]) -> Dict[str, Decimal]:
     # Calculate commission-based earnings
     commission_earnings = calculate_earnings(gross_revenue, percentage, bonus_rules)
     
     # Calculate hourly earnings
-    hourly_earnings = calculate_hourly_earnings(gross_revenue, hourly_rate, bonus_rules)
-
-    net_revenue, employee_cut, platform_fee = calculate_revenue_share(gross_revenue, role_percentage)
+    hourly_earnings = calculate_hourly_earnings(gross_revenue, hours, hourly_rate, [])
     
     # Combine results
     total_cut = commission_earnings["total_cut"] + hourly_earnings["total_cut"]
     
     return {
         "gross_revenue": gross_revenue,
-        "net_revenue": net_revenue,
-        "platform_fee": platform_fee,
-        "employee_cut": employee_cut,
-        "bonus": bonus,
+        "net_revenue": commission_earnings["net_revenue"],
+        "platform_fee": commission_earnings["platform_fee"],
+        "employee_cut": commission_earnings["employee_cut"],
+        "bonus": commission_earnings["bonus"],
         "total_cut": total_cut
     }
 

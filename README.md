@@ -240,6 +240,7 @@
 - [x] (v0.57.0) Implement `/set-user-hourly` command
 - [x] (v0.57.0) Implement `/view-commission-settings` command
 - [ ] Make them admin slash ephemeral
+- [ ] Update configuration commands for new `commission_settings.json` structure
 
 ## Data Management
 - [x] (v0.57.0) Create `commission_settings.json` in `data/` directory
@@ -248,6 +249,8 @@
 - [x] (v0.57.0) Create backup mechanism for settings file
 - [x] (v0.58.0) Add compensation step to the workflow
 - [ ] Add guild id entry that wraps data
+- [x] Do hourly only get bonus for gross?
+    - YES
  
 ## Calculation Logic Integration
 - [x] (v0.59.0) `calculate_hourly_earnings` method

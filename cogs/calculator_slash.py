@@ -14,21 +14,52 @@ from utils import file_handlers, validators, calculations
 
 logger = logging.getLogger("xof_calculator.calculator")
 
+class HoursWorkedModal(ui.Modal, title="Enter Hours Worked"):
+    def __init__(self, cog, period, shift, role, gross_revenue, compensation_type):
+        super().__init__()
+        self.cog = cog
+        self.period = period
+        self.shift = shift
+        self.role = role
+        self.gross_revenue = gross_revenue
+        self.compensation_type = compensation_type
+        
+        self.hours_input = ui.TextInput(
+            label="Hours Worked (e.g. 8)",
+            placeholder="Enter number of hours...",
+            required=True
+        )
+        self.add_item(self.hours_input)
+    
+    async def on_submit(self, interaction: discord.Interaction):
+        # Parse hours input
+        hours_str = self.hours_input.value
+        try:
+            hours_worked = Decimal(hours_str)
+            if hours_worked <= 0:
+                raise ValueError("Hours worked must be positive")
+        except (ValueError, InvalidOperation):
+            logger.warning(f"User {interaction.user.name} ({interaction.user.id}) entered invalid hours format: {hours_str}")
+            await interaction.response.send_message("❌ Invalid hours format. Please use a valid positive number.", ephemeral=True)
+            return
+        
+        await self.cog.show_model_selection(interaction, self.period, self.shift, self.role, self.gross_revenue, self.compensation_type, hours_worked)
+
 class CompensationTypeSelectionView(ui.View):
     def __init__(self, cog):
         super().__init__(timeout=180)
         self.cog = cog
         
         # Add buttons for each compensation type
-        commission_button = ui.Button(label="Commission", style=discord.ButtonStyle.primary)
+        commission_button = ui.Button(label="Commission (%)", style=discord.ButtonStyle.primary)
         commission_button.callback = lambda i: self.on_compensation_selected(i, "commission")
         self.add_item(commission_button)
         
-        hourly_button = ui.Button(label="Hourly", style=discord.ButtonStyle.primary)
+        hourly_button = ui.Button(label="Hourly ($/h)", style=discord.ButtonStyle.primary)
         hourly_button.callback = lambda i: self.on_compensation_selected(i, "hourly")
         self.add_item(hourly_button)
         
-        both_button = ui.Button(label="Both", style=discord.ButtonStyle.primary)
+        both_button = ui.Button(label="Both (% + $/h)", style=discord.ButtonStyle.primary)
         both_button.callback = lambda i: self.on_compensation_selected(i, "both")
         self.add_item(both_button)
     
@@ -56,7 +87,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         
         # Start the interactive workflow with compensation type selection
         view = CompensationTypeSelectionView(self)
-        await interaction.response.send_message("Select a compensation type:", view=view, ephemeral=True)
+        await interaction.response.send_message("Select a compensation type:", view=view) # change to ephemeral
 
     async def start_period_selection(self, interaction: discord.Interaction, compensation_type: str):
         """First step: Period selection"""
@@ -159,22 +190,49 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         await interaction.response.edit_message(content="Select models (optional, you can select multiple):", view=view)
 
     async def preview_calculation(self, interaction: discord.Interaction, period: str, shift: str, role: discord.Role, 
-                                gross_revenue: Decimal, selected_models: List[str], compensation_type: str):
+                             gross_revenue: Decimal, selected_models: List[str], compensation_type: str):
         """Preview calculation and show confirmation options"""
 
         # Log selected models
         logger.info(f"User {interaction.user.name} ({interaction.user.id}) selected models: {', '.join(selected_models) if selected_models else 'None'}")
         
         guild_id = str(interaction.guild_id)
+        logger.info(f"guild_id: {guild_id}")
         
         # Get role percentage from configuration
-        
         role_data = await file_handlers.load_json(settings.COMMISSION_SETTINGS_FILE, settings.DEFAULT_COMMISSION_SETTINGS)
-        percentage = Decimal(str(role_data[guild_id][str(role.id)])) # default percentage calculation
+        logger.info(f"role_data: {role_data}")
+        
+        # Check if guild_id exists in role_data
+        if guild_id not in role_data:
+            logger.error(f"Guild ID {guild_id} not found in role_data")
+            await interaction.edit_original_response(content="Guild configuration not found. Please contact an administrator.")
+            return
+        
+        guild_config = role_data[guild_id]
+        logger.info(f"guild_config: {guild_config}")
+        
+        # Check if role exists in the guild's roles configuration
+        if str(role.id) not in guild_config.get("roles", {}):
+            logger.error(f"Role ID {role.id} not found in guild {guild_id} configuration")
+            await interaction.edit_original_response(content="Role configuration not found. Please contact an administrator.")
+            return
+        
+        role_config = guild_config["roles"][str(role.id)]
+        percentage = Decimal(str(role_config.get("commission_percentage", 0)))
+        logger.info(f"percentage: {percentage}")
+        
+        # Check if the user has an override
+        user_config = guild_config.get("users", {}).get(str(interaction.user.id), {})
+        logger.info(f"user_config: {user_config}")
+        if user_config.get("override_role", False):
+            percentage = Decimal(str(user_config.get("commission_percentage", percentage)))
+            logger.info(f"override_role percentage: {percentage}")
         
         # Load bonus rules
         bonus_rules = await file_handlers.load_json(settings.BONUS_RULES_FILE, settings.DEFAULT_BONUS_RULES)
         guild_bonus_rules = bonus_rules.get(guild_id, [])
+        logger.info(f"guild_bonus_rules: {guild_bonus_rules}")
         
         # Convert to proper Decimal objects for calculations
         bonus_rule_objects = []
@@ -185,6 +243,10 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                 "amount": Decimal(str(rule.get("amount", 0)))
             }
             bonus_rule_objects.append(rule_obj)
+            logger.info(f"bonus_rule_object: {rule_obj}")
+        
+        hourly_rate = 0.0
+        hours = 8  # Default to 8 hours # todo replace with real hours
 
         # Calculate earnings based on compensation type
         if compensation_type == "commission":
@@ -195,26 +257,33 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             )
         elif compensation_type == "hourly":
             # Calculate hourly earnings
+            hourly_rate = Decimal(str(role_config.get("hourly_rate", 0)))
+            logger.info(f"hourly_rate: {hourly_rate}")
+            if user_config.get("override_role", False):
+                hourly_rate = Decimal(str(user_config.get("hourly_rate", hourly_rate)))
+                logger.info(f"override_role hourly_rate: {hourly_rate}")
+            
             results = calculations.calculate_hourly_earnings(
                 gross_revenue,
-                role_data[guild_id][str(role.id)].get("hourly_rate", 0),
+                8, # example hours
+                hourly_rate,
                 bonus_rule_objects
             )
         elif compensation_type == "both":
             # Calculate both commission and hourly earnings
+            hourly_rate = Decimal(str(role_config.get("hourly_rate", 0)))
+            logger.info(f"hourly_rate: {hourly_rate}")
+            if user_config.get("override_role", False):
+                hourly_rate = Decimal(str(user_config.get("hourly_rate", hourly_rate)))
+                logger.info(f"override_role hourly_rate: {hourly_rate}")
+            
             results = calculations.calculate_combined_earnings(
                 gross_revenue,
                 percentage,
-                role_data[guild_id][str(role.id)].get("hourly_rate", 0),
+                hours,
+                hourly_rate,
                 bonus_rule_objects
             )
-        
-        # Calculate earnings
-        # results = calculations.calculate_earnings(
-        #     gross_revenue,
-        #     percentage,
-        #     bonus_rule_objects
-        # )
         
         # Log calculation preview
         logger.info(f"Calculation preview for {interaction.user.name}: Gross=${results['gross_revenue']}, Net=${results['net_revenue']}, Total Cut=${results['total_cut']}")
@@ -233,11 +302,12 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                 "💸 Compensation",
                 {
                     "commission": f"{percentage:.2f}%",
-                    "hourly": f"${role_data[guild_id][str(role.id)].get('hourly_rate', 0):,.2f}/h",
-                    "both": f"{percentage:.2f}% + ${role_data[guild_id][str(role.id)].get('hourly_rate', 0):,.2f}/h"
+                    "hourly": f"${hourly_rate:,.2f}/h",
+                    "both": f"{percentage:.2f}% + ${hourly_rate:,.2f}/h"
                 }[compensation_type],
                 True
             ),
+            ("⏰ Hours Worked", f"{hours:.2f}h", True),
             ("📅 Date", current_date, True),
             ("✍ Sender", sender, True),
             ("📥 Shift", shift, True),
@@ -246,6 +316,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             ("💰 Gross Revenue", f"${float(results['gross_revenue']):,.2f}", True),
             ("💵 Net Revenue", f"${float(results['net_revenue']):,.2f} (80%)", True),
             ("🎁 Bonus", f"${float(results['bonus']):,.2f}", True),
+            ("💼 Employee Cut", f"${float(results['employee_cut']):,.2f}", True),
             ("💰 Total Cut", f"${float(results['total_cut']):,.2f}", True),
             ("🎭 Models", models_list, False)
         ]

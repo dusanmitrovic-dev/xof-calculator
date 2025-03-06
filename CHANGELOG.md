@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.61.0] - 2025-03-06
+### Added
+- First working version for preview with compensation and dummy 8 hours of work data.
+
 ## [0.60.0] - 2025-03-05
 ### Changed
 - Modified `calculate_hourly_earnings` method to align with already used logic.
