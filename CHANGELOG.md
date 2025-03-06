@@ -243,12 +243,12 @@ New admin slash commands:
 ## [0.24.0] - 2025-03-01
 ### Added
 - New admin command:
-    - `admin-export-earnings-json`
+    - `admin-export-earnings-json`.
 
 ## [0.23.0] - 2025-03-01
 ### Added
 - New admin command:
-    - `admin-export-earnings-csv`
+    - `admin-export-earnings-csv`.
 
 ## [0.22.0] - 2025-03-01
 ### Added
@@ -271,7 +271,7 @@ New admin slash commands:
 
 ## [0.18.0] - 2025-02-27
 ### Added
-- Log command usage
+- Log command usage:
     - Admin commands.
 
 ## [0.17.0] - 2025-02-27
@@ -369,8 +369,8 @@ New admin slash commands:
 
 ## [0.2.0] - 2025-02-26
 ### Added
-- Correct version bump
-    - instead of v0.1.9 bumped to v0.2.0
+- Correct version bump:
+    - instead of v0.1.9 bumped to v0.2.0.
 
 ## [0.1.9] - 2025-02-26
 ### Added
@@ -413,7 +413,7 @@ New admin slash commands:
 
 ## [0.1.0] - 2025-02-25
 ### Added
-- `main.py` system remodeled
+- `main.py` system remodeled:
     - bug fixes,
     - clean code.
     - remodeled functions now being used instead.
