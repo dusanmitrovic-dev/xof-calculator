@@ -261,7 +261,7 @@
  
 ## Calculation Logic Integration
 - [x] (v0.59.0) `calculate_hourly_earnings` method
-- [ ] Calculate priority
+- [x] Calculate priority
     - [x] (HIGHEST) User commission and hourly
     - [x] (MEDIUM) Role commission and hourly
 - [ ] Modify existing earnings calculation to use commission settings
