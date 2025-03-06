@@ -263,7 +263,7 @@
 - [x] (v0.59.0) `calculate_hourly_earnings` method
 - [ ] Calculate priority
     - [x] (HIGHEST) User commission and hourly
-    - [ ] (MEDIUM) Role commission and hourly
+    - [x] (MEDIUM) Role commission and hourly
     - [ ] (LOWEST) Percentage settings default logic (necessary?)
 - [ ] Modify existing earnings calculation to use commission settings
 - [ ] Implement rate selection logic:
