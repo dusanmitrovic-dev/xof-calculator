@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [0.64.0] - 2025-03-06
+### Changed
+- (calculator_slash): fixed role logic for commission settings
+- (admin_slash): commission commands are now admin only
+
 ## [0.63.0] - 2025-03-06
 ### Changed
 - (calculator_slash): compensation view now gets edited instead of staying untouched

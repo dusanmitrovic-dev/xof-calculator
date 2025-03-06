@@ -88,7 +88,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         
         # Start the interactive workflow with compensation type selection
         view = CompensationTypeSelectionView(self)
-        await interaction.response.send_message("Select a compensation type:", view=view) # change to ephemeral
+        await interaction.response.send_message("Select a compensation type:", view=view, ephemeral=True)
 
     async def start_period_selection(self, interaction: discord.Interaction, compensation_type: str):
         """First step: Period selection"""
@@ -112,24 +112,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         # Create period selection view, passing the compensation type and hours worked
         view = PeriodSelectionView(self, valid_periods, compensation_type, hours_worked)
         await interaction.response.edit_message(content="Select a period:", view=view)
-
-    # async def start_period_selection(self, interaction: discord.Interaction, compensation_type: str, hours_worked: Decimal):
-    #     """First step: Period selection"""
-
-    #     guild_id = str(interaction.guild_id)
-        
-    #     # Load period data
-    #     period_data = await file_handlers.load_json(settings.PERIOD_DATA_FILE, settings.DEFAULT_PERIOD_DATA)
-    #     valid_periods = period_data.get(guild_id, [])
-        
-    #     if not valid_periods:
-    #         logger.warning(f"No periods configured for guild {guild_id}")
-    #         await interaction.response.send_message("❌ No periods configured! Admins: use !set-period.", ephemeral=True)
-    #         return
-        
-    #     # Create period selection view, passing the compensation type
-    #     view = PeriodSelectionView(self, valid_periods, compensation_type, hours_worked)
-    #     await interaction.response.send_message(content="Select a period:", view=view)
     
     async def show_shift_selection(self, interaction: discord.Interaction, period: str, compensation_type: str, hours_worked: Decimal):
         """Second step: Shift selection"""
@@ -160,11 +142,11 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         guild_id = str(interaction.guild_id)
         
         # Load role data
-        role_data = await file_handlers.load_json(settings.ROLE_DATA_FILE, settings.DEFAULT_ROLE_DATA)
+        role_data = await file_handlers.load_json(settings.COMMISSION_SETTINGS_FILE, settings.DEFAULT_COMMISSION_SETTINGS)
         
         if guild_id not in role_data or not role_data[guild_id]:
             logger.warning(f"No roles configured for guild {guild_id}")
-            await interaction.response.edit_message(content="❌ No roles configured! Admins: use !set-role.", view=None)
+            await interaction.response.edit_message(content="❌ No roles configured! Admins: use /set-role-commission.", view=None)
             return
         
         # Get roles for this guild that are in the configuration
@@ -172,12 +154,12 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         configured_roles = []
         
         for role in guild_roles:
-            if str(role.id) in role_data[guild_id]:
+            if str(role.id) in role_data[guild_id]["roles"]:
                 configured_roles.append(role)
         
         if not configured_roles:
             logger.warning(f"No configured roles found in guild {guild_id}")
-            await interaction.response.edit_message(content="❌ No roles configured! Admins: use !set-role.", view=None)
+            await interaction.response.edit_message(content="❌ No roles configured! Admins: use /set-role-commission.", view=None)
             return
         
         # Create role selection view
@@ -281,7 +263,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             )
         elif compensation_type == "hourly":
             # Calculate hourly earnings
-            hourly_rate = Decimal(str(role_config.get("hourly_rate", 0)))
+            hourly_rate = Decimal(str(role_config.get("hourly_rate", 0))) if role_config.get("hourly_rate") else 0
             logger.info(f"hourly_rate: {hourly_rate}")
             if user_config.get("override_role", False):
                 hourly_rate = Decimal(str(user_config.get("hourly_rate", hourly_rate)))
@@ -295,7 +277,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             )
         elif compensation_type == "both":
             # Calculate both commission and hourly earnings
-            hourly_rate = Decimal(str(role_config.get("hourly_rate", 0)))
+            hourly_rate = Decimal(str(role_config.get("hourly_rate", 0))) if role_config.get("hourly_rate") else 0
             logger.info(f"hourly_rate: {hourly_rate}")
             if user_config.get("override_role", False):
                 hourly_rate = Decimal(str(user_config.get("hourly_rate", hourly_rate)))

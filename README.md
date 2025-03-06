@@ -242,6 +242,7 @@
 - [ ] Make them admin slash ephemeral
 - [x] (v0.63.0) Update configuration commands for new `commission_settings.json` structure
 - [x] (v0.63.0) Compensation view gets edited instead of staying untouched.
+- [x] (v0.64.0) Commission commands to be admin only
 
 ## Data Management
 - [x] (v0.57.0) Create `commission_settings.json` in `data/` directory
@@ -253,6 +254,9 @@
 - [x] Do hourly only get bonus for gross?
     - YES
 - [ ] Remove loggers from preview method
+- [ ] Block cases that do not have set % or $/h from attempting
+    - or handle properly
+- [x] (v0.64.0) fix role logic for commission settings
  
 ## Calculation Logic Integration
 - [x] (v0.59.0) `calculate_hourly_earnings` method

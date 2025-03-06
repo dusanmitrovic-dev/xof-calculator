@@ -31,6 +31,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         return rate >= 0
     
     @app_commands.command(name="set-role-commission")
+    @app_commands.default_permissions(administrator=True)
     @app_commands.describe(
         role="The role to set commission for",
         percentage="Commission percentage (0-100)"
@@ -75,6 +76,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         await interaction.response.send_message(response)
     
     @app_commands.command(name="set-role-hourly")
+    @app_commands.default_permissions(administrator=True)
     @app_commands.describe(
         role="The role to set hourly rate for",
         rate="Hourly rate in dollars"
@@ -119,6 +121,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         await interaction.response.send_message(response)
     
     @app_commands.command(name="set-user-commission")
+    @app_commands.default_permissions(administrator=True)
     @app_commands.describe(
         user="The user to set commission for",
         percentage="Commission percentage (0-100)",
@@ -167,6 +170,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         await interaction.response.send_message(response)
     
     @app_commands.command(name="set-user-hourly")
+    @app_commands.default_permissions(administrator=True)
     @app_commands.describe(
         user="The user to set hourly rate for",
         rate="Hourly rate in dollars",
@@ -212,6 +216,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         await interaction.response.send_message(response)
     
     @app_commands.command(name="view-commission-settings")
+    @app_commands.default_permissions(administrator=True)
     @app_commands.describe(
         role="Optional role to view settings for",
         user="Optional user to view settings for"
