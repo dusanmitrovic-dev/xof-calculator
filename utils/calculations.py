@@ -83,8 +83,8 @@ def calculate_hourly_earnings(gross_revenue: Decimal, hours: Decimal, hourly_rat
     commission_earnings = calculate_earnings(gross_revenue, 0, bonus_rules)
     gross_revenue = gross_revenue
     hourly_revenue = hours * hourly_rate
-    net_revenue = 0
-    platform_fee = 0
+    net_revenue = commission_earnings["net_revenue"]
+    platform_fee = commission_earnings["platform_fee"]
     employee_cut = hourly_revenue
     bonus = commission_earnings["bonus"]
     total_cut = employee_cut + bonus
@@ -104,6 +104,8 @@ def calculate_combined_earnings(gross_revenue: Decimal, percentage: Decimal, hou
     
     # Calculate hourly earnings
     hourly_earnings = calculate_hourly_earnings(gross_revenue, hours, hourly_rate, [])
+
+    employee_cut = commission_earnings["employee_cut"] + hourly_earnings["employee_cut"]
     
     # Combine results
     total_cut = commission_earnings["total_cut"] + hourly_earnings["total_cut"]
@@ -112,7 +114,7 @@ def calculate_combined_earnings(gross_revenue: Decimal, percentage: Decimal, hou
         "gross_revenue": gross_revenue,
         "net_revenue": commission_earnings["net_revenue"],
         "platform_fee": commission_earnings["platform_fee"],
-        "employee_cut": commission_earnings["employee_cut"],
+        "employee_cut": employee_cut,
         "bonus": commission_earnings["bonus"],
         "total_cut": total_cut
     }

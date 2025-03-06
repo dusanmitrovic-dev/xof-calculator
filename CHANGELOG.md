@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.62.0] - 2025-03-06
+### Added
+- Second working version for preview / finalize methods with compensation and real hours input data.
+
 ## [0.61.0] - 2025-03-06
 ### Added
 - First working version for preview with compensation and dummy 8 hours of work data.

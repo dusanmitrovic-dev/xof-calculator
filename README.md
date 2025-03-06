@@ -251,6 +251,7 @@
 - [ ] Add guild id entry that wraps data
 - [x] Do hourly only get bonus for gross?
     - YES
+- [ ] Remove loggers from preview method
  
 ## Calculation Logic Integration
 - [x] (v0.59.0) `calculate_hourly_earnings` method
