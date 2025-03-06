@@ -255,7 +255,7 @@
 - [x] Do hourly only get bonus for gross?
     - YES
 - [x] (v0.67.0) Remove loggers from preview method
-- [ ] Block cases that do not have set % or $/h from attempting
+- [x] Block cases that do not have set % or $/h from attempting
     - or handle properly
 - [x] (v0.64.0) fix role logic for commission settings
  
