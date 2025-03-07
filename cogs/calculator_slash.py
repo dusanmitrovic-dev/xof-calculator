@@ -85,6 +85,113 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
     def __init__(self, bot):
         self.bot = bot
         super().__init__()
+
+    async def generate_export_file(self, user_earnings, user, export_format):
+        """Generate export file based on format choice"""
+        sanitized_name = Path(user.name).stem[:32].replace(" ", "_")
+        timestamp = datetime.now().strftime('%Y%m%d')
+        base_name = f"earnings_{sanitized_name}_{timestamp}"
+        
+        buffer = io.BytesIO()
+        
+        if export_format == "csv":
+            df = pd.DataFrame(user_earnings)
+            df.to_csv(buffer, index=False)
+            buffer.seek(0)
+            return discord.File(buffer, filename=f"{base_name}.csv")
+        
+        elif export_format == "json":
+            import json
+            buffer.write(json.dumps(user_earnings, indent=2).encode('utf-8'))
+            buffer.seek(0)
+            return discord.File(buffer, filename=f"{base_name}.json")
+        
+        elif export_format == "xlsx":
+            df = pd.DataFrame(user_earnings)
+            with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
+                df.to_excel(writer, index=False, sheet_name='Earnings')
+            buffer.seek(0)
+            return discord.File(buffer, filename=f"{base_name}.xlsx")
+        
+        elif export_format == "pdf":
+            doc = SimpleDocTemplate(buffer, pagesize=letter)
+            elements = []
+            
+            # Create data table
+            data = [["Date", "Role", "Gross", "Total Cut"]]
+            for entry in user_earnings:
+                data.append([
+                    entry['date'],
+                    entry['role'],
+                    f"${float(entry['gross_revenue']):.2f}",
+                    f"${float(entry['total_cut']):.2f}"
+                ])
+            
+            table = Table(data)
+            style = TableStyle([
+                ('BACKGROUND', (0,0), (-1,0), colors.grey),
+                ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+                ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+                ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0,0), (-1,0), 14),
+                ('BOTTOMPADDING', (0,0), (-1,0), 12),
+                ('BACKGROUND', (0,1), (-1,-1), colors.beige),
+                ('GRID', (0,0), (-1,-1), 1, colors.black)
+            ])
+            table.setStyle(style)
+            elements.append(table)
+            
+            doc.build(elements)
+            buffer.seek(0)
+            return discord.File(buffer, filename=f"{base_name}.pdf")
+        
+        elif export_format == "png":
+            plt.figure(figsize=(10, 6))
+            dates = [datetime.strptime(entry['date'], '%Y-%m-%d') for entry in user_earnings]
+            gross = [float(entry['gross_revenue']) for entry in user_earnings]
+            cuts = [float(entry['total_cut']) for entry in user_earnings]
+            
+            plt.plot(dates, gross, label='Gross Revenue', marker='o')
+            plt.plot(dates, cuts, label='Total Cut', marker='x')
+            plt.title(f'Earnings Trend for {user.display_name}')
+            plt.xlabel('Date')
+            plt.ylabel('Amount ($)')
+            plt.legend()
+            plt.grid(True)
+            plt.tight_layout()
+            
+            plt.savefig(buffer, format='png')
+            plt.close()
+            buffer.seek(0)
+            return discord.File(buffer, filename=f"{base_name}.png")
+        
+        elif export_format == "zip":
+            zip_buffer = io.BytesIO()
+            with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
+                # Add CSV
+                csv_file = await generate_export_file(user_earnings, user, "csv")
+                zip_file.writestr(f"{base_name}.csv", csv_file.fp.getvalue())
+                
+                # Add PDF
+                pdf_file = await generate_export_file(user_earnings, user, "pdf")
+                zip_file.writestr(f"{base_name}.pdf", pdf_file.fp.getvalue())
+            
+            zip_buffer.seek(0)
+            return discord.File(zip_buffer, filename=f"{base_name}.zip")
+        
+        else:  # txt format
+            text_content = f"Earnings Report for {user.display_name}\n\n"
+            text_content += "Date       | Role       | Gross     | Total Cut\n"
+            text_content += "-"*40 + "\n"
+            for entry in user_earnings:
+                text_content += (
+                    f"{entry['date']} | {entry['role'].ljust(10)} | "
+                    f"${float(entry['gross_revenue']):>8.2f} | "
+                    f"${float(entry['total_cut']):>9.2f}\n"
+                )
+            buffer.write(text_content.encode('utf-8'))
+            buffer.seek(0)
+            return discord.File(buffer, filename=f"{base_name}.txt")
     
     # New interactive slash command
     @app_commands.command(
@@ -590,113 +697,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         else:
             await interaction.response.send_message(embed=embed)
 
-    async def generate_export_file(self, user_earnings, user, export_format):
-        """Generate export file based on format choice"""
-        sanitized_name = Path(user.name).stem[:32].replace(" ", "_")
-        timestamp = datetime.now().strftime('%Y%m%d')
-        base_name = f"earnings_{sanitized_name}_{timestamp}"
-        
-        buffer = io.BytesIO()
-        
-        if export_format == "csv":
-            df = pd.DataFrame(user_earnings)
-            df.to_csv(buffer, index=False)
-            buffer.seek(0)
-            return discord.File(buffer, filename=f"{base_name}.csv")
-        
-        elif export_format == "json":
-            import json
-            buffer.write(json.dumps(user_earnings, indent=2).encode('utf-8'))
-            buffer.seek(0)
-            return discord.File(buffer, filename=f"{base_name}.json")
-        
-        elif export_format == "xlsx":
-            df = pd.DataFrame(user_earnings)
-            with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
-                df.to_excel(writer, index=False, sheet_name='Earnings')
-            buffer.seek(0)
-            return discord.File(buffer, filename=f"{base_name}.xlsx")
-        
-        elif export_format == "pdf":
-            doc = SimpleDocTemplate(buffer, pagesize=letter)
-            elements = []
-            
-            # Create data table
-            data = [["Date", "Role", "Gross", "Total Cut"]]
-            for entry in user_earnings:
-                data.append([
-                    entry['date'],
-                    entry['role'],
-                    f"${float(entry['gross_revenue']):.2f}",
-                    f"${float(entry['total_cut']):.2f}"
-                ])
-            
-            table = Table(data)
-            style = TableStyle([
-                ('BACKGROUND', (0,0), (-1,0), colors.grey),
-                ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
-                ('ALIGN', (0,0), (-1,-1), 'CENTER'),
-                ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
-                ('FONTSIZE', (0,0), (-1,0), 14),
-                ('BOTTOMPADDING', (0,0), (-1,0), 12),
-                ('BACKGROUND', (0,1), (-1,-1), colors.beige),
-                ('GRID', (0,0), (-1,-1), 1, colors.black)
-            ])
-            table.setStyle(style)
-            elements.append(table)
-            
-            doc.build(elements)
-            buffer.seek(0)
-            return discord.File(buffer, filename=f"{base_name}.pdf")
-        
-        elif export_format == "png":
-            plt.figure(figsize=(10, 6))
-            dates = [datetime.strptime(entry['date'], '%Y-%m-%d') for entry in user_earnings]
-            gross = [float(entry['gross_revenue']) for entry in user_earnings]
-            cuts = [float(entry['total_cut']) for entry in user_earnings]
-            
-            plt.plot(dates, gross, label='Gross Revenue', marker='o')
-            plt.plot(dates, cuts, label='Total Cut', marker='x')
-            plt.title(f'Earnings Trend for {user.display_name}')
-            plt.xlabel('Date')
-            plt.ylabel('Amount ($)')
-            plt.legend()
-            plt.grid(True)
-            plt.tight_layout()
-            
-            plt.savefig(buffer, format='png')
-            plt.close()
-            buffer.seek(0)
-            return discord.File(buffer, filename=f"{base_name}.png")
-        
-        elif export_format == "zip":
-            zip_buffer = io.BytesIO()
-            with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
-                # Add CSV
-                csv_file = await generate_export_file(user_earnings, user, "csv")
-                zip_file.writestr(f"{base_name}.csv", csv_file.fp.getvalue())
-                
-                # Add PDF
-                pdf_file = await generate_export_file(user_earnings, user, "pdf")
-                zip_file.writestr(f"{base_name}.pdf", pdf_file.fp.getvalue())
-            
-            zip_buffer.seek(0)
-            return discord.File(zip_buffer, filename=f"{base_name}.zip")
-        
-        else:  # txt format
-            text_content = f"Earnings Report for {user.display_name}\n\n"
-            text_content += "Date       | Role       | Gross     | Total Cut\n"
-            text_content += "-"*40 + "\n"
-            for entry in user_earnings:
-                text_content += (
-                    f"{entry['date']} | {entry['role'].ljust(10)} | "
-                    f"${float(entry['gross_revenue']):>8.2f} | "
-                    f"${float(entry['total_cut']):>9.2f}\n"
-                )
-            buffer.write(text_content.encode('utf-8'))
-            buffer.seek(0)
-            return discord.File(buffer, filename=f"{base_name}.txt")
-
     # Modified command implementation
     @app_commands.command(
         name="view-earnings",
@@ -772,7 +772,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             await interaction.followup.send(
                 embed=embed,
                 file=file,
-                ephemeral=export != "none"
+                ephemeral=False != "none"
             )
             
         except Exception as e:
@@ -784,7 +784,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
     # User command
     @app_commands.command(
         name="view-earnings-table",
-        description="View your earnings"
+        description="View your earnings in a table format with various export options"
     )
     @app_commands.describe(
         entries="Number of entries to return (max 50)",
