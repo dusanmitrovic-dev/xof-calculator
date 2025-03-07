@@ -1158,6 +1158,24 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             ephemeral=True
         )
 
+    @app_commands.default_permissions(administrator=True)
+    @app_commands.command(name="restore-compensation-backup", description="[Admin] Restore the latest compensation configuration backup")
+    async def restore_compensation_backup(self, interaction: discord.Interaction):
+        async def restore_action(interaction: discord.Interaction):
+            backup_file = os.path.join(settings.DATA_DIRECTORY, f"{settings.COMMISSION_SETTINGS_FILE}.bak")
+            if os.path.exists(backup_file):
+                shutil.copy2(backup_file, os.path.join(settings.DATA_DIRECTORY, settings.COMMISSION_SETTINGS_FILE))
+                await interaction.response.edit_message(content="✅ Compensation configuration backup restored successfully.", view=None)
+            else:
+                await interaction.response.edit_message(content="❌ No compensation configuration backup found.", view=None)
+
+        view = ConfirmButton(restore_action, interaction.user.id)
+        await interaction.response.send_message(
+            "⚠️ Are you sure you want to restore the compensation configuration backup? This will replace the current configuration.", 
+            view=view, 
+            ephemeral=True
+        )
+
 class ConfirmButton(discord.ui.View):
     def __init__(self, action_callback, user_id: int):
         super().__init__()

@@ -2,13 +2,17 @@
 
 ## [Unreleased]
 
-## [0.69.0] - 2025-03-07
+## [0.71.0] - 2025-03-07
+### Added
+- New command `restore-compensation-backup`.
+
+## [0.70.0] - 2025-03-07
 ### Changed
 - `clear-compensation` renamed to `reset-compensation-config`.
 
 ## [0.69.0] - 2025-03-07
 ### Added
-- new command `clear-compensation`.
+- New command `clear-compensation`.
 
 ## [0.68.0] - 2025-03-07
 ### Changed
@@ -20,7 +24,7 @@
 
 ## [0.66.0] - 2025-03-06
 ### Changed
-- most of admin command messages are ephemeral now,
+- Most of admin command messages are ephemeral now,
 - `/calculate workflow` will only show roles that user has.
 
 ## [0.65.0] - 2025-03-06
