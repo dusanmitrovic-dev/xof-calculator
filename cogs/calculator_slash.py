@@ -771,8 +771,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             # Send response
             await interaction.followup.send(
                 embed=embed,
-                file=file,
-                ephemeral=False != "none"
+                file=file
             )
             
         except Exception as e:
