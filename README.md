@@ -232,18 +232,27 @@
 - [x] (v0.56.0) `view-earnings` admin able to see for specific user, user only theirs
     - [x] (v0.56.0) `view-earnings-admin` admin will see users earning entries
     - [x] (v0.56.0) `view-earnings` user command version
-- [ ] Separate data and backup data
 - [x] (v0.72.0) Admin slash toggle that shows ephemeral messages to everyone or hides
     - `toggle-ephemeral`
+- [x] (v0.73.0) `reset-config` needs to reset display settings
+- [x] (v0.74.0) `reset-config` uses helper reset functions
 - [ ] Fully ephemeral slash commands
     - [x] (v0.75.0) `set-role`
     - [x] (v0.72.0) `set-period`
     - [x] (v0.76.0) `remove-role`
     - [x] (v0.76.0) `list-roles`
-- [x] (v0.73.0) `reset-config` needs to reset display settings
-- [ ] Remove `reset-earnings-config`
-- [x] (v0.74.0) `reset-config` uses helper reset functions
     - [x] make helper functions
+- [ ] Remove `reset-earnings-config`
+- [ ] Separate data and backup data
+- [ ] Remove hours for commission views
+- [ ] Remove net revenue in hourly views
+- [ ] View earnings remove period use role instead
+- [ ] New view earnings slash command `view-earnings date-from date-to weekly/monthly`
+- [ ] View earnings export
+- [ ] Bulk earnings for everyone from period to period for weekly/monthly
+    - [ ] With DM support notification that sends to everyone their earnings log
+- [ ] Bot roles
+
 
 # Commission Settings Implementation TODO
 
