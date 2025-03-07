@@ -231,6 +231,7 @@
     - [x] (v0.56.0) `view-earnings-admin` admin will see users earning entries
     - [x] (v0.56.0) `view-earnings` user command version
 - [ ] Separate data and backup data
+- [ ] Admin toggle that shows ephemeral messages to everyone or hides
 
 # Commission Settings Implementation TODO
 
