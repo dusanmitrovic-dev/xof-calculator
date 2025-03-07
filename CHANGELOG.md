@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [0.76.0] - 2025-03-07
+### Changed
+These functions now have full ephemeral support logic:
+- `remove-role`,
+- `list-roles`.
+
 ## [0.75.0] - 2025-03-07
 ### Changed
 - `help` slash command now displays `toggle-ephemeral`,

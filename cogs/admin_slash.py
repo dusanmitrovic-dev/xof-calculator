@@ -54,6 +54,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
                 "❌ Invalid percentage. Must be between 0 and 100.", 
                 ephemeral=True
             )
+
             return
         
         # Load existing settings
@@ -506,6 +507,8 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             return
         
         try:
+            ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+
             logger.info(f"User {interaction.user.name} ({interaction.user.id}) used remove-role command for role {role.name}")
             
             guild_id = str(interaction.guild.id)
@@ -515,7 +518,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             
             if guild_id not in role_data or role_id not in role_data[guild_id]:
                 logger.warning(f"Role {role.name} ({role_id}) not found in configuration")
-                await interaction.response.send_message(f"❌ {role.name} does not have a configured percentage.")
+                await interaction.response.send_message(f"❌ {role.name} does not have a configured percentage.", ephemeral=ephemeral)
                 return
             
             del role_data[guild_id][role_id]
@@ -523,13 +526,13 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             
             if success:
                 logger.info(f"Role {role.name} ({role_id}) removed from configuration")
-                await interaction.response.send_message(f"✅ {role.name} has been removed from percentage configuration!", ephemeral=True)
+                await interaction.response.send_message(f"✅ {role.name} has been removed from percentage configuration!", ephemeral=ephemeral)
             else:
                 logger.error(f"Failed to remove role {role.name} ({role_id})")
-                await interaction.response.send_message("❌ Failed to save role data. Please try again later.")
+                await interaction.response.send_message("❌ Failed to save role data. Please try again later.", ephemeral=ephemeral)
         except Exception as e:
             logger.error(f"Error in remove_role: {str(e)}")
-            await interaction.response.send_message("❌ An unexpected error occurred. See logs for details.", ephemeral=True)
+            await interaction.response.send_message("❌ An unexpected error occurred. See logs for details.", ephemeral=ephemeral)
 
     # Shift Management
     @app_commands.default_permissions(administrator=True)
@@ -742,21 +745,23 @@ class AdminSlashCommands(commands.Cog, name="admin"):
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="list-roles", description="[Admin] List configured roles and percentages")
     async def list_roles(self, interaction: discord.Interaction):
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
         guild_id = str(interaction.guild.id)
         role_data = await file_handlers.load_json(settings.ROLE_DATA_FILE, settings.DEFAULT_ROLE_DATA)
         guild_roles = role_data.get(guild_id, {})
         
         if not guild_roles:
-            await interaction.response.send_message("❌ No roles configured.")
+            await interaction.response.send_message("❌ No roles configured.", ephemeral=ephemeral)
             return
             
         embed = discord.Embed(title="Configured Roles", color=discord.Color.blue())
+
         for role_id, percentage in guild_roles.items():
             role = interaction.guild.get_role(int(role_id))
             role_name = role.name if role else f"Unknown Role ({role_id})"
             embed.add_field(name=role_name, value=f"{percentage}%", inline=True)
         
-        await interaction.response.send_message(embed=embed, ephemeral=True)
+        await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="list-shifts", description="[Admin] List configured shifts")

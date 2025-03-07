@@ -238,6 +238,8 @@
 - [ ] Fully ephemeral slash commands
     - [x] (v0.75.0) `set-role`
     - [x] (v0.72.0) `set-period`
+    - [x] (v0.76.0) `remove-role`
+    - [x] (v0.76.0) `list-roles`
 - [x] (v0.73.0) `reset-config` needs to reset display settings
 - [ ] Remove `reset-earnings-config`
 - [x] (v0.74.0) `reset-config` uses helper reset functions
