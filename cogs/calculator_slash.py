@@ -93,8 +93,11 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
     async def start_period_selection(self, interaction: discord.Interaction, compensation_type: str):
         """First step: Period selection"""
         # Open the HoursWorkedModal to collect hours worked
-        modal = HoursWorkedModal(self, None, None, None, None, compensation_type)
-        await interaction.response.send_modal(modal)
+        if compensation_type == "commission":
+            await self.start_period_selection_with_hours(interaction, compensation_type, Decimal(0))
+        else:
+            modal = HoursWorkedModal(self, None, None, None, None, compensation_type)
+            await interaction.response.send_modal(modal)
 
     async def start_period_selection_with_hours(self, interaction: discord.Interaction, compensation_type: str, hours_worked: Decimal):
         """First step: Period selection with hours worked"""
@@ -196,7 +199,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         await interaction.response.edit_message(content="Select models (optional, you can select multiple):", view=view)
 
     async def preview_calculation(self, interaction: discord.Interaction, period: str, shift: str, role: discord.Role, 
-                             gross_revenue: Decimal, selected_models: List[str], compensation_type: str, hours_worked: Decimal):
+                         gross_revenue: Decimal, selected_models: List[str], compensation_type: str, hours_worked: Decimal):
         """Preview calculation and show confirmation options"""
         
         guild_id = str(interaction.guild_id)
@@ -288,52 +291,75 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         current_date = datetime.now().strftime(settings.DATE_FORMAT)
         sender = interaction.user.mention
         
-        # Add fields to embed
-        fields = [
-            (
-                "💸 Compensation",
-                {
-                    "commission": f"{percentage:.2f}%",
-                    "hourly": f"${hourly_rate:,.2f}/h",
-                    "both": f"{percentage:.2f}% + ${hourly_rate:,.2f}/h"
-                }[compensation_type],
-                True
-            ),
-            ("⏰ Hours Worked", f"{hours:.2f}h", True),
+        # Build fields dynamically based on compensation type
+        fields = []
+        
+        # Compensation field
+        compensation_value = {
+            "commission": f"{percentage:.2f}%",
+            "hourly": f"${hourly_rate:,.2f}/h",
+            "both": f"{percentage:.2f}% + ${hourly_rate:,.2f}/h"
+        }[compensation_type]
+        fields.append(("💸 Compensation", compensation_value, True))
+        
+        # Hours Worked (only show if not commission)
+        if compensation_type != "commission":
+            fields.append(("⏰ Hours Worked", f"{hours_worked:.2f}h", True))
+        
+        # Common fields
+        fields.extend([
             ("📅 Date", current_date, True),
             ("✍ Sender", sender, True),
             ("📥 Shift", shift, True),
             ("🎯 Role", role.name, True),
             ("⌛ Period", period, True),
             ("💰 Gross Revenue", f"${float(results['gross_revenue']):,.2f}", True),
-            ("💵 Net Revenue", f"${float(results['net_revenue']):,.2f} (80%)", True),
+        ])
+        
+        # Net Revenue (only show if not hourly)
+        if compensation_type != "hourly":
+            fields.append(("💵 Net Revenue", f"${float(results['net_revenue']):,.2f} (80%)", True))
+        
+        # Remaining fields
+        fields.extend([
             ("🎁 Bonus", f"${float(results['bonus']):,.2f}", True),
             ("💼 Employee Cut", f"${float(results['employee_cut']):,.2f}", True),
             ("💰 Total Cut", f"${float(results['total_cut']):,.2f}", True),
             ("🎭 Models", models_list, False)
-        ]
-
+        ])
+        
+        # Store compensation type for finalization
+        results["compensation_type"] = compensation_type
+        # Add fields to embed
+        for name, value, inline in fields:
+            embed.add_field(name=name, value=value, inline=inline)
+        
         # Add compensation result to results dictionary
         results["compensation"] = {
             "commission": f"{percentage:.2f}%",
             "hourly": f"${hourly_rate:,.2f}/h",
             "both": f"{percentage:.2f}% + ${hourly_rate:,.2f}/h"
         }[compensation_type]
-        results["hours_worked"] = f"{hours:.2f}h"
+        
+        # Only add hours worked if using hourly or both
+        if compensation_type in ["hourly", "both"]:
+            results["hours_worked"] = f"{hours:.2f}h"
+        
         results["date"] = current_date
         results["sender"] = sender
         results["shift"] = shift
         results["role"] = role.name
         results["period"] = period
         results["gross_revenue"] = f"${float(results['gross_revenue']):,.2f}"
-        results["net_revenue"] =f"${float(results['net_revenue']):,.2f} (80%)"
+        
+        # Only add net revenue if using commission or both
+        if compensation_type in ["commission", "both"]:
+            results["net_revenue"] = f"${float(results['net_revenue']):,.2f} (80%)"
+        
         results["bonus"] = f"${float(results['bonus']):,.2f}"
         results["employee_cut"] = f"${float(results['employee_cut']):,.2f}"
         results["total_cut"] = f"${float(results['total_cut']):,.2f}"
         results["models"] = models_list
-        
-        for name, value, inline in fields:
-            embed.add_field(name=name, value=value, inline=inline)
         
         # Create confirmation view
         view = ConfirmationView(
@@ -363,6 +389,11 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         if sender not in earnings_data:
             earnings_data[sender] = []
         
+        # Add new entry - handle potential missing hours_worked key
+        hours_worked = 0.0
+        if "hours_worked" in results:
+            hours_worked = float(results["hours_worked"].replace('h', ''))
+        
         # Add new entry
         new_entry = {
             "date": results["date"],
@@ -372,13 +403,14 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             "shift": results["shift"].lower(),
             "role": results["role"],
             "models": models_list,
-            "hours_worked": float(results["hours_worked"].replace('h', ''))
+            "hours_worked": hours_worked
         }
         
         earnings_data[sender].append(new_entry)
         
         # Log final calculation
-        logger.info(f"Final calculation for {interaction.user.name} ({interaction.user.id}): Gross=${results['gross_revenue']}, Total Cut=${results['total_cut']}, Period={results['period']}, Shift={results['shift']}, Role={results['role']}, Hours Worked={results['hours_worked']}")
+        hours_worked_text = f", Hours Worked={results.get('hours_worked', 'N/A')}" if "hours_worked" in results else ""
+        logger.info(f"Final calculation for {interaction.user.name} ({interaction.user.id}): Gross=${results['gross_revenue']}, Total Cut=${results['total_cut']}, Period={results['period']}, Shift={results['shift']}, Role={results['role']}{hours_worked_text}")
         
         # Save updated earnings data
         success = await file_handlers.save_json(settings.EARNINGS_FILE, earnings_data)
@@ -398,10 +430,11 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         performance_text = ""
         if show_average:
             try:
-                all_entries = [e for e in earnings_data[sender] if e["period"] == period.lower()]
+                period = results["period"].lower()
+                all_entries = [e for e in earnings_data[sender] if e["period"] == period]
                 if len(all_entries) > 1:  # Current entry is already added
                     avg_gross = sum(e["gross_revenue"] for e in all_entries[:-1]) / len(all_entries[:-1])
-                    current_gross = float(results["gross_revenue"])
+                    current_gross = float(results["gross_revenue"].replace('$', '').replace(',', ''))
                     performance = (current_gross / avg_gross) * 100 - 100
                     performance_text = f" (↑ {performance:.1f}% above average)" if performance > 0 else f" (↓ {abs(performance):.1f}% below average)"
                 else:
@@ -410,22 +443,36 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                 logger.error(f"Performance calculation error: {str(e)}")
                 performance_text = " (Historical data unavailable)"
 
-        # Add fields to embed
-        fields = [
-            ("💸 Compensation", results.get("compensation", "N/A"), True),
-            ("⏰ Hours Worked", results.get("hours_worked", "N/A"), True),
+        fields = []
+        
+        # Compensation field
+        fields.append(("💸 Compensation", results.get("compensation", "N/A"), True))
+        
+        # Hours Worked (only show if not commission)
+        if results.get("compensation_type") != "commission":
+            fields.append(("⏰ Hours Worked", results.get("hours_worked", "N/A"), True))
+        
+        # Common fields
+        fields.extend([
             ("📅 Date", results.get("date", "N/A"), True),
             ("✍ Sender", results.get("sender", "N/A"), True),
             ("📥 Shift", results.get("shift", "N/A"), True),
             ("🎯 Role", results.get("role", "N/A"), True),
             ("⌛ Period", results.get("period", "N/A"), True),
             ("💰 Gross Revenue", f"{results.get('gross_revenue', 'N/A')}{performance_text}", True),
-            ("💵 Net Revenue", results.get("net_revenue", "N/A"), True),
+        ])
+        
+        # Net Revenue (only show if not hourly)
+        if results.get("compensation_type") != "hourly":
+            fields.append(("💵 Net Revenue", results.get("net_revenue", "N/A"), True))
+        
+        # Remaining fields
+        fields.extend([
             ("🎁 Bonus", results.get("bonus", "N/A"), True),
             ("💼 Employee Cut", results.get("employee_cut", "N/A"), True),
             ("💰 Total Cut", results.get("total_cut", "N/A"), True),
             ("🎭 Models", results.get("models", "N/A"), False)
-        ]
+        ])
         
         for name, value, inline in fields:
             embed.add_field(name=name, value=value, inline=inline)

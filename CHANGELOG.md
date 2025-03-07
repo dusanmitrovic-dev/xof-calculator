@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [0.77.0] - 2025-03-07
+### Changed
+- Remove hours for commission views,
+- Remove net revenue in hourly views.
+
 ## [0.76.0] - 2025-03-07
 ### Changed
 These functions now have full ephemeral support logic:

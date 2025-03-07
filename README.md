@@ -244,8 +244,8 @@
     - [x] make helper functions
 - [ ] Remove `reset-earnings-config`
 - [ ] Separate data and backup data
-- [ ] Remove hours for commission views
-- [ ] Remove net revenue in hourly views
+- [x] (v0.77.0) Remove hours for commission views
+- [x] (v0.77.0) Remove net revenue in hourly views
 - [ ] View earnings remove period use role instead
 - [ ] New view earnings slash command `view-earnings date-from date-to weekly/monthly`
 - [ ] View earnings export
