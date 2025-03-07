@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [0.75.0] - 2025-03-07
+### Changed
+- `help` slash command now displays `toggle-ephemeral`,
+- `set-role` has fully ephemeral support.
+
 ## [0.74.0] - 2025-03-07
 ### Changed
 - `reset-config` now uses helper reset functions

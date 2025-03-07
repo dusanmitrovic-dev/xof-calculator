@@ -466,12 +466,14 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             return
         
         try:
+            ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+
             logger.info(f"User {interaction.user.name} ({interaction.user.id}) used set-role command for role {role.name} with percentage {percentage}")
             
             percentage_decimal = validators.validate_percentage(percentage)
             if percentage_decimal is None:
                 logger.warning(f"Invalid percentage '{percentage}' provided by {interaction.user.name}")
-                await interaction.response.send_message("❌ Percentage must be a valid number between 0 and 100.")
+                await interaction.response.send_message("❌ Percentage must be a valid number between 0 and 100.", ephemeral=ephemeral)
                 return
             
             guild_id = str(interaction.guild.id)
@@ -487,13 +489,13 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             
             if success:
                 logger.info(f"Role {role.name} ({role_id}) percentage set to {percentage_decimal}% by {interaction.user.name}")
-                await interaction.response.send_message(f"✅ {role.name} now has {percentage_decimal}% cut!", ephemeral=True)
+                await interaction.response.send_message(f"✅ {role.name} now has {percentage_decimal}% cut!", ephemeral=ephemeral)
             else:
                 logger.error(f"Failed to save role data for {role.name} ({role_id}) by {interaction.user.name}")
-                await interaction.response.send_message("❌ Failed to save role data. Please try again later.")
+                await interaction.response.send_message("❌ Failed to save role data. Please try again later.", ephemeral=ephemeral)
         except Exception as e:
             logger.error(f"Error in set_role: {str(e)}")
-            await interaction.response.send_message("❌ An unexpected error occurred. See logs for details.", ephemeral=True)
+            await interaction.response.send_message("❌ An unexpected error occurred. See logs for details.", ephemeral=ephemeral)
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="remove-role", description="[Admin] Remove a role's percentage configuration")
@@ -606,25 +608,27 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             if not period.strip():
                 await interaction.response.send_message("❌ Period name cannot be empty.", ephemeral=True)
                 return
+
+            ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
                 
             guild_id = str(interaction.guild.id)
             period_data = await file_handlers.load_json(settings.PERIOD_DATA_FILE, settings.DEFAULT_PERIOD_DATA)
             existing_periods = period_data.get(guild_id, [])
             
             if validators.validate_period(period, existing_periods) is not None:
-                await interaction.response.send_message(f"❌ Period '{period}' already exists!", ephemeral=True)
+                await interaction.response.send_message(f"❌ Period '{period}' already exists!", ephemeral=ephemeral)
                 return
             
             period_data.setdefault(guild_id, []).append(period)
             success = await file_handlers.save_json(settings.PERIOD_DATA_FILE, period_data)
             
             if success:
-                await interaction.response.send_message(f"✅ Period '{period}' added!", ephemeral=True)
+                await interaction.response.send_message(f"✅ Period '{period}' added!", ephemeral=ephemeral)
             else:
-                await interaction.response.send_message("❌ Failed to save period data. Please try again later.", ephemeral=True)
+                await interaction.response.send_message("❌ Failed to save period data. Please try again later.", ephemeral=ephemeral)
         except Exception as e:
             logger.error(f"Error in set_period: {str(e)}")
-            await interaction.response.send_message("❌ An unexpected error occurred. See logs for details.", ephemeral=True)
+            await interaction.response.send_message("❌ An unexpected error occurred. See logs for details.", ephemeral=ephemeral)
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="remove-period", description="[Admin] Remove a period configuration")
@@ -1245,7 +1249,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
 
     @app_commands.command(
         name="toggle-ephemeral",
-        description="Toggle whether admin command responses are ephemeral"
+        description="Toggle whether command responses are ephemeral"
     )
     @app_commands.default_permissions(administrator=True)
     async def toggle_ephemeral(self, interaction: discord.Interaction):
@@ -1274,7 +1278,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         if success:
             status = "enabled" if new_setting else "disabled"
             await interaction.response.send_message(
-                f"✅ Ephemeral responses are now **{status}** for admin commands.",
+                f"✅ Ephemeral responses are now **{status}**.",
                 ephemeral=new_setting
             )
         else:

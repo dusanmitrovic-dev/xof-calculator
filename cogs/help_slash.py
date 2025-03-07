@@ -78,6 +78,7 @@ class HelpSlashCommands(commands.Cog):
 
             # Miscellaneous Admin Commands
             misc_admin_commands = "\n".join([
+                "`/toggle-ephemeral` - Toggle whether command responses are ephemeral",
                 "`/toggle-average` - Toggle performance averages in calculation embeds",
                 "`/export-earnings-csv` - Export earnings data as CSV",
                 "`/export-earnings-json` - Export earnings data as JSON",
