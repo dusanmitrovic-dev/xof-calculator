@@ -214,17 +214,19 @@
 - [x] (❌) (v0.42.0) `remove-shift` better error handling
 - [x] (❌) (v0.43.0) `set-period` better error handling
 - [x] (v0.45.0) Reset Slash Individual Config Files:
-    - [x] (v0.45.0) `reset-shift-config`,
-    - [x] (v0.45.0) `reset-period-config`,
-    - [x] (v0.45.0) `reset-role-config`,
-    - [x] (v0.45.0) `reset-bonus-config`,
-    - [x] (v0.45.0) `reset-earnings-config`,
+    - [x] (v0.45.0) `reset-shift-config`
+    - [x] (v0.45.0) `reset-period-config`
+    - [x] (v0.45.0) `reset-role-config`
+    - [x] (v0.45.0) `reset-bonus-config`
+    - [x] (v0.45.0) `reset-earnings-config`
+    - [x] (v0.73.0) `reset-display-config`
 - [x] (v0.45.0) Restore Slash Individual Backup Files:
-    - [x] (v0.45.0) `restore-shift-backup`,
-    - [x] (v0.45.0) `restore-period-backup`,
-    - [x] (v0.45.0) `restore-role-backup`,
-    - [x] (v0.45.0) `restore-bonus-backup`,
-    - [x] (v0.45.0) `restore-earnings-backup`.
+    - [x] (v0.45.0) `restore-shift-backup`
+    - [x] (v0.45.0) `restore-period-backup`
+    - [x] (v0.45.0) `restore-role-backup`
+    - [x] (v0.45.0) `restore-bonus-backup`
+    - [x] (v0.45.0) `restore-earnings-backup`
+    - [x] (v0.73.0) `restore-display-config`
 - [x] (v0.55.0) `help` list slash commands for admins and normal users
 - [x] (v0.55.0) `view-earnings` view your earnings or earnings of a specified user
 - [x] (v0.56.0) `view-earnings` admin able to see for specific user, user only theirs
@@ -235,6 +237,7 @@
     - `toggle-ephemeral`
 - [ ] Fully ephemeral slash commands
     - [ ] `set-period`
+- [x] (v0.73.0) `reset-config` needs to reset display settings
 
 # Commission Settings Implementation TODO
 

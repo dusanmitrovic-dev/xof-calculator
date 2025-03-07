@@ -905,6 +905,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             await file_handlers.save_json(settings.ROLE_DATA_FILE, settings.DEFAULT_ROLE_DATA)
             await file_handlers.save_json(settings.BONUS_RULES_FILE, settings.DEFAULT_BONUS_RULES)
             await file_handlers.save_json(settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS)
+            await file_handlers.save_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
             await file_handlers.save_json(settings.COMMISSION_SETTINGS_FILE, settings.DEFAULT_COMMISSION_SETTINGS)
             await interaction.response.send_message("✅ Configuration files reset.", ephemeral=True)
 
@@ -1054,6 +1055,20 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             ephemeral=True
         )
 
+    @app_commands.default_permissions(administrator=True)
+    @app_commands.command(name="reset-display-config", description="[Admin] Reset display configuration")
+    async def reset_display_config(self, interaction: discord.Interaction):
+        async def reset_action(interaction: discord.Interaction):
+            await file_handlers.save_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
+            await interaction.response.edit_message(content="✅ Display configuration reset.", view=None)
+
+        view = ConfirmButton(reset_action, interaction.user.id)
+        await interaction.response.send_message(
+            "⚠️ Are you sure you want to reset the display configuration? This will delete all existing display settings.", 
+            view=view, 
+            ephemeral=True
+        )
+
     # Restore Backup Methods
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="restore-shift-backup", description="[Admin] Restore the latest shift configuration backup")
@@ -1177,6 +1192,24 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         view = ConfirmButton(restore_action, interaction.user.id)
         await interaction.response.send_message(
             "⚠️ Are you sure you want to restore the compensation configuration backup? This will replace the current configuration.", 
+            view=view, 
+            ephemeral=True
+        )
+
+    @app_commands.default_permissions(administrator=True)
+    @app_commands.command(name="restore-display-backup", description="[Admin] Restore the latest display configuration backup")
+    async def restore_display_backup(self, interaction: discord.Interaction):
+        async def restore_action(interaction: discord.Interaction):
+            backup_file = os.path.join(settings.DATA_DIRECTORY, f"{settings.DISPLAY_CONFIG_FILE}.bak")
+            if os.path.exists(backup_file):
+                shutil.copy2(backup_file, os.path.join(settings.DATA_DIRECTORY, settings.DISPLAY_CONFIG_FILE))
+                await interaction.response.edit_message(content="✅ Display configuration backup restored successfully.", view=None)
+            else:
+                await interaction.response.edit_message(content="❌ No display configuration backup found.", view=None)
+
+        view = ConfirmButton(restore_action, interaction.user.id)
+        await interaction.response.send_message(
+            "⚠️ Are you sure you want to restore the display configuration backup? This will replace the current configuration.", 
             view=view, 
             ephemeral=True
         )
