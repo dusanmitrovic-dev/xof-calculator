@@ -7,10 +7,20 @@ import asyncio
 from discord import ui, app_commands
 from config import settings
 from decimal import Decimal
+import zipfile
 from datetime import datetime
+from pathlib import Path
 from discord.ext import commands
 from typing import Optional, List, Dict
 from utils import file_handlers, validators, calculations
+import pandas as pd
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+import matplotlib.pyplot as plt
+
+SUPPORTED_EXPORTS = ["none", "txt", "csv", "json", "xlsx", "pdf", "png", "zip"]
+MAX_ENTRIES = 50
 
 logger = logging.getLogger("xof_calculator.calculator")
 
@@ -495,7 +505,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
 
     # Admin command
     @app_commands.command(
-        name="view-earnings-admin",
+        name="view-earnings-admin-table",
         description="Admin command to view earnings for a specified user"
     )
     @app_commands.describe(
@@ -580,9 +590,200 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         else:
             await interaction.response.send_message(embed=embed)
 
-    # User command
+    async def generate_export_file(self, user_earnings, user, export_format):
+        """Generate export file based on format choice"""
+        sanitized_name = Path(user.name).stem[:32].replace(" ", "_")
+        timestamp = datetime.now().strftime('%Y%m%d')
+        base_name = f"earnings_{sanitized_name}_{timestamp}"
+        
+        buffer = io.BytesIO()
+        
+        if export_format == "csv":
+            df = pd.DataFrame(user_earnings)
+            df.to_csv(buffer, index=False)
+            buffer.seek(0)
+            return discord.File(buffer, filename=f"{base_name}.csv")
+        
+        elif export_format == "json":
+            import json
+            buffer.write(json.dumps(user_earnings, indent=2).encode('utf-8'))
+            buffer.seek(0)
+            return discord.File(buffer, filename=f"{base_name}.json")
+        
+        elif export_format == "xlsx":
+            df = pd.DataFrame(user_earnings)
+            with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
+                df.to_excel(writer, index=False, sheet_name='Earnings')
+            buffer.seek(0)
+            return discord.File(buffer, filename=f"{base_name}.xlsx")
+        
+        elif export_format == "pdf":
+            doc = SimpleDocTemplate(buffer, pagesize=letter)
+            elements = []
+            
+            # Create data table
+            data = [["Date", "Role", "Gross", "Total Cut"]]
+            for entry in user_earnings:
+                data.append([
+                    entry['date'],
+                    entry['role'],
+                    f"${float(entry['gross_revenue']):.2f}",
+                    f"${float(entry['total_cut']):.2f}"
+                ])
+            
+            table = Table(data)
+            style = TableStyle([
+                ('BACKGROUND', (0,0), (-1,0), colors.grey),
+                ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+                ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+                ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0,0), (-1,0), 14),
+                ('BOTTOMPADDING', (0,0), (-1,0), 12),
+                ('BACKGROUND', (0,1), (-1,-1), colors.beige),
+                ('GRID', (0,0), (-1,-1), 1, colors.black)
+            ])
+            table.setStyle(style)
+            elements.append(table)
+            
+            doc.build(elements)
+            buffer.seek(0)
+            return discord.File(buffer, filename=f"{base_name}.pdf")
+        
+        elif export_format == "png":
+            plt.figure(figsize=(10, 6))
+            dates = [datetime.strptime(entry['date'], '%Y-%m-%d') for entry in user_earnings]
+            gross = [float(entry['gross_revenue']) for entry in user_earnings]
+            cuts = [float(entry['total_cut']) for entry in user_earnings]
+            
+            plt.plot(dates, gross, label='Gross Revenue', marker='o')
+            plt.plot(dates, cuts, label='Total Cut', marker='x')
+            plt.title(f'Earnings Trend for {user.display_name}')
+            plt.xlabel('Date')
+            plt.ylabel('Amount ($)')
+            plt.legend()
+            plt.grid(True)
+            plt.tight_layout()
+            
+            plt.savefig(buffer, format='png')
+            plt.close()
+            buffer.seek(0)
+            return discord.File(buffer, filename=f"{base_name}.png")
+        
+        elif export_format == "zip":
+            zip_buffer = io.BytesIO()
+            with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
+                # Add CSV
+                csv_file = await generate_export_file(user_earnings, user, "csv")
+                zip_file.writestr(f"{base_name}.csv", csv_file.fp.getvalue())
+                
+                # Add PDF
+                pdf_file = await generate_export_file(user_earnings, user, "pdf")
+                zip_file.writestr(f"{base_name}.pdf", pdf_file.fp.getvalue())
+            
+            zip_buffer.seek(0)
+            return discord.File(zip_buffer, filename=f"{base_name}.zip")
+        
+        else:  # txt format
+            text_content = f"Earnings Report for {user.display_name}\n\n"
+            text_content += "Date       | Role       | Gross     | Total Cut\n"
+            text_content += "-"*40 + "\n"
+            for entry in user_earnings:
+                text_content += (
+                    f"{entry['date']} | {entry['role'].ljust(10)} | "
+                    f"${float(entry['gross_revenue']):>8.2f} | "
+                    f"${float(entry['total_cut']):>9.2f}\n"
+                )
+            buffer.write(text_content.encode('utf-8'))
+            buffer.seek(0)
+            return discord.File(buffer, filename=f"{base_name}.txt")
+
+    # Modified command implementation
     @app_commands.command(
         name="view-earnings",
+        description="View your earnings with various export options"
+    )
+    @app_commands.describe(
+        entries=f"Number of entries to return (max {MAX_ENTRIES})",
+        export="Export format"
+    )
+    @app_commands.choices(
+        export=[
+            app_commands.Choice(name="None", value="none"),
+            app_commands.Choice(name="Text File", value="txt"),
+            app_commands.Choice(name="CSV", value="csv"),
+            app_commands.Choice(name="JSON", value="json"),
+            app_commands.Choice(name="Excel", value="xlsx"),
+            app_commands.Choice(name="PDF", value="pdf"),
+            app_commands.Choice(name="PNG Chart", value="png"),
+            app_commands.Choice(name="ZIP Archive", value="zip")
+        ]
+    )
+    async def view_earnings(
+        self,
+        interaction: discord.Interaction,
+        entries: Optional[int] = 50,
+        export: Optional[str] = "none"
+    ):
+        """Command for users to view their own earnings"""
+        try:
+            # Defer response for large exports
+            await interaction.response.defer(ephemeral=export != "none")
+            
+            # Validate entries
+            entries = min(max(entries, 1), MAX_ENTRIES)
+            
+            # Load data
+            earnings_data = await file_handlers.load_json(settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS)
+            user_earnings = sorted(
+                earnings_data.get(interaction.user.mention, []),
+                key=lambda x: x['date'],
+                reverse=True
+            )[:entries]
+            
+            if not user_earnings:
+                await interaction.followup.send(f"❌ No earnings data found.", ephemeral=True)
+                return
+            
+            # Generate embed
+            embed = discord.Embed(
+                title=f"📊 Earnings Summary ({len(user_earnings)} entries)",
+                color=0x009933
+            )
+            
+            # Add totals
+            total_gross = sum(float(entry['gross_revenue']) for entry in user_earnings)
+            total_cut = sum(float(entry['total_cut']) for entry in user_earnings)
+            embed.add_field(name="Total Gross", value=f"${total_gross:.2f}", inline=True)
+            embed.add_field(name="Total Cut", value=f"${total_cut:.2f}", inline=True)
+            
+            # Generate file if needed
+            file = None
+            if export != "none":
+                try:
+                    file = await self.generate_export_file(user_earnings, interaction.user, export)
+                except Exception as e:
+                    await interaction.followup.send(
+                        f"❌ Failed to generate export: {str(e)}",
+                        ephemeral=True
+                    )
+                    return
+            
+            # Send response
+            await interaction.followup.send(
+                embed=embed,
+                file=file,
+                ephemeral=export != "none"
+            )
+            
+        except Exception as e:
+            await interaction.followup.send(
+                f"❌ An error occurred: {str(e)}",
+                ephemeral=True
+            )
+
+    # User command
+    @app_commands.command(
+        name="view-earnings-table",
         description="View your earnings"
     )
     @app_commands.describe(

@@ -250,6 +250,7 @@
 - [x] (v0.79.0) Export options for `view-earnings` and `view-earnings-admin`
     - [x] (v0.79.0) CSV
     - [x] (v0.79.0) TXT
+    - [x] (v0.80.0) JSON, Excel, PDF, PNG Chart, ZIP Archive
 - [ ] View earnings remove period use role instead
 - [ ] New view earnings slash command `view-earnings date-from date-to weekly/monthly`
 - [ ] View earnings export

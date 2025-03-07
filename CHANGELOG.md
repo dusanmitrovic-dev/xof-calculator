@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [0.80.0] - 2025-03-07
+### Changed
+- `view-earnings` command changed to `view-earnings-table`,
+- `view-earnings-admin` command changed to `view-earnings-table-admin`,
+- export options JSON. Excel, PDF, PNG Chart, ZIP Archive
+
 ## [0.79.0] - 2025-03-07
 ### Changed
 - `view-earnings`,
