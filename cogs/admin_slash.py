@@ -888,6 +888,23 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         view.children[0].callback = button_callback
         await interaction.response.send_message("⚠️ Are you sure you want to clear all earnings data?", view=view, ephemeral=True)
 
+    
+    @app_commands.default_permissions(administrator=True)
+    @app_commands.command(name="clear-compensation", description="[Admin] Clear all compensation data")
+    async def clear_compensation(self, interaction: discord.Interaction):
+        view = discord.ui.View()
+        view.add_item(discord.ui.Button(label="Confirm", style=discord.ButtonStyle.danger, custom_id="confirm_clear_compensation"))
+
+        async def button_callback(interaction):
+            guild_id = str(interaction.guild.id)
+            compensation_data = await file_handlers.load_json(settings.COMMISSION_SETTINGS_FILE, settings.DEFAULT_COMMISSION_SETTINGS)
+            compensation_data[guild_id] = {}
+            await file_handlers.save_json(settings.COMMISSION_SETTINGS_FILE, compensation_data)
+            await interaction.response.send_message(f"✅ All compensation data for the guild with ID ({guild_id}) has been successfully cleared.", ephemeral=True)
+
+        view.children[0].callback = button_callback
+        await interaction.response.send_message("⚠️ Are you sure you want to clear all compensation data?", view=view, ephemeral=True)
+
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="reset-config", description="[Admin] Reset all configuration files")
     async def reset_config(self, interaction: discord.Interaction):

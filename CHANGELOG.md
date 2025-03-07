@@ -2,7 +2,11 @@
 
 ## [Unreleased]
 
-## [0.68.0] - 2025-03-06
+## [0.69.0] - 2025-03-07
+### Added
+- new command `clear-compensation`.
+
+## [0.68.0] - 2025-03-07
 ### Changed
 - `reset-config` updated to reset compensation settings as well.
 
