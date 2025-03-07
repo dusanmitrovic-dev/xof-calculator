@@ -900,6 +900,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             await file_handlers.save_json(settings.ROLE_DATA_FILE, settings.DEFAULT_ROLE_DATA)
             await file_handlers.save_json(settings.BONUS_RULES_FILE, settings.DEFAULT_BONUS_RULES)
             await file_handlers.save_json(settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS)
+            await file_handlers.save_json(settings.COMMISSION_SETTINGS_FILE, settings.DEFAULT_COMMISSION_SETTINGS)
             await interaction.response.send_message("✅ Configuration files reset.", ephemeral=True)
 
         view.children[0].callback = button_callback

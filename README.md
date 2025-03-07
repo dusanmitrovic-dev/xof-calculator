@@ -244,6 +244,7 @@
 - [x] (v0.63.0) Update configuration commands for new `commission_settings.json` structure
 - [x] (v0.63.0) Compensation view gets edited instead of staying untouched.
 - [x] (v0.64.0) Commission commands to be admin only
+- [x] (v0.68.0) `reset-config` update to reset compensation settings as well
 
 ## Data Management
 - [x] (v0.57.0) Create `commission_settings.json` in `data/` directory

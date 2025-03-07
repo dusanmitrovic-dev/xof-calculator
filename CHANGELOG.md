@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.68.0] - 2025-03-06
+### Changed
+- `reset-config` updated to reset compensation settings as well.
+
 ## [0.67.0] - 2025-03-06
 ### Changed
 - Remove loggers from preview method.
