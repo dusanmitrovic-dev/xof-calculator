@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.78.0] - 2025-03-07
+### Changed
+- Calculate slash preview and finalize field display.
+
 ## [0.77.0] - 2025-03-07
 ### Changed
 - Remove hours for commission views,

@@ -300,16 +300,19 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             "hourly": f"${hourly_rate:,.2f}/h",
             "both": f"{percentage:.2f}% + ${hourly_rate:,.2f}/h"
         }[compensation_type]
-        fields.append(("💸 Compensation", compensation_value, True))
-        
-        # Hours Worked (only show if not commission)
-        if compensation_type != "commission":
-            fields.append(("⏰ Hours Worked", f"{hours_worked:.2f}h", True))
         
         # Common fields
         fields.extend([
             ("📅 Date", current_date, True),
             ("✍ Sender", sender, True),
+            ("💸 Compensation", compensation_value, True),
+        ])
+
+        # Hours Worked (only show if not commission)
+        if compensation_type != "commission":
+            fields.append(("⏰ Hours Worked", f"{hours_worked:.2f}h", True))
+
+        fields.extend([
             ("📥 Shift", shift, True),
             ("🎯 Role", role.name, True),
             ("⌛ Period", period, True),
@@ -325,6 +328,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             ("🎁 Bonus", f"${float(results['bonus']):,.2f}", True),
             ("💼 Employee Cut", f"${float(results['employee_cut']):,.2f}", True),
             ("💰 Total Cut", f"${float(results['total_cut']):,.2f}", True),
+            (" ", "" if results.get("compensation_type") == "hourly" else "", True),
             ("🎭 Models", models_list, False)
         ])
         
@@ -445,17 +449,18 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
 
         fields = []
         
-        # Compensation field
-        fields.append(("💸 Compensation", results.get("compensation", "N/A"), True))
-        
-        # Hours Worked (only show if not commission)
-        if results.get("compensation_type") != "commission":
-            fields.append(("⏰ Hours Worked", results.get("hours_worked", "N/A"), True))
-        
         # Common fields
         fields.extend([
             ("📅 Date", results.get("date", "N/A"), True),
             ("✍ Sender", results.get("sender", "N/A"), True),
+            ("💸 Compensation", results.get("compensation", "N/A"), True),
+        ])
+
+        # Hours Worked (only show if not commission)
+        if results.get("compensation_type") != "commission":
+            fields.append(("⏰ Hours Worked", results.get("hours_worked", "N/A"), True))
+
+        fields.extend([
             ("📥 Shift", results.get("shift", "N/A"), True),
             ("🎯 Role", results.get("role", "N/A"), True),
             ("⌛ Period", results.get("period", "N/A"), True),
@@ -471,6 +476,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             ("🎁 Bonus", results.get("bonus", "N/A"), True),
             ("💼 Employee Cut", results.get("employee_cut", "N/A"), True),
             ("💰 Total Cut", results.get("total_cut", "N/A"), True),
+            (" ", "" if results.get("compensation_type") == "hourly" else "", True),
             ("🎭 Models", results.get("models", "N/A"), False)
         ])
         

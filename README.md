@@ -246,6 +246,7 @@
 - [ ] Separate data and backup data
 - [x] (v0.77.0) Remove hours for commission views
 - [x] (v0.77.0) Remove net revenue in hourly views
+- [x] (v0.78.0) Better preview and finalize display
 - [ ] View earnings remove period use role instead
 - [ ] New view earnings slash command `view-earnings date-from date-to weekly/monthly`
 - [ ] View earnings export
