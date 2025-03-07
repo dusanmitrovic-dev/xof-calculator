@@ -796,7 +796,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             app_commands.Choice(name="CSV File", value="csv")
         ]
     )
-    async def view_earnings(
+    async def view_earnings_table(
         self,
         interaction: discord.Interaction,
         entries: Optional[int] = 50,

@@ -255,6 +255,7 @@
     - [x] (v0.80.0) PDF
     - [x] (v0.80.0) PNG Chart
     - [x] (v0.80.0) ZIP Archive
+- [x] (v0.80.1) Fix bug where view-earnings command did not display
 - [ ] View earnings remove period use role instead
 - [ ] New view earnings slash command `view-earnings date-from date-to weekly/monthly`
 - [ ] View earnings export
