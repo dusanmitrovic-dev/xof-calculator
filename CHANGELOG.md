@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [0.72.0] - 2025-03-07
+### Added
+- `toggle-ephemeral`.
+### Changed
+- `set-period` is now fully ephemeral.
+
 ## [0.71.0] - 2025-03-07
 ### Added
 - New command `restore-compensation-backup`.

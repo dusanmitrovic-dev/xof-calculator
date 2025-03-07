@@ -181,3 +181,6 @@ logs/*.log.*
 data/*.json
 data/*.bak
 !data/__init__.py
+
+# Backup
+data/_backup

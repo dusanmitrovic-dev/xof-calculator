@@ -20,6 +20,11 @@ class AdminSlashCommands(commands.Cog, name="admin"):
     def __init__(self, bot):
         self.bot = bot
 
+    async def get_ephemeral_setting(self, guild_id):
+        display_settings = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
+        guild_settings = display_settings.get(str(guild_id), {})
+        return guild_settings.get('ephemeral_responses', True)
+
     def validate_percentage(self, percentage: Optional[float]) -> bool:
         if percentage is None:
             return True
@@ -599,7 +604,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         
         try:
             if not period.strip():
-                await interaction.response.send_message("❌ Period name cannot be empty.")
+                await interaction.response.send_message("❌ Period name cannot be empty.", ephemeral=True)
                 return
                 
             guild_id = str(interaction.guild.id)
@@ -607,7 +612,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             existing_periods = period_data.get(guild_id, [])
             
             if validators.validate_period(period, existing_periods) is not None:
-                await interaction.response.send_message(f"❌ Period '{period}' already exists!")
+                await interaction.response.send_message(f"❌ Period '{period}' already exists!", ephemeral=True)
                 return
             
             period_data.setdefault(guild_id, []).append(period)
@@ -616,7 +621,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             if success:
                 await interaction.response.send_message(f"✅ Period '{period}' added!", ephemeral=True)
             else:
-                await interaction.response.send_message("❌ Failed to save period data. Please try again later.")
+                await interaction.response.send_message("❌ Failed to save period data. Please try again later.", ephemeral=True)
         except Exception as e:
             logger.error(f"Error in set_period: {str(e)}")
             await interaction.response.send_message("❌ An unexpected error occurred. See logs for details.", ephemeral=True)
@@ -1175,6 +1180,46 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             view=view, 
             ephemeral=True
         )
+
+    @app_commands.command(
+        name="toggle-ephemeral",
+        description="Toggle whether admin command responses are ephemeral"
+    )
+    @app_commands.default_permissions(administrator=True)
+    async def toggle_ephemeral(self, interaction: discord.Interaction):
+        """Toggle ephemeral responses for admin commands"""
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+        
+        if not interaction.user.guild_permissions.administrator:
+            await interaction.response.send_message(
+                "❌ You need administrator permissions to use this command.",
+                ephemeral=True
+            )
+            return
+
+        display_settings = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
+        guild_id = str(interaction.guild.id)
+        current_setting = display_settings.get(guild_id, {}).get('ephemeral_responses', True)
+        new_setting = not current_setting
+
+        # Update settings
+        if guild_id not in display_settings:
+            display_settings[guild_id] = {}
+        display_settings[guild_id]['ephemeral_responses'] = new_setting
+        
+        success = await file_handlers.save_json(settings.DISPLAY_SETTINGS_FILE, display_settings)
+        
+        if success:
+            status = "enabled" if new_setting else "disabled"
+            await interaction.response.send_message(
+                f"✅ Ephemeral responses are now **{status}** for admin commands.",
+                ephemeral=new_setting
+            )
+        else:
+            await interaction.response.send_message(
+                "❌ Failed to update ephemeral settings. Please try again.",
+                ephemeral=current_setting
+            )
 
 class ConfirmButton(discord.ui.View):
     def __init__(self, action_callback, user_id: int):

@@ -231,7 +231,10 @@
     - [x] (v0.56.0) `view-earnings-admin` admin will see users earning entries
     - [x] (v0.56.0) `view-earnings` user command version
 - [ ] Separate data and backup data
-- [ ] Admin toggle that shows ephemeral messages to everyone or hides
+- [x] (v0.72.0) Admin slash toggle that shows ephemeral messages to everyone or hides
+    - `toggle-ephemeral`
+- [ ] Fully ephemeral slash commands
+    - [ ] `set-period`
 
 # Commission Settings Implementation TODO
 

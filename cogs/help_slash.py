@@ -58,7 +58,8 @@ class HelpSlashCommands(commands.Cog):
                 "`/reset-role-config` - Reset role configuration",
                 "`/reset-bonus-config` - Reset bonus rules configuration",
                 "`/reset-earnings-config` - Reset earnings configuration",
-                "`/reset-models-config` - Reset models configuration"
+                "`/reset-models-config` - Reset models configuration",
+                "`/reset-compensation-config` - Reset compensation configuration"
             ])
             embed.add_field(name="Reset Commands", value=reset_commands, inline=False)
 
@@ -70,7 +71,8 @@ class HelpSlashCommands(commands.Cog):
                 "`/restore-role-backup` - Restore the latest role configuration backup",
                 "`/restore-bonus-backup` - Restore the latest bonus rules configuration backup",
                 "`/restore-earnings-backup` - Restore the latest earnings configuration backup",
-                "`/restore-models-backup` - Restore the latest models configuration backup"
+                "`/restore-models-backup` - Restore the latest models configuration backup",
+                "`/restore-compensation-backup` - Restore the latest compensation configuration backup",
             ])
             embed.add_field(name="Backup Commands", value=backup_commands, inline=False)
 

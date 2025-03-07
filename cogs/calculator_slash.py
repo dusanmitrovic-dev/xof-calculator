@@ -106,7 +106,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         
         if not valid_periods:
             logger.warning(f"No periods configured for guild {guild_id}")
-            await interaction.response.send_message("❌ No periods configured! Admins: use !set-period.", ephemeral=True)
+            await interaction.response.send_message("❌ No periods configured! Admins: use /set-period.", ephemeral=True)
             return
         
         # Create period selection view, passing the compensation type and hours worked
