@@ -246,6 +246,7 @@
 - [x] (v0.64.0) Commission commands to be admin only
 - [x] (v0.68.0) `reset-config` update to reset compensation settings as well
 - [x] (v0.69.0) new command `clear-compensation`
+- [x] (v0.70.0) `clear-compensation` renamed to `reset-compensation-config`
 
 ## Data Management
 - [x] (v0.57.0) Create `commission_settings.json` in `data/` directory

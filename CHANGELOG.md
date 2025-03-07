@@ -3,6 +3,10 @@
 ## [Unreleased]
 
 ## [0.69.0] - 2025-03-07
+### Changed
+- `clear-compensation` renamed to `reset-compensation-config`.
+
+## [0.69.0] - 2025-03-07
 ### Added
 - new command `clear-compensation`.
 
