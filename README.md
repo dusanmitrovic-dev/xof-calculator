@@ -238,6 +238,9 @@
 - [ ] Fully ephemeral slash commands
     - [ ] `set-period`
 - [x] (v0.73.0) `reset-config` needs to reset display settings
+- [ ] Remove `reset-earnings-config`
+- [x] (v0.74.0) `reset-config` uses helper reset functions
+    - [x] make helper functions
 
 # Commission Settings Implementation TODO
 

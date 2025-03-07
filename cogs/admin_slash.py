@@ -898,18 +898,23 @@ class AdminSlashCommands(commands.Cog, name="admin"):
     async def reset_config(self, interaction: discord.Interaction):
         view = discord.ui.View()
         view.add_item(discord.ui.Button(label="Confirm", style=discord.ButtonStyle.danger, custom_id="confirm_reset_config"))
+        view.add_item(discord.ui.Button(label="Cancel", style=discord.ButtonStyle.success, custom_id="cancel_reset_config"))
 
         async def button_callback(interaction):
-            await file_handlers.save_json(settings.SHIFT_DATA_FILE, settings.DEFAULT_SHIFT_DATA)
-            await file_handlers.save_json(settings.PERIOD_DATA_FILE, settings.DEFAULT_PERIOD_DATA)
-            await file_handlers.save_json(settings.ROLE_DATA_FILE, settings.DEFAULT_ROLE_DATA)
-            await file_handlers.save_json(settings.BONUS_RULES_FILE, settings.DEFAULT_BONUS_RULES)
-            await file_handlers.save_json(settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS)
-            await file_handlers.save_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
-            await file_handlers.save_json(settings.COMMISSION_SETTINGS_FILE, settings.DEFAULT_COMMISSION_SETTINGS)
+            await self.reset_shift(interaction)
+            await self.reset_period(interaction)
+            await self.reset_role(interaction)
+            await self.reset_bonus_rules(interaction)
+            await self.reset_earnings(interaction)
+            await self.reset_display(interaction)
+            await self.reset_compensation(interaction)
             await interaction.response.send_message("✅ Configuration files reset.", ephemeral=True)
 
+        async def cancel_callback(interaction):
+            await interaction.response.send_message("❌ Canceled.", ephemeral=True)
+
         view.children[0].callback = button_callback
+        view.children[1].callback = cancel_callback
         await interaction.response.send_message("⚠️ Are you sure you want to reset all configuration files? This will delete all existing data.", view=view, ephemeral=True)
 
     @app_commands.default_permissions(administrator=True)
@@ -956,12 +961,15 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         view.children[0].callback = button_callback
         await interaction.response.send_message("⚠️ Are you sure you want to restore the latest backup? This will overwrite current data.", view=view, ephemeral=True)
 
+    async def reset_shift(self, interaction: discord.Interaction):
+        await file_handlers.save_json(settings.SHIFT_DATA_FILE, settings.DEFAULT_SHIFT_DATA)
+
     # Reset Individual Config Files
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="reset-shift-config", description="[Admin] Reset shift configuration")
     async def reset_shift_config(self, interaction: discord.Interaction):
         async def reset_action(interaction: discord.Interaction):
-            await file_handlers.save_json(settings.SHIFT_DATA_FILE, settings.DEFAULT_SHIFT_DATA)
+            await self.reset_shift(interaction)
             await interaction.response.edit_message(content="✅ Shift configuration reset.", view=None)
 
         view = ConfirmButton(reset_action, interaction.user.id)
@@ -971,11 +979,14 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             ephemeral=True
         )
 
+    async def reset_period(self, interaction: discord.Interaction):
+        await file_handlers.save_json(settings.PERIOD_DATA_FILE, settings.DEFAULT_PERIOD_DATA)
+
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="reset-period-config", description="[Admin] Reset period configuration")
     async def reset_period_config(self, interaction: discord.Interaction):
         async def reset_action(interaction: discord.Interaction):
-            await file_handlers.save_json(settings.PERIOD_DATA_FILE, settings.DEFAULT_PERIOD_DATA)
+            await self.reset_period(interaction)
             await interaction.response.edit_message(content="✅ Period configuration reset.", view=None)
 
         view = ConfirmButton(reset_action, interaction.user.id)
@@ -985,11 +996,14 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             ephemeral=True
         )
 
+    async def reset_role(self, interaction: discord.Interaction):
+        await file_handlers.save_json(settings.ROLE_DATA_FILE, settings.DEFAULT_ROLE_DATA)
+
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="reset-role-config", description="[Admin] Reset role configuration")
     async def reset_role_config(self, interaction: discord.Interaction):
         async def reset_action(interaction: discord.Interaction):
-            await file_handlers.save_json(settings.ROLE_DATA_FILE, settings.DEFAULT_ROLE_DATA)
+            await self.reset_role(interaction)
             await interaction.response.edit_message(content="✅ Role configuration reset.", view=None)
 
         view = ConfirmButton(reset_action, interaction.user.id)
@@ -999,11 +1013,14 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             ephemeral=True
         )
 
+    async def reset_bonus_rules(self, interaction: discord.Interaction):
+        await file_handlers.save_json(settings.BONUS_RULES_FILE, settings.DEFAULT_BONUS_RULES)
+
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="reset-bonus-config", description="[Admin] Reset bonus rules configuration")
     async def reset_bonus_config(self, interaction: discord.Interaction):
         async def reset_action(interaction: discord.Interaction):
-            await file_handlers.save_json(settings.BONUS_RULES_FILE, settings.DEFAULT_BONUS_RULES)
+            await self.reset_bonus_rules(interaction)
             await interaction.response.edit_message(content="✅ Bonus rules configuration reset.", view=None)
 
         view = ConfirmButton(reset_action, interaction.user.id)
@@ -1013,11 +1030,14 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             ephemeral=True
         )
 
-    @app_commands.default_permissions(administrator=True)
+    async def reset_earnings(self, interaction: discord.Interaction):
+        await file_handlers.save_json(settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS)
+
+    @app_commands.default_permissions(administrator=True) # todo remove reset-earnings-config
     @app_commands.command(name="reset-earnings-config", description="[Admin] Reset earnings configuration")
     async def reset_earnings_config(self, interaction: discord.Interaction):
         async def reset_action(interaction: discord.Interaction):
-            await file_handlers.save_json(settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS)
+            await self.reset_earnings(interaction)
             await interaction.response.edit_message(content="✅ Earnings configuration reset.", view=None)
 
         view = ConfirmButton(reset_action, interaction.user.id)
@@ -1026,13 +1046,16 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             view=view, 
             ephemeral=True
         )
+    
+    async def reset_model_settings(self, interaction: discord.Interaction): 
+        await file_handlers.save_json(settings.MODELS_DATA_FILE, settings.DEFAULT_MODELS_DATA)
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="reset-models-config", description="[Admin] Reset models configuration")
     async def reset_models_config(self, interaction: discord.Interaction):
         async def reset_action(interaction: discord.Interaction):
-            await file_handlers.save_json(settings.MODELS_DATA_FILE, settings.DEFAULT_MODELS_DATA)
-            await interaction.response.edit_message(content="✅ Models configuration reset.", view=None)
+            await self.reset_model_settings(interaction)
+            await interaction.response.edit_message(content="✅ Model settings reset.", view=None)
 
         view = ConfirmButton(reset_action, interaction.user.id)
         await interaction.response.send_message(
@@ -1041,12 +1064,15 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             ephemeral=True
         )
 
+    async def reset_compensation(self, interaction: discord.Interaction):
+        await file_handlers.save_json(settings.COMMISSION_SETTINGS_FILE, settings.DEFAULT_COMMISSION_SETTINGS)
+
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="reset-compensation-config", description="[Admin] Reset compensation configuration")
     async def reset_compensation_config(self, interaction: discord.Interaction):
         async def reset_action(interaction: discord.Interaction):
-            await file_handlers.save_json(settings.COMMISSION_SETTINGS_FILE, settings.DEFAULT_COMMISSION_SETTINGS)
-            await interaction.response.edit_message(content="✅ Compensation configuration reset.", view=None)
+            await self.reset_compensation(interaction)
+            await interaction.response.edit_message(content="✅ Commission configuration reset.", view=None)
 
         view = ConfirmButton(reset_action, interaction.user.id)
         await interaction.response.send_message(
@@ -1055,11 +1081,14 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             ephemeral=True
         )
 
+    async def reset_display(self, interaction: discord.Interaction):
+        await file_handlers.save_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
+
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="reset-display-config", description="[Admin] Reset display configuration")
     async def reset_display_config(self, interaction: discord.Interaction):
         async def reset_action(interaction: discord.Interaction):
-            await file_handlers.save_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
+            await self.reset_display(interaction)
             await interaction.response.edit_message(content="✅ Display configuration reset.", view=None)
 
         view = ConfirmButton(reset_action, interaction.user.id)
@@ -1200,9 +1229,9 @@ class AdminSlashCommands(commands.Cog, name="admin"):
     @app_commands.command(name="restore-display-backup", description="[Admin] Restore the latest display configuration backup")
     async def restore_display_backup(self, interaction: discord.Interaction):
         async def restore_action(interaction: discord.Interaction):
-            backup_file = os.path.join(settings.DATA_DIRECTORY, f"{settings.DISPLAY_CONFIG_FILE}.bak")
+            backup_file = os.path.join(settings.DATA_DIRECTORY, f"{settings.DISPLAY_SETTINGS_FILE}.bak")
             if os.path.exists(backup_file):
-                shutil.copy2(backup_file, os.path.join(settings.DATA_DIRECTORY, settings.DISPLAY_CONFIG_FILE))
+                shutil.copy2(backup_file, os.path.join(settings.DATA_DIRECTORY, settings.DISPLAY_SETTINGS_FILE))
                 await interaction.response.edit_message(content="✅ Display configuration backup restored successfully.", view=None)
             else:
                 await interaction.response.edit_message(content="❌ No display configuration backup found.", view=None)
