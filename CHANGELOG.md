@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [0.79.0] - 2025-03-07
+### Changed
+- `view-earnings`,
+- `view-earnings-admin`,
+they can now also export data to formats CSV and TXT.
+
 ## [0.78.0] - 2025-03-07
 ### Changed
 - Calculate slash preview and finalize field display.

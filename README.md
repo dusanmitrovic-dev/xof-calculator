@@ -247,6 +247,9 @@
 - [x] (v0.77.0) Remove hours for commission views
 - [x] (v0.77.0) Remove net revenue in hourly views
 - [x] (v0.78.0) Better preview and finalize display
+- [x] (v0.79.0) Export options for `view-earnings` and `view-earnings-admin`
+    - [x] (v0.79.0) CSV
+    - [x] (v0.79.0) TXT
 - [ ] View earnings remove period use role instead
 - [ ] New view earnings slash command `view-earnings date-from date-to weekly/monthly`
 - [ ] View earnings export
