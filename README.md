@@ -251,6 +251,8 @@
 - [ ] View earnings export
 - [ ] Bulk earnings for everyone from period to period for weekly/monthly
     - [ ] With DM support notification that sends to everyone their earnings log
+- [ ] Any way to use date picker for view earnings for example?
+    - https://discord-date-2.shyked.fr/
 - [ ] Bot roles
 
 
