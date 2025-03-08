@@ -89,7 +89,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
     async def generate_export_file(self, user_earnings, user, export_format):
         """Generate export file based on format choice"""
         sanitized_name = Path(user.display_name).stem[:32].replace(" ", "_")
-        timestamp = datetime.now().strftime('%Y%m%d')
         base_name = f"{sanitized_name}_earnings_{datetime.now().strftime('%d_%m_%Y')}"
         
         buffer = io.BytesIO()
