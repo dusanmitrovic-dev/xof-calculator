@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.89.0] - 2025-03-08
+### Rollback
+- Rollback to stable `v0.86.0` release.
+
 ## [0.87.0] - 2025-03-08
 ### Changed
 - `view-earnings` functions merged with new `as_table` parameter.
