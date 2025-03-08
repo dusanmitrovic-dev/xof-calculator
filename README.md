@@ -273,7 +273,7 @@
 - [ ] Pip freeze > requirements.txt
 - [ ] View earnings remove period use role instead
 - [ ] New view earnings slash command `view-earnings date-from date-to weekly/monthly`
-- [ ] View earnings export
+- [x] View earnings export
 - [ ] Bulk earnings for everyone from period to period for weekly/monthly
     - [ ] With DM support notification that sends to everyone their earnings log
 - [ ] Any way to use a date picker for `view-earnings`?
