@@ -266,6 +266,7 @@
 - [ ] Update other `view-earnings` methods
     - [x] (v0.84.0) `view-earnings-admin-table`
     - [x] (v0.85.0) `view-earnings-admin`
+    - [x] (v0.86.0) `view-earnings-table`
 - [ ] Add functionality to select column names to display in `view-earnings`
 - [ ] Pip freeze > requirements.txt
 - [ ] View earnings remove period use role instead

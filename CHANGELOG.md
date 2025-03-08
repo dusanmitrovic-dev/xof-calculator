@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.86.0] - 2025-03-08
+### Changed
+- Enhance `view-earnings-table` command to support multiple recipients and improved error handling.
+
 ## [0.85.0] - 2025-03-08
 ### Changed
 `view-earnings-admin`:
