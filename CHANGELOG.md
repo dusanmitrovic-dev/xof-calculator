@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [0.81.0] - 2025-03-08
+### Added
+- new functionalities:
+- range_from and range_to parameters
+
 ## [0.80.2] - 2025-03-08
 ### Fixed
 - Fixed export zip functionality with better base naming.
