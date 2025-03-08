@@ -321,7 +321,6 @@
 - [x] Implement rate selection logic:
   - User-specific rates with override
   - Role-based fallback
-- [ ] Create helper methods to retrieve appropriate rates
 - [x] (v0.66.0) Calculate workflow will only show roles that user has
 
 ## FUTURE IMPROVEMENTS
