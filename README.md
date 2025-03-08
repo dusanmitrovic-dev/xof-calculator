@@ -257,6 +257,10 @@
     - [x] (v0.80.0) ZIP Archive
 - [x] (v0.80.1) Fix bug where view-earnings command did not display
 - [x] (v0.80.2) Fix export zip functionality
+- [x] (v0.81.0) New command view-earnings-table
+- [x] (v0.81.0) `range_from` and `range_to` parameters
+- [x] (v0.81.0) `send_to` functionality
+- [ ] Update other view earnings methods
 - [ ] Add functionality to select column names you want to display in view-earnings
 - [ ] Pip freeze > requirements.txt
 - [ ] View earnings remove period use role instead
