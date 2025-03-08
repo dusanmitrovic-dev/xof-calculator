@@ -544,10 +544,12 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             return
         
         try:
+            ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+
             logger.info(f"User {interaction.user.name} used set-shift command for shift '{shift}'")
             
             if not shift.strip():
-                await interaction.response.send_message("❌ Shift name cannot be empty.")
+                await interaction.response.send_message("❌ Shift name cannot be empty.", ephemeral=ephemeral)
                 return
                 
             guild_id = str(interaction.guild.id)
@@ -555,19 +557,19 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             existing_shifts = shift_data.get(guild_id, [])
             
             if validators.validate_shift(shift, existing_shifts) is not None:
-                await interaction.response.send_message(f"❌ Shift '{shift}' already exists!")
+                await interaction.response.send_message(f"❌ Shift '{shift}' already exists!", ephemeral=ephemeral)
                 return
             
             shift_data.setdefault(guild_id, []).append(shift)
             success = await file_handlers.save_json(settings.SHIFT_DATA_FILE, shift_data)
             
             if success:
-                await interaction.response.send_message(f"✅ Shift '{shift}' added!", ephemeral=True)
+                await interaction.response.send_message(f"✅ Shift '{shift}' added!", ephemeral=ephemeral)
             else:
-                await interaction.response.send_message("❌ Failed to save shift data. Please try again later.")
+                await interaction.response.send_message("❌ Failed to save shift data. Please try again later.", ephemeral=ephemeral)
         except Exception as e:
             logger.error(f"Error in set_shift: {str(e)}")
-            await interaction.response.send_message("❌ An unexpected error occurred. See logs for details.", ephemeral=True)
+            await interaction.response.send_message("❌ An unexpected error occurred. See logs for details.", ephemeral=ephemeral)
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="remove-shift", description="[Admin] Remove a shift configuration")

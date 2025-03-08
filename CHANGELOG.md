@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.90.0] - 2025-03-08
+### Changed
+- `set-shift` now has fully ephemeral support
+
 ## [0.89.0] - 2025-03-08
 ### Rollback
 - Rollback to stable `v0.86.0` release.
