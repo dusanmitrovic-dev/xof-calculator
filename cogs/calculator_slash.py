@@ -628,13 +628,13 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
     # Admin command
     @app_commands.command(
         name="view-earnings-admin-table",
-        description="Admin command to view earnings for a specified user"
+        description="Admin command to view earnings for a specified user in table format"
     )
     @app_commands.describe(
         user="The user whose earnings you want to view",
         entries="Number of entries to return (max 50)",
         export="Export format",
-        send_to="Send the response as a DM to this user",
+        send_to="User or role to send the report to (mention users/roles)",
         range_from="Start date in dd/mm/yyyy format",
         range_to="End date in dd/mm/yyyy format (use ~ for today)"
     )
@@ -657,11 +657,11 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         user: discord.User,
         entries: Optional[int] = 50,
         export: Optional[str] = "none",
-        send_to: Optional[discord.User] = None,
+        send_to: Optional[str] = None,
         range_from: Optional[str] = None,
         range_to: Optional[str] = None
     ):
-        """Admin command to view earnings for a specified user"""
+        """Admin command to view earnings for a specified user in table format"""
         if not interaction.user.guild_permissions.administrator:
             await interaction.response.send_message("❌ You need administrator permissions to use this command.", ephemeral=True)
             return
@@ -747,20 +747,62 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                     await interaction.followup.send(f"❌ Export failed: {str(e)}")
                     return
 
-            # Send to specified user or current channel
-            try:
-                if send_to:
-                    if not interaction.user.guild_permissions.administrator:
-                        await interaction.followup.send("❌ Only administrators can use the send_to parameter.", ephemeral=True)
-                        return
-                    
-                    dm_channel = await send_to.create_dm()
-                    await dm_channel.send(embed=embed, file=file)
-                    await interaction.followup.send(f"✅ Report sent to {send_to.mention}.", ephemeral=True)
-                else:
-                    await interaction.followup.send(embed=embed, file=file)
-            except discord.Forbidden:
-                await interaction.followup.send("❌ Could not send DM to the user. They may have DMs disabled.", ephemeral=True)
+            # Get recipients from send_to mentions
+            recipients = []
+            if send_to:
+                resolved = interaction.data.get("resolved", {})
+                if resolved:
+                    users = [await self.bot.fetch_user(int(u)) for u in resolved.get("users", {})]
+                    roles = [interaction.guild.get_role(int(r)) for r in resolved.get("roles", {})]
+                    role_member_ids = {m.id for r in roles for m in r.members}
+                    filtered_users = [u for u in users if u.id not in role_member_ids]
+                    recipients = filtered_users + roles
+
+            # Send to recipients
+            successful = []
+            failed = []
+            already_sent = set()
+            
+            if recipients:
+                for recipient in recipients:
+                    try:
+                        if isinstance(recipient, (discord.User, discord.Member)):
+                            if recipient.id in already_sent:
+                                continue
+                            try:
+                                dm_channel = await recipient.create_dm()
+                                await dm_channel.send(embed=embed, file=file)
+                                successful.append(f"User: {recipient.mention}")
+                                already_sent.add(recipient.id)
+                            except Exception as e:
+                                failed.append(f"{recipient.mention} ({str(e)})")
+                        elif isinstance(recipient, discord.Role):
+                            for member in recipient.members:
+                                if member.id in already_sent:
+                                    continue
+                                try:
+                                    dm_channel = await member.create_dm()
+                                    await dm_channel.send(embed=embed, file=file)
+                                    successful.append(f"Role Member: {member.mention}")
+                                    already_sent.add(member.id)
+                                except Exception as e:
+                                    failed.append(f"{member.mention} ({str(e)})")
+                    except Exception as e:
+                        failed.append(f"{getattr(recipient, 'mention', str(recipient))} ({str(e)})")
+                
+                result_msg = []
+                if successful:
+                    result_msg.append("✅ Sent to:\n" + "\n".join(successful[:5]))
+                    if len(successful) > 5:
+                        result_msg.append(f"*...and {len(successful)-5} more*")
+                if failed:
+                    result_msg.append("❌ Failed to send to:\n" + "\n".join(failed[:5]))
+                    if len(failed) > 5:
+                        result_msg.append(f"*...and {len(failed)-5} more*")
+                
+                await interaction.followup.send("\n\n".join(result_msg), ephemeral=True)
+            else:
+                await interaction.followup.send(embed=embed, file=file)
 
         except Exception as e:
             await interaction.followup.send(f"❌ Error: {str(e)}")
@@ -990,7 +1032,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         ]
     )
     @app_commands.default_permissions(administrator=True)
-    async def view_earnings_admin(
+    async def view_earnings_admin( 
         self,
         interaction: discord.Interaction,
         user: discord.User,

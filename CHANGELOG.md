@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.84.0] - 2025-03-08
+### Changed
+- feat(calculator_slash): enhance `view-earnings-admin-table` command with improved descriptions and recipient handling
+
 ## [0.83.0] - 2025-03-08
 ### Added
 - Added `range_from` and `range_to` parameters for filtering earnings by date.
