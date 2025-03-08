@@ -773,7 +773,10 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
     @app_commands.describe(
         entries=f"Number of entries to return (max {MAX_ENTRIES})",
         export="Export format",
-        display_entries="Whether entries will be displayed or not"
+        display_entries="Whether entries will be displayed or not",
+        send_to="User to send the report to",
+        range_from="Starting date (dd/mm/yyyy)",
+        range_to="Ending date (dd/mm/yyyy)",
     )
     @app_commands.choices(
         export=[
@@ -792,69 +795,95 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         interaction: discord.Interaction,
         entries: Optional[int] = 50,
         export: Optional[str] = "none",
-        display_entries: Optional[bool] = True
+        display_entries: Optional[bool] = False,
+        send_to: Optional[str] = None,
+        range_from: Optional[str] = None,
+        range_to: Optional[str] = None
     ):
         """Command for users to view their own earnings"""
         try:
             await interaction.response.defer()
             entries = min(max(entries, 1), MAX_ENTRIES)
             
-            # Load data
+            # Load and filter data
             earnings_data = await file_handlers.load_json(settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS)
+            user_earnings = earnings_data.get(interaction.user.mention, [])
+            
+            # Date filtering
+            if range_from or range_to:
+                try:
+                    from_date = datetime.strptime(range_from, "%d/%m/%Y") if range_from else datetime.min
+                    to_date = datetime.now() if range_to == "~" else (
+                        datetime.strptime(range_to, "%d/%m/%Y") if range_to else datetime.max
+                    )
+                    to_date = to_date.replace(hour=23, minute=59, second=59)
+
+                    filtered = []
+                    for entry in user_earnings:
+                        entry_date = datetime.strptime(entry['date'], "%d/%m/%Y")
+                        if from_date <= entry_date <= to_date:
+                            filtered.append(entry)
+                    user_earnings = filtered
+                except ValueError:
+                    await interaction.followup.send("❌ Invalid date format. Use dd/mm/yyyy.", ephemeral=True)
+                    return
+
             user_earnings = sorted(
-                earnings_data.get(interaction.user.mention, []),
-                key=lambda x: x['date'],
+                user_earnings,
+                key=lambda x: datetime.strptime(x['date'], "%d/%m/%Y"),
                 reverse=True
             )[:entries]
-            
+
             if not user_earnings:
                 await interaction.followup.send("❌ No earnings data found.")
                 return
-            
+
             # Create embed
             embed = discord.Embed(
                 title=f"📊 Earnings Summary - {interaction.user.display_name}",
                 color=0x2ECC71,
                 timestamp=interaction.created_at
             )
-            embed.set_thumbnail(url=interaction.user.avatar.url if interaction.user.avatar else None)
-            # embed.add_field( #todo better view
-            #         name="\u200b",
-            #         value="=============================================",
-            #         inline=False
-            #     )
             
-            # if display_entries:
-            #     # Add entries
-            #     for idx, entry in enumerate(user_earnings, start=1):
-            #         # Calculate additional fields
-            #         net_revenue = float(entry['gross_revenue']) * 0.8
-            #         total_cut_percent = (float(entry['total_cut']) / float(entry['gross_revenue'])) * 100
+            embed.set_thumbnail(url=interaction.user.avatar.url if interaction.user.avatar else None)
+           
+            if display_entries:
+                embed.add_field( #todo better view
+                    name="\u200b",
+                    value="=============================================",
+                    inline=False
+                )
+            
+                # Add entries
+                for idx, entry in enumerate(user_earnings, start=1):
+                    # Calculate additional fields
+                    net_revenue = float(entry['gross_revenue']) * 0.8
+                    total_cut_percent = (float(entry['total_cut']) / float(entry['gross_revenue'])) * 100
                     
-            #         entry_text = (
-            #             f"**Date:** {entry['date']}\n"
-            #             # f"**Shift:** {entry['shift'].title()}\n"
-            #             f"**Role:** {entry['role']}\n"
-            #             # f"**Period:** {entry['period'].title()}\n"
-            #             f"**Gross Revenue:** ${float(entry['gross_revenue']):.2f}\n"
-            #             # f"**Net Revenue:** ${net_revenue:.2f} (80%)\n"
-            #             # f"**Bonus:** $0.00\n"  # Replace with actual bonus field if available
-            #             f"**Total Cut:** ${float(entry['total_cut']):.2f} ({total_cut_percent:.1f}% + Bonus)\n"
-            #             # f"**Models:** {entry['models'] or 'None'}"
-            #         )
+                    entry_text = (
+                        f"**Date:** {entry['date']}\n"
+                        # f"**Shift:** {entry['shift'].title()}\n"
+                        f"**Role:** {entry['role']}\n"
+                        # f"**Period:** {entry['period'].title()}\n"
+                        f"**Gross Revenue:** ${float(entry['gross_revenue']):.2f}\n"
+                        # f"**Net Revenue:** ${net_revenue:.2f} (80%)\n"
+                        # f"**Bonus:** $0.00\n"  # Replace with actual bonus field if available
+                        f"**Total Cut:** ${float(entry['total_cut']):.2f} ({total_cut_percent:.1f}% + Bonus)\n"
+                        # f"**Models:** {entry['models'] or 'None'}"
+                    )
                     
-            #         embed.add_field(
-            #             name=f"#{idx}",
-            #             value=entry_text,
-            #             inline=False
-            #         )
+                    embed.add_field(
+                        name=f"#{idx}",
+                        value=entry_text,
+                        inline=False
+                    )
                     
-            #         # Add visual separator
-            #         embed.add_field(
-            #             name="\u200b",
-            #             value="▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
-            #             inline=False
-            #         )
+                    # Add visual separator
+                    embed.add_field(
+                        name="\u200b",
+                        value="▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
+                        inline=False
+                    )
 
             # Add totals
             total_gross = sum(float(e['gross_revenue']) for e in user_earnings)
@@ -870,8 +899,71 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                     await interaction.followup.send(f"❌ Export failed: {str(e)}")
                     return
             
-            await interaction.followup.send(embed=embed, file=file)
+            # Get recipients
+            recipients = []
+            if send_to:
+                # Parse mentions from interaction data
+                resolved = interaction.data.get("resolved", {})
+                if resolved:
+                    # Get mentioned users
+                    users = [await self.bot.fetch_user(int(u)) for u in resolved.get("users", {})]
+                    # Get mentioned roles
+                    roles = [interaction.guild.get_role(int(r)) for r in resolved.get("roles", {})]
+                    
+                    # Get all member IDs from mentioned roles
+                    role_member_ids = {m.id for r in roles for m in r.members}
+                    
+                    # Filter out users who are already in mentioned roles
+                    filtered_users = [u for u in users if u.id not in role_member_ids]
+                    
+                    recipients = filtered_users + roles
+
+            # Send to recipients
+            successful = []
+            failed = []
+            already_sent = set()  # Track sent user IDs to prevent duplicates
             
+            if recipients:
+                for recipient in recipients:
+                    try:
+                        if isinstance(recipient, (discord.User, discord.Member)):
+                            if recipient.id in already_sent:
+                                continue
+                                
+                            dm_channel = await recipient.create_dm()
+                            await dm_channel.send(embed=embed, file=file)
+                            successful.append(f"User: {recipient.mention}")
+                            already_sent.add(recipient.id)
+
+                        elif isinstance(recipient, discord.Role):
+                            for member in recipient.members:
+                                if member.id in already_sent:
+                                    continue
+                                    
+                                try:
+                                    dm_channel = await member.create_dm()
+                                    await dm_channel.send(embed=embed, file=file)
+                                    successful.append(f"Role Member: {member.mention}")
+                                    already_sent.add(member.id)
+                                except Exception as e:
+                                    failed.append(f"{member.mention} ({str(e)})")
+                    except Exception as e:
+                        failed.append(f"{getattr(recipient, 'mention', str(recipient))} ({str(e)})")
+                
+                result_msg = []
+                if successful:
+                    result_msg.append("✅ Sent to:\n" + "\n".join(successful[:5]))
+                    if len(successful) > 5:
+                        result_msg.append(f"*...and {len(successful)-5} more*")
+                if failed:
+                    result_msg.append("❌ Failed to send to:\n" + "\n".join(failed[:5]))
+                    if len(failed) > 5:
+                        result_msg.append(f"*...and {len(failed)-5} more*")
+                
+                await interaction.followup.send("\n\n".join(result_msg), ephemeral=True)
+            else:
+                await interaction.followup.send(embed=embed, file=file)
+                
         except Exception as e:
             await interaction.followup.send(f"❌ Error: {str(e)}")
 

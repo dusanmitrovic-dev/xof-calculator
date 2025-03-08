@@ -260,19 +260,20 @@
 - [x] (v0.81.0) New command view-earnings-table
 - [x] (v0.81.0) `range_from` and `range_to` parameters
 - [x] (v0.81.0) `send_to` functionality
-- [ ] Update other view earnings methods
-    - [x] (v0.82.0) `view-earnings-admin-table`
-- [ ] Add functionality to select column names you want to display in view-earnings
+- [x] (v0.82.0) `view-earnings-admin-table`
+- [x] (v0.83.0) Improve earnings display with separators and additional fields
+- [x] (v0.83.0) Implement error handling for export failures
+- [ ] Update other `view-earnings` methods
+- [ ] Add functionality to select column names to display in `view-earnings`
 - [ ] Pip freeze > requirements.txt
 - [ ] View earnings remove period use role instead
 - [ ] New view earnings slash command `view-earnings date-from date-to weekly/monthly`
 - [ ] View earnings export
 - [ ] Bulk earnings for everyone from period to period for weekly/monthly
     - [ ] With DM support notification that sends to everyone their earnings log
-- [ ] Any way to use date picker for view earnings for example?
+- [ ] Any way to use a date picker for `view-earnings`?
     - https://discord-date-2.shyked.fr/
 - [ ] Bot roles
-
 
 # Commission Settings Implementation TODO
 

@@ -2,13 +2,20 @@
 
 ## [Unreleased]
 
+## [0.83.0] - 2025-03-08
+### Added
+- Added `range_from` and `range_to` parameters for filtering earnings by date.
+- Implemented `send_to` functionality to send reports via DM to users/roles.
+- Improved earnings display with separators and additional fields.
+- Enhanced export handling with better error messages.
+
 ## [0.82.0] - 2025-03-08
 ### Added
 - Updated new functionalities for `view-earnings-admin-table` command.
 
 ## [0.81.0] - 2025-03-08
 ### Added
-- range_from and range_to parameters
+- `range_from` and `range_to` parameters
 - send_to: that will send report to the user DM
 - new export formats for `view-earnings-table`
 - new command `view-earnings-table`
