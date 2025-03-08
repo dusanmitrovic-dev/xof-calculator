@@ -265,6 +265,7 @@
 - [x] (v0.83.0) Implement error handling for export failures
 - [ ] Update other `view-earnings` methods
     - [x] (v0.84.0) `view-earnings-admin-table`
+    - [x] (v0.85.0) `view-earnings-admin`
 - [ ] Add functionality to select column names to display in `view-earnings`
 - [ ] Pip freeze > requirements.txt
 - [ ] View earnings remove period use role instead
