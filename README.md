@@ -264,7 +264,7 @@
 - [x] (v0.82.0) `view-earnings-admin-table`
 - [x] (v0.83.0) Improve earnings display with separators and additional fields
 - [x] (v0.83.0) Implement error handling for export failures
-- [ ] Update other `view-earnings` methods
+- [x] Update other `view-earnings` methods
     - [x] (v0.84.0) `view-earnings-admin-table`
     - [x] (v0.85.0) `view-earnings-admin`
     - [x] (v0.86.0) `view-earnings-table`
