@@ -92,7 +92,7 @@ These functions now have full ephemeral support logic:
 
 ## [0.74.0] - 2025-03-07
 ### Changed
-- `reset-config` now uses helper reset functions
+- `reset-config` now uses helper reset functions.
 
 ## [0.73.0] - 2025-03-07
 ### Added
