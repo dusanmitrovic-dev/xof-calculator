@@ -633,84 +633,137 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
     @app_commands.describe(
         user="The user whose earnings you want to view",
         entries="Number of entries to return (max 50)",
-        export="Export format (csv, txt, or none)"
+        export="Export format",
+        send_to="Send the response as a DM to this user",
+        range_from="Start date in dd/mm/yyyy format",
+        range_to="End date in dd/mm/yyyy format (use ~ for today)"
     )
     @app_commands.choices(
         export=[
+            app_commands.Choice(name="None", value="none"),
             app_commands.Choice(name="Text File", value="txt"),
-            app_commands.Choice(name="CSV File", value="csv")
+            app_commands.Choice(name="CSV", value="csv"),
+            app_commands.Choice(name="JSON", value="json"),
+            app_commands.Choice(name="Excel", value="xlsx"),
+            app_commands.Choice(name="PDF", value="pdf"),
+            app_commands.Choice(name="PNG Chart", value="png"),
+            app_commands.Choice(name="ZIP Archive", value="zip")
         ]
     )
     @app_commands.default_permissions(administrator=True)
-    async def view_earnings_admin(
+    async def view_earnings_admin_table(
         self,
         interaction: discord.Interaction,
         user: discord.User,
         entries: Optional[int] = 50,
-        export: Optional[str] = "none"
+        export: Optional[str] = "none",
+        send_to: Optional[discord.User] = None,
+        range_from: Optional[str] = None,
+        range_to: Optional[str] = None
     ):
         """Admin command to view earnings for a specified user"""
         if not interaction.user.guild_permissions.administrator:
             await interaction.response.send_message("❌ You need administrator permissions to use this command.", ephemeral=True)
             return
 
-        entries = min(max(entries, 1), 50)
-        earnings_data = await file_handlers.load_json(settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS)
-        user_earnings = earnings_data.get(user.mention, [])[::-1][:entries]
-        user_earnings = sorted(user_earnings, key=lambda x: x['date'], reverse=True)[:entries]
+        try:
+            await interaction.response.defer()
+            entries = min(max(entries, 1), 50)
 
-        if not user_earnings:
-            await interaction.response.send_message(f"❌ No earnings data found for {user.mention}.", ephemeral=True)
-            return
+            # Load and filter earnings data
+            earnings_data = await file_handlers.load_json(settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS)
+            user_earnings = earnings_data.get(user.mention, [])
+            
+            # Date filtering
+            if range_from or range_to:
+                try:
+                    from_date = datetime.strptime(range_from, "%d/%m/%Y") if range_from else datetime.min
+                    to_date = datetime.now() if range_to == "~" else (
+                        datetime.strptime(range_to, "%d/%m/%Y") if range_to else datetime.max
+                    )
+                    to_date = to_date.replace(hour=23, minute=59, second=59)
 
-        embed = discord.Embed(title=f"📊 Earnings for {user.display_name} ({len(user_earnings)} entries)", color=0x009933)
-        total_gross = 0
-        total_cut_sum = 0
-        
-        table_header = "```\n  # |   Date    |   Role    |  Gross  |  Total   \n----|------------|-----------|---------|--------\n"
-        table_rows = []
-        
-        for index, entry in enumerate(user_earnings, start=1):
-            gross_revenue = float(entry['gross_revenue'])
-            total_cut = float(entry['total_cut'])
-            total_gross += gross_revenue
-            total_cut_sum += total_cut
-            table_rows.append(f"{index:3} | {entry['date']:10} | {entry['role'].capitalize():<9} | {gross_revenue:7.2f} | {total_cut:6.2f}\n")
+                    filtered = []
+                    for entry in user_earnings:
+                        entry_date = datetime.strptime(entry['date'], "%d/%m/%Y")
+                        if from_date <= entry_date <= to_date:
+                            filtered.append(entry)
+                    user_earnings = filtered
+                except ValueError:
+                    await interaction.followup.send("❌ Invalid date format. Use dd/mm/yyyy.", ephemeral=True)
+                    return
 
-        current_chunk = table_header
-        for row in table_rows:
-            if len(current_chunk) + len(row) + 3 > 1024:
+            # Sort and limit entries
+            user_earnings = sorted(
+                user_earnings,
+                key=lambda x: datetime.strptime(x['date'], "%d/%m/%Y"),
+                reverse=True
+            )[:entries]
+
+            if not user_earnings:
+                await interaction.followup.send(f"❌ No earnings data found for {user.mention}.", ephemeral=True)
+                return
+
+            # Create embed
+            embed = discord.Embed(
+                title=f"📊 Earnings for {user.display_name} ({len(user_earnings)} entries)",
+                color=0x009933
+            )
+
+            # Create table content
+            table_header = "```\n  # |   Date     |   Role    |  Gross   |  Total   \n----|------------|-----------|----------|--------\n"
+            table_rows = []
+            total_gross = 0
+            total_cut_sum = 0
+            
+            for index, entry in enumerate(user_earnings, start=1):
+                gross_revenue = float(entry['gross_revenue'])
+                total_cut = float(entry['total_cut'])
+                total_gross += gross_revenue
+                total_cut_sum += total_cut
+                table_rows.append(f"{index:3} | {entry['date']:10} | {entry['role'].capitalize():<9} | {gross_revenue:8.2f} | {total_cut:6.2f}\n")
+
+            # Build table chunks
+            current_chunk = table_header
+            for row in table_rows:
+                if len(current_chunk) + len(row) + 3 > 1024:
+                    embed.add_field(name="", value=current_chunk + "```", inline=False)
+                    current_chunk = "```\n"
+                current_chunk += row
+            
+            if current_chunk != table_header:
                 embed.add_field(name="", value=current_chunk + "```", inline=False)
-                current_chunk = "```\n"
-            current_chunk += row
-        
-        if current_chunk != table_header:
-            embed.add_field(name="", value=current_chunk + "```", inline=False)
-        
-        embed.add_field(name="Total Gross", value=f"```\n{total_gross:.2f}\n```", inline=True)
-        embed.add_field(name="Total Cut", value=f"```\n{total_cut_sum:.2f}\n```", inline=True)
+            
+            # Add totals
+            embed.add_field(name="Total Gross", value=f"```\n{total_gross:.2f}\n```", inline=True)
+            embed.add_field(name="Total Cut", value=f"```\n{total_cut_sum:.2f}\n```", inline=True)
 
-        if export != "none":
-            file_data = ""
-            file_name = f"earnings_{user.name}_{datetime.now().strftime('%Y%m%d')}"  # Fixed
-            
-            if export == "csv":
-                file_data = "Index,Date,Role,Gross,Total Cut\n"
-                for index, entry in enumerate(user_earnings, start=1):
-                    file_data += f"{index},{entry['date']},{entry['role']},{entry['gross_revenue']},{entry['total_cut']}\n"
-                file_name += ".csv"
-            else:
-                file_data = f"Earnings for {user.display_name} - Generated on {datetime.now().strftime('%Y-%m-%d')}\n\n"  # Fixed
-                file_data += "Index | Date       | Role      | Gross    | Total Cut\n--------------------------------------------------\n"
-                for index, entry in enumerate(user_earnings, start=1):
-                    file_data += f"{index:5} | {entry['date']:10} | {entry['role']:<9} | {float(entry['gross_revenue']):8.2f} | {float(entry['total_cut']):9.2f}\n"
-                file_data += f"\nTotal Gross: {total_gross:.2f}\nTotal Cut:   {total_cut_sum:.2f}\n"
-                file_name += ".txt"
-            
-            file = discord.File(io.BytesIO(file_data.encode('utf-8')), filename=file_name)
-            await interaction.response.send_message(embed=embed, file=file)
-        else:
-            await interaction.response.send_message(embed=embed)
+            # Handle export
+            file = None
+            if export != "none":
+                try:
+                    file = await self.generate_export_file(user_earnings, user, export)
+                except Exception as e:
+                    await interaction.followup.send(f"❌ Export failed: {str(e)}")
+                    return
+
+            # Send to specified user or current channel
+            try:
+                if send_to:
+                    if not interaction.user.guild_permissions.administrator:
+                        await interaction.followup.send("❌ Only administrators can use the send_to parameter.", ephemeral=True)
+                        return
+                    
+                    dm_channel = await send_to.create_dm()
+                    await dm_channel.send(embed=embed, file=file)
+                    await interaction.followup.send(f"✅ Report sent to {send_to.mention}.", ephemeral=True)
+                else:
+                    await interaction.followup.send(embed=embed, file=file)
+            except discord.Forbidden:
+                await interaction.followup.send("❌ Could not send DM to the user. They may have DMs disabled.", ephemeral=True)
+
+        except Exception as e:
+            await interaction.followup.send(f"❌ Error: {str(e)}")
 
     # Modified command implementation
     @app_commands.command(

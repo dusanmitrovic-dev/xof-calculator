@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.82.0] - 2025-03-08
+### Added
+- Updated new functionalities for `view-earnings-admin-table` command.
+
 ## [0.81.0] - 2025-03-08
 ### Added
 - range_from and range_to parameters

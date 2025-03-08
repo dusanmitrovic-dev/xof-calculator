@@ -261,6 +261,7 @@
 - [x] (v0.81.0) `range_from` and `range_to` parameters
 - [x] (v0.81.0) `send_to` functionality
 - [ ] Update other view earnings methods
+    - [x] (v0.82.0) `view-earnings-admin-table`
 - [ ] Add functionality to select column names you want to display in view-earnings
 - [ ] Pip freeze > requirements.txt
 - [ ] View earnings remove period use role instead
