@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.87.0] - 2025-03-08
+### Changed
+- `view-earnings` functions merged with new `as_table` parameter.
+
 ## [0.86.0] - 2025-03-08
 ### Changed
 - Enhance `view-earnings-table` command to support multiple recipients and improved error handling.
