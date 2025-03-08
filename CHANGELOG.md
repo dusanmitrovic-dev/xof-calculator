@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.80.2] - 2025-03-08
+### Fixed
+- Fixed export zip functionality with better base naming.
+
 ## [0.80.1] - 2025-03-07
 ### Fixed
 Fix bug where view-earnings command did not display
@@ -212,6 +216,10 @@ New admin slash commands:
 - `remove-shift` command has better error handling now.
 
 ## [0.41.0] - 2025-03-03
+### Changed
+- `set-shift` command has better error handling now.
+
+## [0.40.0] - 2025-03-03
 ### Changed
 - `set-shift` command has better error handling now.
 

@@ -88,9 +88,9 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
 
     async def generate_export_file(self, user_earnings, user, export_format):
         """Generate export file based on format choice"""
-        sanitized_name = Path(user.name).stem[:32].replace(" ", "_")
+        sanitized_name = Path(user.display_name).stem[:32].replace(" ", "_")
         timestamp = datetime.now().strftime('%Y%m%d')
-        base_name = f"earnings_{sanitized_name}_{timestamp}"
+        base_name = f"{sanitized_name}_earnings_{datetime.now().strftime('%d_%m_%Y')}"
         
         buffer = io.BytesIO()
         
@@ -147,7 +147,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         
         elif export_format == "png":
             plt.figure(figsize=(10, 6))
-            dates = [datetime.strptime(entry['date'], '%Y-%m-%d') for entry in user_earnings]
+            dates = [datetime.strptime(entry['date'], '%d/%m/%Y') for entry in user_earnings]
             gross = [float(entry['gross_revenue']) for entry in user_earnings]
             cuts = [float(entry['total_cut']) for entry in user_earnings]
             
@@ -169,12 +169,28 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             zip_buffer = io.BytesIO()
             with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
                 # Add CSV
-                csv_file = await generate_export_file(user_earnings, user, "csv")
+                csv_file = await self.generate_export_file(user_earnings, user, "csv")
                 zip_file.writestr(f"{base_name}.csv", csv_file.fp.getvalue())
                 
                 # Add PDF
-                pdf_file = await generate_export_file(user_earnings, user, "pdf")
+                pdf_file = await self.generate_export_file(user_earnings, user, "pdf")
                 zip_file.writestr(f"{base_name}.pdf", pdf_file.fp.getvalue())
+
+                # Add PNG
+                png_file = await self.generate_export_file(user_earnings, user, "png")
+                zip_file.writestr(f"{base_name}.png", png_file.fp.getvalue())
+                
+                # Add JSON
+                json_file = await self.generate_export_file(user_earnings, user, "json")
+                zip_file.writestr(f"{base_name}.json", json_file.fp.getvalue())
+
+                # Add XLSX
+                xlsx_file = await self.generate_export_file(user_earnings, user, "xlsx")
+                zip_file.writestr(f"{base_name}.xlsx", xlsx_file.fp.getvalue())
+
+                # Add TXT
+                txt_file = await self.generate_export_file(user_earnings, user, "txt")
+                zip_file.writestr(f"{base_name}.txt", txt_file.fp.getvalue())
             
             zip_buffer.seek(0)
             return discord.File(zip_buffer, filename=f"{base_name}.zip")
@@ -704,7 +720,8 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
     )
     @app_commands.describe(
         entries=f"Number of entries to return (max {MAX_ENTRIES})",
-        export="Export format"
+        export="Export format",
+        display_entries="Whether entries will be displayed or not"
     )
     @app_commands.choices(
         export=[
@@ -722,14 +739,12 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         self,
         interaction: discord.Interaction,
         entries: Optional[int] = 50,
-        export: Optional[str] = "none"
+        export: Optional[str] = "none",
+        display_entries: Optional[bool] = True
     ):
         """Command for users to view their own earnings"""
         try:
-            # Defer response for large exports
-            await interaction.response.defer(ephemeral=export != "none")
-            
-            # Validate entries
+            await interaction.response.defer()
             entries = min(max(entries, 1), MAX_ENTRIES)
             
             # Load data
@@ -741,44 +756,72 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             )[:entries]
             
             if not user_earnings:
-                await interaction.followup.send(f"❌ No earnings data found.", ephemeral=True)
+                await interaction.followup.send("❌ No earnings data found.")
                 return
             
-            # Generate embed
+            # Create embed
             embed = discord.Embed(
-                title=f"📊 Earnings Summary ({len(user_earnings)} entries)",
-                color=0x009933
+                title=f"💵 Earnings Summary - {interaction.user.display_name}",
+                color=0x2ECC71,
+                timestamp=interaction.created_at
             )
+            embed.set_thumbnail(url=interaction.user.avatar.url if interaction.user.avatar else None)
+            # embed.add_field( #todo better view
+            #         name="\u200b",
+            #         value="=============================================",
+            #         inline=False
+            #     )
             
+            # if display_entries:
+            #     # Add entries
+            #     for idx, entry in enumerate(user_earnings, start=1):
+            #         # Calculate additional fields
+            #         net_revenue = float(entry['gross_revenue']) * 0.8
+            #         total_cut_percent = (float(entry['total_cut']) / float(entry['gross_revenue'])) * 100
+                    
+            #         entry_text = (
+            #             f"**Date:** {entry['date']}\n"
+            #             # f"**Shift:** {entry['shift'].title()}\n"
+            #             f"**Role:** {entry['role']}\n"
+            #             # f"**Period:** {entry['period'].title()}\n"
+            #             f"**Gross Revenue:** ${float(entry['gross_revenue']):.2f}\n"
+            #             # f"**Net Revenue:** ${net_revenue:.2f} (80%)\n"
+            #             # f"**Bonus:** $0.00\n"  # Replace with actual bonus field if available
+            #             f"**Total Cut:** ${float(entry['total_cut']):.2f} ({total_cut_percent:.1f}% + Bonus)\n"
+            #             # f"**Models:** {entry['models'] or 'None'}"
+            #         )
+                    
+            #         embed.add_field(
+            #             name=f"#{idx}",
+            #             value=entry_text,
+            #             inline=False
+            #         )
+                    
+            #         # Add visual separator
+            #         embed.add_field(
+            #             name="\u200b",
+            #             value="▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
+            #             inline=False
+            #         )
+
             # Add totals
-            total_gross = sum(float(entry['gross_revenue']) for entry in user_earnings)
-            total_cut = sum(float(entry['total_cut']) for entry in user_earnings)
-            embed.add_field(name="Total Gross", value=f"${total_gross:.2f}", inline=True)
-            embed.add_field(name="Total Cut", value=f"${total_cut:.2f}", inline=True)
-            
-            # Generate file if needed
+            total_gross = sum(float(e['gross_revenue']) for e in user_earnings)
+            total_cut = sum(float(e['total_cut']) for e in user_earnings)
+            embed.set_footer(text=f"Total Gross: ${total_gross:.2f} | Total Cut: ${total_cut:.2f}")
+
+            # Handle export
             file = None
             if export != "none":
                 try:
                     file = await self.generate_export_file(user_earnings, interaction.user, export)
                 except Exception as e:
-                    await interaction.followup.send(
-                        f"❌ Failed to generate export: {str(e)}",
-                        ephemeral=True
-                    )
+                    await interaction.followup.send(f"❌ Export failed: {str(e)}")
                     return
             
-            # Send response
-            await interaction.followup.send(
-                embed=embed,
-                file=file
-            )
+            await interaction.followup.send(embed=embed, file=file)
             
         except Exception as e:
-            await interaction.followup.send(
-                f"❌ An error occurred: {str(e)}",
-                ephemeral=True
-            )
+            await interaction.followup.send(f"❌ Error: {str(e)}")
 
     # User command
     @app_commands.command(
