@@ -2,6 +2,33 @@
 
 ## [Unreleased]
 
+## [0.103.0] - 2025-03-09
+### Changed
+feat(admin_slash): changes:
+- commands that now have full ephemeral support:
+    - `clear-earnings`,
+    - `view-display-settings`,
+    - `list-models`,
+    - `reset-config`,
+    - `restore-latest-backup`,
+    - `reset-role-config`,
+    - `reset-bonus-config`,
+    - `reset-models-config`,
+    - `reset-compensation-config`,
+    - `reset-display-config`,
+    - `restore-role-backup`,
+    - `restore-bonus-backup`,
+    - `restore-earnings-backup`,
+    - `restore-models-backup`,
+    - `restore-compensation-backup`,
+    - `restore-display-backup`,
+- removed `[Admin]` from command descriptions,
+- removed `reset-earnings-config` command,
+- `clear-earnings` now has a "Confirm" and "Cancel" buttons,
+- removed unnecessary command descriptions,
+- renamed `reset_models_settings` to `reset_models`,
+- new command `view-display-settings`.
+
 ## [0.102.0] - 2025-03-09
 ### Changed
 - `reset-period-config` now has fully ephemeral support,

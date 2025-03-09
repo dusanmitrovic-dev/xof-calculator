@@ -256,6 +256,22 @@
     - [x] (v0.101.0) `restore-shift-backup`
     - [x] (v0.102.0) `reset-period-backup`
     - [x] (v0.102.0) `restore-period-backup`
+    - [x] (v0.103.0) `clear-earnings`
+    - [x] (v0.103.0) `view-display-settings`
+    - [x] (v0.103.0) `list-models`
+    - [x] (v0.103.0) `reset-config`
+    - [x] (v0.103.0) `restore-latest-backup`
+    - [x] (v0.103.0) `reset-role-config`
+    - [x] (v0.103.0) `reset-bonus-config`
+    - [x] (v0.103.0) `reset-models-config`
+    - [x] (v0.103.0) `reset-compensation-config`
+    - [x] (v0.103.0) `reset-display-config`
+    - [x] (v0.103.0) `restore-role-backup`
+    - [x] (v0.103.0) `restore-bonus-backup`
+    - [x] (v0.103.0) `restore-earnings-backup`
+    - [x] (v0.103.0) `restore-models-backup`
+    - [x] (v0.103.0) `restore-compensation-backup`
+    - [x] (v0.103.0) `restore-display-backup`
     - [x] make helper functions
 - [ ] Remove `reset-earnings-config`
 - [ ] Separate data and backup data
@@ -284,6 +300,12 @@
     - [x] (v0.86.0) `view-earnings-table`
 - [x] (v0.87.0) Merge `view-earnings` functions and add new `as_table` parameter
 - [x] (v0.101.0) `save_json` bool argument `make_backup` (default `True`)
+- [x] (v0.103.0) Remove `[Admin]` from command descriptions
+- [x] (v0.103.0) Remove `reset-earnings-config` command
+- [x] (v0.103.0) `clear-earnings` should have "Confirm" and "Cancel" buttons
+- [x] (v0.103.0) Remove unnecessary command descriptions
+- [x] (v0.103.0) Rename `reset_models_settings` to `reset_models`
+- [x] (v0.103.0) New command `view-display-settings`
 - [ ] Add functionality to select column names to display in `view-earnings`
 - [ ] Pip freeze > requirements.txt
 - [ ] View earnings remove period use role instead

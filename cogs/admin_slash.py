@@ -264,7 +264,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         response = f"✅ Toggled role override for {user.mention} to {user_settings['override_role']}"
         await interaction.response.send_message(response, ephemeral=True)
     
-    @app_commands.command(name="view-commission-settings")
+    @app_commands.command(name="view-compensation-settings")
     @app_commands.default_permissions(administrator=True)
     @app_commands.describe(
         role="Optional role to view settings for",
@@ -276,7 +276,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         role: Optional[discord.Role] = None,
         user: Optional[discord.User] = None
     ):
-        """View commission settings for a role or user"""
+        """View compensation settings for a role or user"""
         commission_settings = await file_handlers.load_json(settings.COMMISSION_SETTINGS_FILE, {})
         
         # Get guild-specific settings
@@ -352,6 +352,28 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
+    
+    @app_commands.command(
+        name="view-display-settings",
+        description="View the current display settings"
+    )
+    @app_commands.default_permissions(administrator=True)
+    async def view_display_settings(self, interaction: discord.Interaction):
+        """View the current display settings"""
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+        show_average = await self.get_average_setting(interaction.guild.id)
+        
+        embed = discord.Embed(
+            title="Display Settings",
+            description=f"Ephemeral Messages: {ephemeral}\nShow Averages: {show_average}"
+        )
+        await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
+
+    async def get_average_setting(self, guild_id):
+        settings_data = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
+        guild_settings = settings_data.get(str(guild_id), {})
+        return guild_settings.get("show_average", False)
+
     @app_commands.command(
         name="toggle-average",
         description="Toggle whether to show performance averages in calculation embeds"
@@ -394,7 +416,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(
         name="export-earnings-csv",
-        description="[Admin] Export all earnings data as CSV"
+        description="Export all earnings data as CSV"
     )
     async def export_earnings_csv(self, interaction: discord.Interaction):
         """
@@ -430,7 +452,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(
         name="export-earnings-json",
-        description="[Admin] Export all earnings data as JSON"
+        description="Export all earnings data as JSON"
     )
     async def export_earnings_json(self, interaction: discord.Interaction):
         """
@@ -461,7 +483,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
 
     # Role Management
     @app_commands.default_permissions(administrator=True)
-    @app_commands.command(name="set-role", description="[Admin] Set a role's percentage cut")
+    @app_commands.command(name="set-role", description="Set a role's percentage cut")
     @app_commands.describe(role="The role to configure", percentage="The percentage cut (e.g., 6.5)")
     async def set_role(self, interaction: discord.Interaction, role: discord.Role, percentage: str):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
@@ -501,7 +523,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             await interaction.response.send_message("❌ An unexpected error occurred. See logs for details.", ephemeral=ephemeral)
 
     @app_commands.default_permissions(administrator=True)
-    @app_commands.command(name="remove-role", description="[Admin] Remove a role's percentage configuration")
+    @app_commands.command(name="remove-role", description="Remove a role's percentage configuration")
     @app_commands.describe(role="The role to remove")
     async def remove_role(self, interaction: discord.Interaction, role: discord.Role):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
@@ -538,7 +560,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
 
     # Shift Management
     @app_commands.default_permissions(administrator=True)
-    @app_commands.command(name="set-shift", description="[Admin] Add a valid shift name")
+    @app_commands.command(name="set-shift", description="Add a valid shift name")
     @app_commands.describe(shift="The name of the shift to add")
     async def set_shift(self, interaction: discord.Interaction, shift: str):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
@@ -574,7 +596,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             await interaction.response.send_message("❌ An unexpected error occurred. See logs for details.", ephemeral=ephemeral)
 
     @app_commands.default_permissions(administrator=True)
-    @app_commands.command(name="remove-shift", description="[Admin] Remove a shift configuration")
+    @app_commands.command(name="remove-shift", description="Remove a shift configuration")
     @app_commands.describe(shift="The name of the shift to remove")
     async def remove_shift(self, interaction: discord.Interaction, shift: str):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
@@ -606,7 +628,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
 
     # Period Management
     @app_commands.default_permissions(administrator=True)
-    @app_commands.command(name="set-period", description="[Admin] Add a valid period name")
+    @app_commands.command(name="set-period", description="Add a valid period name")
     @app_commands.describe(period="The name of the period to add")
     async def set_period(self, interaction: discord.Interaction, period: str):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
@@ -640,7 +662,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             await interaction.response.send_message("❌ An unexpected error occurred. See logs for details.", ephemeral=ephemeral)
 
     @app_commands.default_permissions(administrator=True)
-    @app_commands.command(name="remove-period", description="[Admin] Remove a period configuration")
+    @app_commands.command(name="remove-period", description="Remove a period configuration")
     @app_commands.describe(period="The name of the period to remove")
     async def remove_period(self, interaction: discord.Interaction, period: str):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
@@ -668,7 +690,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
 
     # Bonus Rules Management
     @app_commands.default_permissions(administrator=True)
-    @app_commands.command(name="set-bonus-rule", description="[Admin] Set a bonus rule for a revenue range")
+    @app_commands.command(name="set-bonus-rule", description="Set a bonus rule for a revenue range")
     @app_commands.describe(
         from_range="Lower bound of revenue (e.g., 1000)",
         to_range="Upper bound of revenue (e.g., 2000)",
@@ -712,7 +734,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             await interaction.response.send_message("❌ Failed to save bonus rule.", ephemeral=ephemeral)
 
     @app_commands.default_permissions(administrator=True)
-    @app_commands.command(name="remove-bonus-rule", description="[Admin] Remove a bonus rule for a revenue range")
+    @app_commands.command(name="remove-bonus-rule", description="Remove a bonus rule for a revenue range")
     @app_commands.describe(
         from_range="Lower bound of revenue",
         to_range="Upper bound of revenue"
@@ -755,7 +777,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
 
     # List Commands
     @app_commands.default_permissions(administrator=True)
-    @app_commands.command(name="list-roles", description="[Admin] List configured roles and percentages")
+    @app_commands.command(name="list-roles", description="List configured roles and percentages")
     async def list_roles(self, interaction: discord.Interaction):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
 
@@ -777,7 +799,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
 
     @app_commands.default_permissions(administrator=True)
-    @app_commands.command(name="list-shifts", description="[Admin] List configured shifts")
+    @app_commands.command(name="list-shifts", description="List configured shifts")
     async def list_shifts(self, interaction: discord.Interaction):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
 
@@ -794,7 +816,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
 
     @app_commands.default_permissions(administrator=True)
-    @app_commands.command(name="list-periods", description="[Admin] List configured periods")
+    @app_commands.command(name="list-periods", description="List configured periods")
     async def list_periods(self, interaction: discord.Interaction):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
 
@@ -811,7 +833,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
 
     @app_commands.default_permissions(administrator=True)
-    @app_commands.command(name="list-bonus-rules", description="[Admin] List configured bonus rules")
+    @app_commands.command(name="list-bonus-rules", description="List configured bonus rules")
     async def list_bonus_rules(self, interaction: discord.Interaction):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
 
@@ -836,7 +858,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
 
     # Model Management
     @app_commands.default_permissions(administrator=True)
-    @app_commands.command(name="set-model", description="[Admin] Add a valid model name")
+    @app_commands.command(name="set-model", description="Add a valid model name")
     @app_commands.describe(model="The name of the model to add")
     async def set_model(self, interaction: discord.Interaction, model: str):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
@@ -868,7 +890,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             await interaction.response.send_message("❌ Failed to save model data. Please try again later.", ephemeral=ephemeral)
 
     @app_commands.default_permissions(administrator=True)
-    @app_commands.command(name="remove-model", description="[Admin] Remove a model configuration")
+    @app_commands.command(name="remove-model", description="Remove a model configuration")
     @app_commands.describe(model="The name of the model to remove")
     async def remove_model(self, interaction: discord.Interaction, model: str):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
@@ -895,7 +917,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             await interaction.response.send_message("❌ Failed to save model data. Please try again later.", ephemeral=ephemeral)
 
     @app_commands.default_permissions(administrator=True)
-    @app_commands.command(name="list-models", description="[Admin] List configured models")
+    @app_commands.command(name="list-models", description="List configured models")
     async def list_models(self, interaction: discord.Interaction):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
 
@@ -912,95 +934,117 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
 
     @app_commands.default_permissions(administrator=True)
-    @app_commands.command(name="clear-earnings", description="[Admin] Clear all earnings data")
+    @app_commands.command(name="clear-earnings", description="Clear all earnings data")
     async def clear_earnings(self, interaction: discord.Interaction):
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+
+        # guild_id = str(interaction.guild.id) # todo remove 
+        guild_name = interaction.guild.name
+
         view = discord.ui.View()
         view.add_item(discord.ui.Button(label="Confirm", style=discord.ButtonStyle.danger, custom_id="confirm_clear_earnings"))
+        view.add_item(discord.ui.Button(label="Cancel", style=discord.ButtonStyle.success, custom_id="cancel_clear_earnings"))
 
-        async def button_callback(interaction):
-            guild_id = str(interaction.guild.id)
-            earnings_data = await file_handlers.load_json(settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS)
-            earnings_data[guild_id] = {}
-            await file_handlers.save_json(settings.EARNINGS_FILE, earnings_data)
-            await interaction.response.send_message(f"✅ All earnings data for the guild with ID ({guild_id}) has been successfully cleared.", ephemeral=True)
+        async def confirm_callback(interaction):
+            # guild_id = str(interaction.guild.id) # todo remove when you check if it works
+            # earnings_data = await file_handlers.load_json(settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS)
+            # earnings_data[guild_id] = {}
+            # await file_handlers.save_json(settings.EARNINGS_FILE, earnings_data)
+            await self.reset_earnings(interaction)
+            await interaction.response.edit_message(content=f"✅ All earnings data for the guild ({guild_name}) has been successfully cleared.", view=None)
 
-        view.children[0].callback = button_callback
-        await interaction.response.send_message("⚠️ Are you sure you want to clear all earnings data?", view=view, ephemeral=True)
+        async def cancel_callback(interaction):
+            await interaction.response.edit_message(content="❌ Canceled.", view=None)
+
+        view.children[0].callback = confirm_callback
+        view.children[1].callback = cancel_callback
+        await interaction.response.send_message("‼️🚨‼ Are you sure you want to clear all earnings data?", view=view, ephemeral=ephemeral)
 
     @app_commands.default_permissions(administrator=True)
-    @app_commands.command(name="reset-config", description="[Admin] Reset all configuration files")
+    @app_commands.command(name="reset-config", description="Reset all configuration files")
     async def reset_config(self, interaction: discord.Interaction):
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+
         view = discord.ui.View()
         view.add_item(discord.ui.Button(label="Confirm", style=discord.ButtonStyle.danger, custom_id="confirm_reset_config"))
         view.add_item(discord.ui.Button(label="Cancel", style=discord.ButtonStyle.success, custom_id="cancel_reset_config"))
 
-        async def button_callback(interaction):
+        async def confirm_callback(interaction):
             await self.reset_shift(interaction)
             await self.reset_period(interaction)
             await self.reset_role(interaction)
             await self.reset_bonus_rules(interaction)
-            await self.reset_earnings(interaction)
+            await self.reset_models(interaction)
+            # await self.reset_earnings(interaction) # todo remove
             await self.reset_display(interaction)
             await self.reset_compensation(interaction)
-            await interaction.response.send_message("✅ Configuration files reset.", ephemeral=True)
+            try:
+                await interaction.response.edit_message(content="✅ Configuration data has been reset.", view=None)
+            except discord.NotFound:
+                logger.error("Ignoring exception in view %r for item %r", self, view, exc_info=True)
 
         async def cancel_callback(interaction):
-            await interaction.response.send_message("❌ Canceled.", ephemeral=True)
+            await interaction.response.edit_message(content="❌ Canceled.", view=None)
 
-        view.children[0].callback = button_callback
+        view.children[0].callback = confirm_callback
         view.children[1].callback = cancel_callback
-        await interaction.response.send_message("⚠️ Are you sure you want to reset all configuration files? This will delete all existing data.", view=view, ephemeral=True)
+        await interaction.response.send_message(content="‼️🚨‼ Are you sure you want to reset all configuration data? Earnings data will not be affected (use: `/clear-earnings`).", view=view, ephemeral=ephemeral)
 
     @app_commands.default_permissions(administrator=True)
-    @app_commands.command(name="restore-latest-backup", description="[Admin] Restore the latest backup")
+    @app_commands.command(name="restore-latest-backup", description="Restore the latest backup")
     async def restore_latest_backup(self, interaction: discord.Interaction):
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+
         view = discord.ui.View()
         view.add_item(discord.ui.Button(label="Confirm", style=discord.ButtonStyle.danger, custom_id="confirm_restore_backup"))
-        
-        async def button_callback(interaction):
-            await interaction.response.defer(ephemeral=True)
-            
-            # Path to data directory (parallel to cogs directory)
-            cogs_dir = os.path.dirname(os.path.abspath(__file__))  # Current file's directory (cogs folder)
-            parent_dir = os.path.dirname(cogs_dir)  # Parent directory of cogs
-            data_dir = os.path.join(parent_dir, "data")  # data folder is parallel to cogs
-            
-            # Find all .bak files
+        view.add_item(discord.ui.Button(label="Cancel", style=discord.ButtonStyle.success, custom_id="cancel_restore_backup"))
+
+        async def confirm_callback(interaction):
+            await interaction.response.defer(ephemeral=ephemeral)
+
+            cogs_dir = os.path.dirname(os.path.abspath(__file__))
+            parent_dir = os.path.dirname(cogs_dir)
+            data_dir = os.path.join(parent_dir, "data")
+
             backup_files = glob.glob(os.path.join(data_dir, "*.bak"))
-            
+
             if not backup_files:
-                await interaction.followup.send("❌ No backup files found!", ephemeral=True)
+                await interaction.response.edit_message(content="❌ No backup files found!", view=None)
                 return
-            
+
             restored_count = 0
             failed_count = 0
-            
+
             for bak_file in backup_files:
+                if os.path.basename(bak_file) == settings.EARNINGS_FILE + ".bak":
+                    continue
+
                 try:
-                    # Get the original filename by removing .bak extension
-                    original_file = bak_file[:-4]  # Remove ".bak"
-                    
-                    # Copy the backup file to the original location
+                    original_file = bak_file[:-4]
                     shutil.copy2(bak_file, original_file)
                     restored_count += 1
                 except Exception as e:
                     print(f"Failed to restore {bak_file}: {str(e)}")
                     failed_count += 1
-            
+
             if failed_count == 0:
-                await interaction.followup.send(f"✅ Successfully restored {restored_count} backup files.", ephemeral=True)
+                await interaction.response.edit_message(content=f"✅ Successfully restored {restored_count} backup files.", view=None)
             else:
-                await interaction.followup.send(f"⚠️ Restored {restored_count} files, but {failed_count} failed. Check console for details.", ephemeral=True)
-        
-        view.children[0].callback = button_callback
-        await interaction.response.send_message("⚠️ Are you sure you want to restore the latest backup? This will overwrite current data.", view=view, ephemeral=True)
+                await interaction.response.edit_message(content=f"⚠️ Restored {restored_count} files, but {failed_count} failed. Check console for details.", view=None)
+
+        async def cancel_callback(interaction):
+            await interaction.response.edit_message(content="❌ Canceled.", view=None)
+
+        view.children[0].callback = confirm_callback
+        view.children[1].callback = cancel_callback
+        await interaction.response.send_message(content="‼️🚨‼ Are you sure you want to restore the latest configuration backup?", view=view, ephemeral=ephemeral)
 
     async def reset_shift(self, interaction: discord.Interaction):
         await file_handlers.save_json(settings.SHIFT_DATA_FILE, settings.DEFAULT_SHIFT_DATA)
 
     # Reset Individual Config Files
     @app_commands.default_permissions(administrator=True)
-    @app_commands.command(name="reset-shift-config", description="[Admin] Reset shift configuration")
+    @app_commands.command(name="reset-shift-config", description="Reset shift configuration")
     async def reset_shift_config(self, interaction: discord.Interaction):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
 
@@ -1011,7 +1055,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         view = ConfirmButton(reset_action, interaction.user.id)
 
         await interaction.response.send_message(
-            "⚠️ Are you sure you want to reset the shift configuration? This will delete all existing shift.", 
+            "⚠️ Are you sure you want to reset the shift configuration?", 
             view=view, 
             ephemeral=ephemeral
         )
@@ -1020,7 +1064,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         await file_handlers.save_json(settings.PERIOD_DATA_FILE, settings.DEFAULT_PERIOD_DATA)
 
     @app_commands.default_permissions(administrator=True)
-    @app_commands.command(name="reset-period-config", description="[Admin] Reset period configuration")
+    @app_commands.command(name="reset-period-config", description="Reset period configuration")
     async def reset_period_config(self, interaction: discord.Interaction):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
 
@@ -1030,7 +1074,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
 
         view = ConfirmButton(reset_action, interaction.user.id)
         await interaction.response.send_message(
-            "⚠️ Are you sure you want to reset the period configuration? This will delete all existing period.", 
+            "⚠️ Are you sure you want to reset the period configuration?", 
             view=view, 
             ephemeral=ephemeral
         )
@@ -1039,107 +1083,117 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         await file_handlers.save_json(settings.ROLE_DATA_FILE, settings.DEFAULT_ROLE_DATA)
 
     @app_commands.default_permissions(administrator=True)
-    @app_commands.command(name="reset-role-config", description="[Admin] Reset role configuration")
+    @app_commands.command(name="reset-role-config", description="Reset role configuration")
     async def reset_role_config(self, interaction: discord.Interaction):
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+
         async def reset_action(interaction: discord.Interaction):
             await self.reset_role(interaction)
             await interaction.response.edit_message(content="✅ Role configuration reset.", view=None)
 
         view = ConfirmButton(reset_action, interaction.user.id)
         await interaction.response.send_message(
-            "⚠️ Are you sure you want to reset the role configuration? This will delete all existing roles.", 
+            "⚠️ Are you sure you want to reset the role configuration?", 
             view=view, 
-            ephemeral=True
+            ephemeral=ephemeral
         )
 
     async def reset_bonus_rules(self, interaction: discord.Interaction):
         await file_handlers.save_json(settings.BONUS_RULES_FILE, settings.DEFAULT_BONUS_RULES)
 
     @app_commands.default_permissions(administrator=True)
-    @app_commands.command(name="reset-bonus-config", description="[Admin] Reset bonus rules configuration")
+    @app_commands.command(name="reset-bonus-config", description="Reset bonus rules configuration")
     async def reset_bonus_config(self, interaction: discord.Interaction):
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+
         async def reset_action(interaction: discord.Interaction):
             await self.reset_bonus_rules(interaction)
             await interaction.response.edit_message(content="✅ Bonus rules configuration reset.", view=None)
 
         view = ConfirmButton(reset_action, interaction.user.id)
         await interaction.response.send_message(
-            "⚠️ Are you sure you want to reset the bonus rules configuration? This will delete all existing bonus rules.", 
+            "⚠️ Are you sure you want to reset the bonus rules configuration?", 
             view=view, 
-            ephemeral=True
+            ephemeral=ephemeral
         )
 
     async def reset_earnings(self, interaction: discord.Interaction):
         await file_handlers.save_json(settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS)
 
-    @app_commands.default_permissions(administrator=True) # todo remove reset-earnings-config
-    @app_commands.command(name="reset-earnings-config", description="[Admin] Reset earnings configuration")
-    async def reset_earnings_config(self, interaction: discord.Interaction):
-        async def reset_action(interaction: discord.Interaction):
-            await self.reset_earnings(interaction)
-            await interaction.response.edit_message(content="✅ Earnings configuration reset.", view=None)
+    # @app_commands.default_permissions(administrator=True) # todo remove reset-earnings-config
+    # @app_commands.command(name="reset-earnings-config", description="Reset earnings configuration")
+    # async def reset_earnings_config(self, interaction: discord.Interaction):
+    #     async def reset_action(interaction: discord.Interaction):
+    #         await self.reset_earnings(interaction)
+    #         await interaction.response.edit_message(content="✅ Earnings configuration reset.", view=None)
 
-        view = ConfirmButton(reset_action, interaction.user.id)
-        await interaction.response.send_message(
-            "⚠️ Are you sure you want to reset all earnings data? This will delete all existing earnings entries.", 
-            view=view, 
-            ephemeral=True
-        )
+    #     view = ConfirmButton(reset_action, interaction.user.id)
+    #     await interaction.response.send_message(
+    #         "⚠️ Are you sure you want to reset all earnings data? This will delete all existing earnings entries.", 
+    #         view=view, 
+    #         ephemeral=True
+    #     )
     
-    async def reset_model_settings(self, interaction: discord.Interaction): 
+    async def reset_models(self, interaction: discord.Interaction): 
         await file_handlers.save_json(settings.MODELS_DATA_FILE, settings.DEFAULT_MODELS_DATA)
 
     @app_commands.default_permissions(administrator=True)
-    @app_commands.command(name="reset-models-config", description="[Admin] Reset models configuration")
+    @app_commands.command(name="reset-models-config", description="Reset models configuration")
     async def reset_models_config(self, interaction: discord.Interaction):
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+
         async def reset_action(interaction: discord.Interaction):
-            await self.reset_model_settings(interaction)
+            await self.reset_models(interaction)
             await interaction.response.edit_message(content="✅ Model settings reset.", view=None)
 
         view = ConfirmButton(reset_action, interaction.user.id)
         await interaction.response.send_message(
-            "⚠️ Are you sure you want to reset the models configuration? This will delete all existing models.", 
+            "⚠️ Are you sure you want to reset the models configuration?", 
             view=view, 
-            ephemeral=True
+            ephemeral=ephemeral
         )
 
     async def reset_compensation(self, interaction: discord.Interaction):
         await file_handlers.save_json(settings.COMMISSION_SETTINGS_FILE, settings.DEFAULT_COMMISSION_SETTINGS)
 
     @app_commands.default_permissions(administrator=True)
-    @app_commands.command(name="reset-compensation-config", description="[Admin] Reset compensation configuration")
+    @app_commands.command(name="reset-compensation-config", description="Reset compensation configuration")
     async def reset_compensation_config(self, interaction: discord.Interaction):
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+
         async def reset_action(interaction: discord.Interaction):
             await self.reset_compensation(interaction)
             await interaction.response.edit_message(content="✅ Commission configuration reset.", view=None)
 
         view = ConfirmButton(reset_action, interaction.user.id)
         await interaction.response.send_message(
-            "⚠️ Are you sure you want to reset the compensation configuration? This will delete all existing compensation settings.", 
+            "⚠️ Are you sure you want to reset the compensation configuration?", 
             view=view, 
-            ephemeral=True
+            ephemeral=ephemeral
         )
 
     async def reset_display(self, interaction: discord.Interaction):
         await file_handlers.save_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
 
     @app_commands.default_permissions(administrator=True)
-    @app_commands.command(name="reset-display-config", description="[Admin] Reset display configuration")
+    @app_commands.command(name="reset-display-config", description="Reset display configuration")
     async def reset_display_config(self, interaction: discord.Interaction):
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+
         async def reset_action(interaction: discord.Interaction):
             await self.reset_display(interaction)
             await interaction.response.edit_message(content="✅ Display configuration reset.", view=None)
 
         view = ConfirmButton(reset_action, interaction.user.id)
         await interaction.response.send_message(
-            "⚠️ Are you sure you want to reset the display configuration? This will delete all existing display settings.", 
+            "⚠️ Are you sure you want to reset the display configuration?", 
             view=view, 
-            ephemeral=True
+            ephemeral=ephemeral
         )
 
     # Restore Backup Methods
     @app_commands.default_permissions(administrator=True)
-    @app_commands.command(name="restore-shift-backup", description="[Admin] Restore the latest shift configuration backup")
+    @app_commands.command(name="restore-shift-backup", description="Restore the latest shift configuration backup")
     async def restore_shift_backup(self, interaction: discord.Interaction):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
 
@@ -1154,13 +1208,13 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         view = ConfirmButton(restore_action, interaction.user.id)
 
         await interaction.response.send_message(
-            "⚠️ Are you sure you want to restore the shift configuration backup? This will replace the current configuration.", 
+            "⚠️ Are you sure you want to restore the shift configuration backup?", 
             view=view, 
             ephemeral=ephemeral
         )
 
     @app_commands.default_permissions(administrator=True)
-    @app_commands.command(name="restore-period-backup", description="[Admin] Restore the latest period configuration backup")
+    @app_commands.command(name="restore-period-backup", description="Restore the latest period configuration backup")
     async def restore_period_backup(self, interaction: discord.Interaction):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
 
@@ -1174,14 +1228,16 @@ class AdminSlashCommands(commands.Cog, name="admin"):
 
         view = ConfirmButton(restore_action, interaction.user.id)
         await interaction.response.send_message(
-            "⚠️ Are you sure you want to restore the period configuration backup? This will replace the current configuration.", 
+            "⚠️ Are you sure you want to restore the period configuration backup?", 
             view=view, 
             ephemeral=ephemeral
         )
 
     @app_commands.default_permissions(administrator=True)
-    @app_commands.command(name="restore-role-backup", description="[Admin] Restore the latest role configuration backup")
+    @app_commands.command(name="restore-role-backup", description="Restore the latest role configuration backup")
     async def restore_role_backup(self, interaction: discord.Interaction):
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+
         async def restore_action(interaction: discord.Interaction):
             backup_file = os.path.join(settings.DATA_DIRECTORY, f"{settings.ROLE_DATA_FILE}.bak")
             if os.path.exists(backup_file):
@@ -1192,14 +1248,16 @@ class AdminSlashCommands(commands.Cog, name="admin"):
 
         view = ConfirmButton(restore_action, interaction.user.id)
         await interaction.response.send_message(
-            "⚠️ Are you sure you want to restore the role configuration backup? This will replace the current configuration.", 
+            "⚠️ Are you sure you want to restore the role configuration backup?", 
             view=view, 
-            ephemeral=True
+            ephemeral=ephemeral
         )
 
     @app_commands.default_permissions(administrator=True)
-    @app_commands.command(name="restore-bonus-backup", description="[Admin] Restore the latest bonus rules configuration backup")
+    @app_commands.command(name="restore-bonus-backup", description="Restore the latest bonus rules configuration backup")
     async def restore_bonus_backup(self, interaction: discord.Interaction):
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+
         async def restore_action(interaction: discord.Interaction):
             backup_file = os.path.join(settings.DATA_DIRECTORY, f"{settings.BONUS_RULES_FILE}.bak")
             if os.path.exists(backup_file):
@@ -1210,14 +1268,16 @@ class AdminSlashCommands(commands.Cog, name="admin"):
 
         view = ConfirmButton(restore_action, interaction.user.id)
         await interaction.response.send_message(
-            "⚠️ Are you sure you want to restore the bonus rules configuration backup? This will replace the current configuration.", 
+            "⚠️ Are you sure you want to restore the bonus rules configuration backup?", 
             view=view, 
-            ephemeral=True
+            ephemeral=ephemeral
         )
 
-    @app_commands.default_permissions(administrator=True)
-    @app_commands.command(name="restore-earnings-backup", description="[Admin] Restore the latest earnings configuration backup")
+    @app_commands.default_permissions(administrator=True) # todo double confirm button needed
+    @app_commands.command(name="restore-earnings-backup", description="Restore the latest earnings configuration backup")
     async def restore_earnings_backup(self, interaction: discord.Interaction):
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+
         async def restore_action(interaction: discord.Interaction):
             backup_file = os.path.join(settings.DATA_DIRECTORY, f"{settings.EARNINGS_FILE}.bak")
             if os.path.exists(backup_file):
@@ -1228,14 +1288,16 @@ class AdminSlashCommands(commands.Cog, name="admin"):
 
         view = ConfirmButton(restore_action, interaction.user.id)
         await interaction.response.send_message(
-            "⚠️ Are you sure you want to restore the earnings configuration backup? This will replace the current configuration.", 
+            "‼️🚨‼ Are you sure you want to restore the earnings configuration backup?", 
             view=view, 
-            ephemeral=True
+            ephemeral=ephemeral
         )
 
     @app_commands.default_permissions(administrator=True)
-    @app_commands.command(name="restore-models-backup", description="[Admin] Restore the latest models configuration backup")
+    @app_commands.command(name="restore-models-backup", description="Restore the latest models configuration backup")
     async def restore_models_backup(self, interaction: discord.Interaction):
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+
         async def restore_action(interaction: discord.Interaction):
             backup_file = os.path.join(settings.DATA_DIRECTORY, f"{settings.MODELS_DATA_FILE}.bak")
             if os.path.exists(backup_file):
@@ -1246,14 +1308,16 @@ class AdminSlashCommands(commands.Cog, name="admin"):
 
         view = ConfirmButton(restore_action, interaction.user.id)
         await interaction.response.send_message(
-            "⚠️ Are you sure you want to restore the models configuration backup? This will replace the current configuration.", 
+            "⚠️ Are you sure you want to restore the models configuration backup?", 
             view=view, 
-            ephemeral=True
+            ephemeral=ephemeral
         )
 
     @app_commands.default_permissions(administrator=True)
-    @app_commands.command(name="restore-compensation-backup", description="[Admin] Restore the latest compensation configuration backup")
+    @app_commands.command(name="restore-compensation-backup", description="Restore the latest compensation configuration backup")
     async def restore_compensation_backup(self, interaction: discord.Interaction):
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+
         async def restore_action(interaction: discord.Interaction):
             backup_file = os.path.join(settings.DATA_DIRECTORY, f"{settings.COMMISSION_SETTINGS_FILE}.bak")
             if os.path.exists(backup_file):
@@ -1264,14 +1328,16 @@ class AdminSlashCommands(commands.Cog, name="admin"):
 
         view = ConfirmButton(restore_action, interaction.user.id)
         await interaction.response.send_message(
-            "⚠️ Are you sure you want to restore the compensation configuration backup? This will replace the current configuration.", 
+            "⚠️ Are you sure you want to restore the compensation configuration backup?", 
             view=view, 
-            ephemeral=True
+            ephemeral=ephemeral
         )
 
     @app_commands.default_permissions(administrator=True)
-    @app_commands.command(name="restore-display-backup", description="[Admin] Restore the latest display configuration backup")
+    @app_commands.command(name="restore-display-backup", description="Restore the latest display configuration backup")
     async def restore_display_backup(self, interaction: discord.Interaction):
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+
         async def restore_action(interaction: discord.Interaction):
             backup_file = os.path.join(settings.DATA_DIRECTORY, f"{settings.DISPLAY_SETTINGS_FILE}.bak")
             if os.path.exists(backup_file):
@@ -1282,9 +1348,9 @@ class AdminSlashCommands(commands.Cog, name="admin"):
 
         view = ConfirmButton(restore_action, interaction.user.id)
         await interaction.response.send_message(
-            "⚠️ Are you sure you want to restore the display configuration backup? This will replace the current configuration.", 
+            "⚠️ Are you sure you want to restore the display configuration backup?", 
             view=view, 
-            ephemeral=True
+            ephemeral=ephemeral
         )
 
     @app_commands.command(
