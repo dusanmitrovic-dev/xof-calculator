@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.93.0] - 2025-03-08
+### Changed
+- `list-shifts` now has fully ephemeral support.
+
 ## [0.92.0] - 2025-03-08
 ### Changed
 - `remove-period` now has fully ephemeral support.
