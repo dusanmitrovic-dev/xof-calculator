@@ -5,13 +5,13 @@
 ## [0.104.0] - 2025-03-09
 ### Changed
 - commands that now have full ephemeral support:
-    - `view-compensation-settings`
-    - `set-role-commission`
-    - `set-role-hourly`
-    - `set-user-commission`
-    - `set-user-hourly`
-    - `toggle-user-role-override`
-    - `help` slash
+    - `view-compensation-settings`,
+    - `set-role-commission`,
+    - `set-role-hourly`,
+    - `set-user-commission`,
+    - `set-user-hourly`,
+    - `toggle-user-role-override`,
+    - `help` slash.
 
 ## [0.103.0] - 2025-03-09
 ### Changed
