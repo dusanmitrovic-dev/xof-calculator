@@ -719,12 +719,14 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         if not interaction.user.guild_permissions.administrator:
             await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=True)
             return
+
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
         
         from_num = validators.parse_money(from_range)
         to_num = validators.parse_money(to_range)
         
         if None in (from_num, to_num):
-            await interaction.response.send_message("❌ Invalid number format.")
+            await interaction.response.send_message("❌ Invalid number format.", ephemeral=ephemeral)
             return
             
         guild_id = str(interaction.guild.id)
@@ -738,16 +740,16 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         )
         
         if not rule_to_remove:
-            await interaction.response.send_message(f"❌ No bonus rule found for ${from_num}-${to_num}.")
+            await interaction.response.send_message(f"❌ No bonus rule found for ${from_num}-${to_num}.", ephemeral=ephemeral)
             return
             
         bonus_rules[guild_id].remove(rule_to_remove)
         success = await file_handlers.save_json(settings.BONUS_RULES_FILE, bonus_rules)
         
         if success:
-            await interaction.response.send_message(f"✅ Bonus rule removed: ${float(from_num):,.2f}-${float(to_num):,.2f}", ephemeral=True)
+            await interaction.response.send_message(f"✅ Bonus rule removed: ${float(from_num):,.2f}-${float(to_num):,.2f}", ephemeral=ephemeral)
         else:
-            await interaction.response.send_message("❌ Failed to remove bonus rule.")
+            await interaction.response.send_message("❌ Failed to remove bonus rule.", ephemeral=ephemeral)
 
     # List Commands
     @app_commands.default_permissions(administrator=True)
@@ -889,17 +891,19 @@ class AdminSlashCommands(commands.Cog, name="admin"):
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="list-models", description="[Admin] List configured models")
     async def list_models(self, interaction: discord.Interaction):
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+
         guild_id = str(interaction.guild.id)
         model_data = await file_handlers.load_json(settings.MODELS_DATA_FILE, settings.DEFAULT_MODELS_DATA)
         guild_models = model_data.get(guild_id, [])
         
         if not guild_models:
-            await interaction.response.send_message("❌ No models configured.")
+            await interaction.response.send_message("❌ No models configured.", ephemeral=ephemeral)
             return
             
         embed = discord.Embed(title="Configured Models", color=discord.Color.blue())
         embed.add_field(name="Models", value="\n".join(f"• {model}" for model in guild_models))
-        await interaction.response.send_message(embed=embed, ephemeral=True)
+        await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="clear-earnings", description="[Admin] Clear all earnings data")

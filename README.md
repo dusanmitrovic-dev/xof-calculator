@@ -248,6 +248,7 @@
     - [x] (v0.94.0) `list-periods`
     - [x] (v0.95.0) `list-bonus-rules`
     - [x] (v0.96.0) `set-bonus-rule`
+    - [x] (v0.97.0) `list-models`
     - [x] make helper functions
 - [ ] Remove `reset-earnings-config`
 - [ ] Separate data and backup data
@@ -285,6 +286,7 @@
 - [ ] Any way to use a date picker for `view-earnings`?
     - https://discord-date-2.shyked.fr/
 - [ ] Bot roles
+- [ ] ONE ADMIN COMMAND TO RULE THEM ALL ! (LOL)
 
 # Commission Settings Implementation TODO
 
