@@ -644,6 +644,8 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         if not interaction.user.guild_permissions.administrator:
             await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=True)
             return
+
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
         
         guild_id = str(interaction.guild.id)
         period_data = await file_handlers.load_json(settings.PERIOD_DATA_FILE, settings.DEFAULT_PERIOD_DATA)
@@ -651,16 +653,16 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         
         normalized_period = validators.validate_period(period, existing_periods)
         if normalized_period is None:
-            await interaction.response.send_message(f"❌ Period '{period}' doesn't exist!")
+            await interaction.response.send_message(f"❌ Period '{period}' doesn't exist!", ephemeral=ephemeral)
             return
         
         period_data[guild_id].remove(normalized_period)
         success = await file_handlers.save_json(settings.PERIOD_DATA_FILE, period_data)
         
         if success:
-            await interaction.response.send_message(f"✅ Period '{normalized_period}' removed!", ephemeral=True)
+            await interaction.response.send_message(f"✅ Period '{normalized_period}' removed!", ephemeral=ephemeral)
         else:
-            await interaction.response.send_message("❌ Failed to save period data. Please try again later.")
+            await interaction.response.send_message("❌ Failed to save period data. Please try again later.", ephemeral=ephemeral)
 
     # Bonus Rules Management
     @app_commands.default_permissions(administrator=True)

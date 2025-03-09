@@ -4,6 +4,10 @@
 
 ## [0.91.0] - 2025-03-08
 ### Changed
+- `remove-period` now has fully ephemeral support.
+
+## [0.91.0] - 2025-03-08
+### Changed
 - `remove-shift` now has fully ephemeral support.
 
 ## [0.90.0] - 2025-03-08
