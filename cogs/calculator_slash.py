@@ -614,7 +614,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         # Remaining fields
         fields.extend([
             ("🎁 Bonus", results.get("bonus", "N/A"), True),
-            ("💼 Employee Cut", results.get("employee_cut", "N/A"), True),
+            ("💼 Employee Cut", results.get("employee_cut", "N/A"), True), # todo maybe add hourly cut display
             ("💰 Total Cut", results.get("total_cut", "N/A"), True),
             (" ", "" if results.get("compensation_type") == "hourly" else "", True),
             ("🎭 Models", results.get("models", "N/A"), False)
