@@ -48,6 +48,8 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         percentage: Optional[float] = None
     ):
         """Set commission percentage for a specific role"""
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+
         # Validate input
         if not self.validate_percentage(percentage):
             await interaction.response.send_message(
@@ -79,7 +81,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         # Respond with confirmation
         response = f"✅ Set commission for {role.mention} to "
         response += f"{percentage}%" if percentage is not None else "cleared"
-        await interaction.response.send_message(response, ephemeral=True)
+        await interaction.response.send_message(response, ephemeral=ephemeral)
     
     @app_commands.command(name="set-role-hourly")
     @app_commands.default_permissions(administrator=True)
@@ -94,6 +96,8 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         rate: Optional[float] = None
     ):
         """Set hourly rate for a specific role"""
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+
         # Validate input
         if not self.validate_hourly_rate(rate):
             await interaction.response.send_message(
@@ -124,7 +128,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         # Respond with confirmation
         response = f"✅ Set hourly rate for {role.mention} to "
         response += f"${rate}/h" if rate is not None else "cleared"
-        await interaction.response.send_message(response, ephemeral=True)
+        await interaction.response.send_message(response, ephemeral=ephemeral)
     
     @app_commands.command(name="set-user-commission")
     @app_commands.default_permissions(administrator=True)
@@ -138,17 +142,18 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         interaction: discord.Interaction, 
         user: discord.User, 
         percentage: Optional[float] = None,
-        override_role: bool = False
+        override_role: bool = None
     ):
         """Set commission percentage for a specific user"""
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+
         # Validate input
         if not self.validate_percentage(percentage):
             await interaction.response.send_message(
                 "❌ Invalid percentage. Must be between 0 and 100.", 
                 ephemeral=True
             )
-            return
-        
+            return        
         # Load existing settings
         commission_settings = await file_handlers.load_json(settings.COMMISSION_SETTINGS_FILE, {})
         
@@ -163,6 +168,10 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         # Update user settings
         user_settings = commission_settings[guild_id]['users'].get(str(user.id), {})
         user_settings['commission_percentage'] = percentage
+
+        if override_role is None:
+            override_role = commission_settings[guild_id]['users'].get(str(user.id), {}).get('override_role', False)
+
         user_settings['override_role'] = override_role
         commission_settings[guild_id]['users'][str(user.id)] = user_settings
         
@@ -173,7 +182,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         response = f"✅ Set commission for {user.mention} to "
         response += f"{percentage}%" if percentage is not None else "cleared"
         response += f" (Override Role: {override_role})"
-        await interaction.response.send_message(response, ephemeral=True)
+        await interaction.response.send_message(response, ephemeral=ephemeral)
     
     @app_commands.command(name="set-user-hourly")
     @app_commands.default_permissions(administrator=True)
@@ -187,9 +196,11 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         interaction: discord.Interaction, 
         user: discord.User, 
         rate: Optional[float] = None,
-        override_role: bool = False
+        override_role: bool = None
     ):
         """Set hourly rate for a specific user"""
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+
         # Validate input
         if not self.validate_hourly_rate(rate):
             await interaction.response.send_message(
@@ -209,6 +220,10 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         # Update user settings
         user_settings = commission_settings[guild_id]['users'].get(str(user.id), {})
         user_settings['hourly_rate'] = rate
+
+        if override_role is None:
+            override_role = commission_settings[guild_id]['users'].get(str(user.id), {}).get('override_role', False)
+
         user_settings['override_role'] = override_role
         commission_settings[guild_id]['users'][str(user.id)] = user_settings
         
@@ -219,7 +234,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         response = f"✅ Set hourly rate for {user.mention} to "
         response += f"${rate}/h" if rate is not None else "cleared"
         response += f" (Override Role: {override_role})"
-        await interaction.response.send_message(response, ephemeral=True)
+        await interaction.response.send_message(response, ephemeral=ephemeral)
     
     @app_commands.command(name="toggle-user-role-override")
     @app_commands.default_permissions(administrator=True)
@@ -232,6 +247,8 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         user: discord.User
     ):
         """Toggle role override for a specific user"""
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+
         # Load existing settings
         commission_settings = await file_handlers.load_json(settings.COMMISSION_SETTINGS_FILE, {})
         
@@ -240,7 +257,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         if guild_id not in commission_settings:
             await interaction.response.send_message(
                 "❌ No commission settings found for this guild.", 
-                ephemeral=True
+                ephemeral=ephemeral
             )
             return
         
@@ -249,7 +266,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         if not user_settings:
             await interaction.response.send_message(
                 "❌ No commission settings found for this user.", 
-                ephemeral=True
+                ephemeral=ephemeral
             )
             return
         
@@ -262,7 +279,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         
         # Respond with confirmation
         response = f"✅ Toggled role override for {user.mention} to {user_settings['override_role']}"
-        await interaction.response.send_message(response, ephemeral=True)
+        await interaction.response.send_message(response, ephemeral=ephemeral)
     
     @app_commands.command(name="view-compensation-settings")
     @app_commands.default_permissions(administrator=True)
@@ -277,6 +294,8 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         user: Optional[discord.User] = None
     ):
         """View compensation settings for a role or user"""
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+
         commission_settings = await file_handlers.load_json(settings.COMMISSION_SETTINGS_FILE, {})
         
         # Get guild-specific settings
@@ -292,12 +311,12 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             embed.description = f"Settings for Role: {role.mention}"
             embed.add_field(
                 name="Commission", 
-                value=f"{role_settings.get('commission_percentage', 'Not set')}%", 
+                value=f"{role_settings.get('commission_percentage', '❓') or '❓'}%", 
                 inline=True
             )
             embed.add_field(
                 name="Hourly Rate", 
-                value=f"${role_settings.get('hourly_rate', 'Not set')}/h", 
+                value=f"${role_settings.get('hourly_rate', '❓') or '❓'}/h", 
                 inline=True
             )
         elif user:
@@ -306,12 +325,12 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             embed.description = f"Settings for User: {user.mention}"
             embed.add_field(
                 name="Commission", 
-                value=f"{user_settings.get('commission_percentage', 'Not set')}%", 
+                value=f"{user_settings.get('commission_percentage', '❓') or '❓'}%", 
                 inline=True
             )
             embed.add_field(
                 name="Hourly Rate", 
-                value=f"${user_settings.get('hourly_rate', 'Not set')}/h", 
+                value=f"${user_settings.get('hourly_rate', '❓') or '❓'}/h", 
                 inline=True
             )
             embed.add_field(
@@ -322,6 +341,9 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         else:
             # View all commission_settings summary
             embed.description = "Summary of Commission Settings"
+
+            if not guild_settings['roles'] and not guild_settings['users']:
+                embed.add_field(name="", value="❌ No settings found", inline=False)
             
             # Role commission_settings summary
             role_summary = []
@@ -329,8 +351,8 @@ class AdminSlashCommands(commands.Cog, name="admin"):
                 role = interaction.guild.get_role(int(role_id))
                 if role:
                     role_summary.append(
-                        f"{role.name}: Commission {role_data.get('commission_percentage', 'N/A')}%, "
-                        f"Hourly ${role_data.get('hourly_rate', 'N/A')}"
+                        f"{role.name}: Commission {role_data.get('commission_percentage', '❓') or '❓'}%, "
+                        f"Hourly ${role_data.get('hourly_rate', '❓') or '❓'}"
                     )
             
             if role_summary:
@@ -342,15 +364,15 @@ class AdminSlashCommands(commands.Cog, name="admin"):
                 member = interaction.guild.get_member(int(user_id))
                 if member:
                     user_summary.append(
-                        f"{member.name}: Commission {user_data.get('commission_percentage', 'N/A')}%, "
-                        f"Hourly ${user_data.get('hourly_rate', 'N/A')}, "
+                        f"{member.name}: Commission {user_data.get('commission_percentage', '❓') or '❓'}%, "
+                        f"Hourly ${user_data.get('hourly_rate', '❓') or '❓'}, "
                         f"Override: {user_data.get('override_role', False)}"
                     )
             
             if user_summary:
                 embed.add_field(name="User Settings", value="\n".join(user_summary), inline=False)
         
-        await interaction.response.send_message(embed=embed, ephemeral=True)
+        await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
 
     
     @app_commands.command(

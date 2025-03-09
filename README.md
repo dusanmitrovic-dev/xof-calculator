@@ -1,4 +1,4 @@
-### Fox agency shift calculator.
+### XOF Agency shift calculator.
 
 # Discord Bot Implementation Plan
 
@@ -272,6 +272,13 @@
     - [x] (v0.103.0) `restore-models-backup`
     - [x] (v0.103.0) `restore-compensation-backup`
     - [x] (v0.103.0) `restore-display-backup`
+    - [x] (v0.104.0) `view-compensation-settings`
+    - [x] (v0.104.0) `set-role-commission`
+    - [x] (v0.104.0) `set-role-hourly`
+    - [x] (v0.104.0) `set-user-commission`
+    - [x] (v0.104.0) `set-user-hourly`
+    - [x] (v0.104.0) `toggle-user-role-override`
+    - [x] (v0.104.0) `help` slash
     - [x] make helper functions
 - [ ] Remove `reset-earnings-config`
 - [ ] Separate data and backup data
@@ -316,6 +323,7 @@
 - [ ] Any way to use a date picker for `view-earnings`?
     - https://discord-date-2.shyked.fr/
 - [ ] Bot roles
+- [ ] `Error`: 'NoneType' object has no attribute 'to_dict' in `view-earnings`
 - [ ] ONE ADMIN COMMAND TO RULE THEM ALL ! (LOL)
 
 # Commission Settings Implementation TODO

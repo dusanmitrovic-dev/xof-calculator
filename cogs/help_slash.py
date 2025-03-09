@@ -3,6 +3,7 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 from config import settings
+from utils import file_handlers
 
 logger = logging.getLogger("xof_calculator.help_slash")
 
@@ -10,9 +11,16 @@ class HelpSlashCommands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    async def get_ephemeral_setting(self, guild_id):
+        display_settings = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
+        guild_settings = display_settings.get(str(guild_id), {})
+        return guild_settings.get('ephemeral_responses', True)
+
     @app_commands.command(name="help", description="Show available commands based on your permissions")
     async def help(self, interaction: discord.Interaction):
         """Show available commands based on user permissions"""
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+
         is_admin = interaction.user.guild_permissions.administrator
 
         # Create an embed to display the commands
@@ -36,7 +44,12 @@ class HelpSlashCommands(commands.Cog):
                 "`/set-bonus-rule` - Set a bonus rule for a revenue range",
                 "`/remove-bonus-rule` - Remove a bonus rule for a revenue range",
                 "`/set-model` - Add a valid model name",
-                "`/remove-model` - Remove a model configuration"
+                "`/remove-model` - Remove a model configuration",
+                "`/set-role-commission` - Set a role's commission percentage",
+                "`/set-role-hourly` - Set a role's hourly rate",
+                "`/set-user-commission` - Set a user's commission percentage",
+                "`/set-user-hourly` - Set a user's hourly rate",
+                "`/toggle-user-role-override` - Toggle role override for a specific user"
             ])
             embed.add_field(name="Configuration Commands", value=config_commands, inline=False)
 
@@ -57,7 +70,7 @@ class HelpSlashCommands(commands.Cog):
                 "`/reset-period-config` - Reset period configuration",
                 "`/reset-role-config` - Reset role configuration",
                 "`/reset-bonus-config` - Reset bonus rules configuration",
-                "`/reset-earnings-config` - Reset earnings configuration",
+                # "`/reset-earnings-config` - Reset earnings configuration", # todo remove
                 "`/reset-models-config` - Reset models configuration",
                 "`/reset-compensation-config` - Reset compensation configuration"
             ])
@@ -86,7 +99,21 @@ class HelpSlashCommands(commands.Cog):
             ])
             embed.add_field(name="Miscellaneous Admin Commands", value=misc_admin_commands, inline=False)
 
-        await interaction.response.send_message(embed=embed, ephemeral=True)
+            # Report Commands
+            report_commands = "\n".join([
+                "`/view-earnings` - View your earnings",
+                "`/view-earnings-table` - View your earnings in a table format"
+            ])
+            embed.add_field(name="📌 Report Commands 📌", value=report_commands, inline=False)
+
+            # Report Admin Commands
+            report_admin_commands = "\n".join([
+                "`/view-earnings-admin` - View earnings for a specified user",
+                "`/view-earnings-admin-table` - View earnings for a specified user in table format"
+            ])
+            embed.add_field(name="📌 Report Admin Commands 📌", value=report_admin_commands, inline=False)
+
+        await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
 
 
 async def setup(bot):

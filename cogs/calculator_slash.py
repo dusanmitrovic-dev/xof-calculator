@@ -355,7 +355,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             return
         
         role_config = guild_config["roles"][str(role.id)]
-        percentage = Decimal(str(role_config.get("commission_percentage", 0)))
+        percentage = Decimal(str(role_config.get("commission_percentage", 0))) if isinstance(role_config.get("commission_percentage"), (int, float, Decimal, str)) else 0
         
         # Check if the user has an override
         user_config = guild_config.get("users", {}).get(str(interaction.user.id), {})
