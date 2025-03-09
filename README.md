@@ -246,7 +246,8 @@
     - [x] (v0.92.0) `remove-period`
     - [x] (v0.93.0) `list-shifts`
     - [x] (v0.94.0) `list-periods`
-    - [x] (v0.94.0) `list-bonus-rules`
+    - [x] (v0.95.0) `list-bonus-rules`
+    - [x] (v0.96.0) `set-bonus-rule`
     - [x] make helper functions
 - [ ] Remove `reset-earnings-config`
 - [ ] Separate data and backup data

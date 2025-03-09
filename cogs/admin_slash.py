@@ -676,17 +676,19 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         if not interaction.user.guild_permissions.administrator:
             await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=True)
             return
+
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
         
         from_num = validators.parse_money(from_range)
         to_num = validators.parse_money(to_range)
         bonus_amount = validators.parse_money(bonus)
         
         if None in (from_num, to_num, bonus_amount):
-            await interaction.response.send_message("❌ Invalid number format.")
+            await interaction.response.send_message("❌ Invalid number format.", ephemeral=ephemeral)
             return
             
         if from_num > to_num:
-            await interaction.response.send_message("❌ The 'from' value must be less than or equal to the 'to' value.")
+            await interaction.response.send_message("❌ The 'from' value must be less than or equal to the 'to' value.", ephemeral=ephemeral)
             return
             
         guild_id = str(interaction.guild.id)
@@ -696,16 +698,16 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         current_rules = bonus_rules.setdefault(guild_id, [])
         
         if any((from_num <= rule["to"] and to_num >= rule["from"]) for rule in current_rules):
-            await interaction.response.send_message("❌ This rule overlaps with an existing bonus rule.")
+            await interaction.response.send_message("❌ This rule overlaps with an existing bonus rule.", ephemeral=ephemeral)
             return
             
         current_rules.append(new_rule)
         success = await file_handlers.save_json(settings.BONUS_RULES_FILE, bonus_rules)
         
         if success:
-            await interaction.response.send_message(f"✅ Bonus rule added: ${float(from_num):,.2f}-${float(to_num):,.2f} → ${float(bonus_amount):,.2f}!", ephemeral=True)
+            await interaction.response.send_message(f"✅ Bonus rule added: ${float(from_num):,.2f}-${float(to_num):,.2f} → ${float(bonus_amount):,.2f}!", ephemeral=ephemeral)
         else:
-            await interaction.response.send_message("❌ Failed to save bonus rule.")
+            await interaction.response.send_message("❌ Failed to save bonus rule.", ephemeral=ephemeral)
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="remove-bonus-rule", description="[Admin] Remove a bonus rule for a revenue range")
