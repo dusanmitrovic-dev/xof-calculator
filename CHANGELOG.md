@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.91.0] - 2025-03-08
+### Changed
+- `remove-shift` now has fully ephemeral support.
+
 ## [0.90.0] - 2025-03-08
 ### Changed
 - `set-shift` now has fully ephemeral support.

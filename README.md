@@ -242,6 +242,7 @@
     - [x] (v0.76.0) `remove-role`
     - [x] (v0.76.0) `list-roles`
     - [x] (v0.90.0) `set-shift`
+    - [x] (v0.91.0) `remove-shift`
     - [x] make helper functions
 - [ ] Remove `reset-earnings-config`
 - [ ] Separate data and backup data
