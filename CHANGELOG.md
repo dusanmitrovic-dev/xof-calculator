@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-## [0.91.0] - 2025-03-08
+## [0.92.0] - 2025-03-08
 ### Changed
 - `remove-period` now has fully ephemeral support.
 
