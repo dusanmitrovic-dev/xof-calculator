@@ -872,6 +872,8 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         if not interaction.user.guild_permissions.administrator:
             await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=True)
             return
+
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
         
         guild_id = str(interaction.guild.id)
         model_data = await file_handlers.load_json(settings.MODELS_DATA_FILE, settings.DEFAULT_MODELS_DATA)
@@ -879,16 +881,16 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         
         normalized_model = next((m for m in existing_models if m.lower() == model.lower()), None)
         if normalized_model is None:
-            await interaction.response.send_message(f"❌ Model '{model}' doesn't exist!")
+            await interaction.response.send_message(f"❌ Model '{model}' doesn't exist!", ephemeral=ephemeral)
             return
         
         model_data[guild_id].remove(normalized_model)
         success = await file_handlers.save_json(settings.MODELS_DATA_FILE, model_data)
         
         if success:
-            await interaction.response.send_message(f"✅ Model '{normalized_model}' removed!", ephemeral=True)
+            await interaction.response.send_message(f"✅ Model '{normalized_model}' removed!", ephemeral=ephemeral)
         else:
-            await interaction.response.send_message("❌ Failed to save model data. Please try again later.")
+            await interaction.response.send_message("❌ Failed to save model data. Please try again later.", ephemeral=ephemeral)
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="list-models", description="[Admin] List configured models")

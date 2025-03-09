@@ -249,7 +249,8 @@
     - [x] (v0.95.0) `list-bonus-rules`
     - [x] (v0.96.0) `set-bonus-rule`
     - [x] (v0.97.0) `list-models`
-    - [x] (v0.98.0) `set-models`
+    - [x] (v0.98.0) `set-model`
+    - [x] (v0.99.0) `remove-model`
     - [x] make helper functions
 - [ ] Remove `reset-earnings-config`
 - [ ] Separate data and backup data

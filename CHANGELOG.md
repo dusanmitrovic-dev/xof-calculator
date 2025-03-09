@@ -2,9 +2,13 @@
 
 ## [Unreleased]
 
+## [0.99.0] - 2025-03-09
+### Changed
+- `remove-model` now has fully ephemeral support.
+
 ## [0.98.0] - 2025-03-09
 ### Changed
-- `set-models` now has fully ephemeral support.
+- `set-model` now has fully ephemeral support.
 
 ## [0.97.0] - 2025-03-09
 ### Changed
