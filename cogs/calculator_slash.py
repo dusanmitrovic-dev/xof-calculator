@@ -628,7 +628,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
     # Admin command
     @app_commands.command(
         name="view-earnings-admin-table",
-        description="Admin command to view earnings for a specified user in table format"
+        description="View earnings for a specified user in table format"
     )
     @app_commands.describe(
         user="The user whose earnings you want to view",
@@ -810,7 +810,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
     # Modified command implementation
     @app_commands.command(
         name="view-earnings",
-        description="View your earnings with various export options"
+        description="View your earnings"
     )
     @app_commands.describe(
         entries=f"Number of entries to return (max {MAX_ENTRIES})",
@@ -1011,7 +1011,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
 
     @app_commands.command(
         name="view-earnings-admin",
-        description="Admin command to view earnings for a specified user"
+        description="View earnings for a specified user"
     )
     @app_commands.describe(
         user="The user whose earnings you want to view",
@@ -1187,7 +1187,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
 
     @app_commands.command(
         name="view-earnings-table",
-        description="View your earnings in a table format with various export options"
+        description="View your earnings in a table format"
     )
     @app_commands.describe(
         entries="Number of entries to return (max 50)",

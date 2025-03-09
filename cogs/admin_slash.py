@@ -1022,6 +1022,8 @@ class AdminSlashCommands(commands.Cog, name="admin"):
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="reset-period-config", description="[Admin] Reset period configuration")
     async def reset_period_config(self, interaction: discord.Interaction):
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+
         async def reset_action(interaction: discord.Interaction):
             await self.reset_period(interaction)
             await interaction.response.edit_message(content="✅ Period configuration reset.", view=None)
@@ -1030,7 +1032,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         await interaction.response.send_message(
             "⚠️ Are you sure you want to reset the period configuration? This will delete all existing period.", 
             view=view, 
-            ephemeral=True
+            ephemeral=ephemeral
         )
 
     async def reset_role(self, interaction: discord.Interaction):
@@ -1150,7 +1152,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
                 await interaction.response.edit_message(content="❌ No shift configuration backup found.", view=None)
 
         view = ConfirmButton(restore_action, interaction.user.id)
-        
+
         await interaction.response.send_message(
             "⚠️ Are you sure you want to restore the shift configuration backup? This will replace the current configuration.", 
             view=view, 
@@ -1160,6 +1162,8 @@ class AdminSlashCommands(commands.Cog, name="admin"):
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="restore-period-backup", description="[Admin] Restore the latest period configuration backup")
     async def restore_period_backup(self, interaction: discord.Interaction):
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+
         async def restore_action(interaction: discord.Interaction):
             backup_file = os.path.join(settings.DATA_DIRECTORY, f"{settings.PERIOD_DATA_FILE}.bak")
             if os.path.exists(backup_file):
@@ -1172,7 +1176,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         await interaction.response.send_message(
             "⚠️ Are you sure you want to restore the period configuration backup? This will replace the current configuration.", 
             view=view, 
-            ephemeral=True
+            ephemeral=ephemeral
         )
 
     @app_commands.default_permissions(administrator=True)

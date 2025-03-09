@@ -254,6 +254,8 @@
     - [x] (v0.100.0) `toggle-average`
     - [x] (v0.101.0) `reset-shift-backup`
     - [x] (v0.101.0) `restore-shift-backup`
+    - [x] (v0.102.0) `reset-period-backup`
+    - [x] (v0.102.0) `restore-period-backup`
     - [x] make helper functions
 - [ ] Remove `reset-earnings-config`
 - [ ] Separate data and backup data

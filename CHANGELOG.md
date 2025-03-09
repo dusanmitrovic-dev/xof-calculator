@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [0.102.0] - 2025-03-09
+### Changed
+- `reset-period-config` now has fully ephemeral support,
+- `restore-period-backup` now has fully ephemeral support.
+
 ## [0.101.0] - 2025-03-09
 ### Changed
 - `reset-shift-config` now has fully ephemeral support,
