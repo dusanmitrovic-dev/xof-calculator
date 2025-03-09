@@ -790,17 +790,19 @@ class AdminSlashCommands(commands.Cog, name="admin"):
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="list-periods", description="[Admin] List configured periods")
     async def list_periods(self, interaction: discord.Interaction):
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+
         guild_id = str(interaction.guild.id)
         period_data = await file_handlers.load_json(settings.PERIOD_DATA_FILE, settings.DEFAULT_PERIOD_DATA)
         guild_periods = period_data.get(guild_id, [])
         
         if not guild_periods:
-            await interaction.response.send_message("❌ No periods configured.")
+            await interaction.response.send_message("❌ No periods configured.", ephemeral=ephemeral)
             return
             
         embed = discord.Embed(title="Configured Periods", color=discord.Color.blue())
         embed.add_field(name="Periods", value="\n".join(f"• {period}" for period in guild_periods))
-        await interaction.response.send_message(embed=embed, ephemeral=True)
+        await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="list-bonus-rules", description="[Admin] List configured bonus rules")

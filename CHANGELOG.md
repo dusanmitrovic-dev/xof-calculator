@@ -2,15 +2,22 @@
 
 ## [Unreleased]
 
-## [0.93.0] - 2025-03-08
+## [0.94.0] - 2025-03-09
+### Changed
+- `list-periods` now has fully ephemeral support.
+
+### Removed
+- Removed `bonus-rules.json` extra file from project root.
+
+## [0.93.0] - 2025-03-09
 ### Changed
 - `list-shifts` now has fully ephemeral support.
 
-## [0.92.0] - 2025-03-08
+## [0.92.0] - 2025-03-09
 ### Changed
 - `remove-period` now has fully ephemeral support.
 
-## [0.91.0] - 2025-03-08
+## [0.91.0] - 2025-03-09
 ### Changed
 - `remove-shift` now has fully ephemeral support.
 

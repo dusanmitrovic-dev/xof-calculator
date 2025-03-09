@@ -245,6 +245,7 @@
     - [x] (v0.91.0) `remove-shift`
     - [x] (v0.92.0) `remove-period`
     - [x] (v0.93.0) `list-shifts`
+    - [x] (v0.94.0) `list-periods`
     - [x] make helper functions
 - [ ] Remove `reset-earnings-config`
 - [ ] Separate data and backup data
