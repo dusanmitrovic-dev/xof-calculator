@@ -8,7 +8,7 @@
 
 ## [0.105.0] - 2025-03-09
 ### Fixed
-- Fixed backup restoration process with improved interaction handling
+- Fixed backup restoration process with improved interaction handling.
 
 ## [0.104.0] - 2025-03-09
 ### Changed

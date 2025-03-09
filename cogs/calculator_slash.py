@@ -852,6 +852,15 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
     ):
         """Command for users to view their own earnings"""
         try:
+            # Log variables
+            print(f"view_earnings: interaction={interaction}")
+            print(f"view_earnings: entries={entries}")
+            print(f"view_earnings: export={export}")
+            print(f"view_earnings: display_entries={display_entries}")
+            print(f"view_earnings: send_to={send_to}")
+            print(f"view_earnings: range_from={range_from}")
+            print(f"view_earnings: range_to={range_to}")
+            
             await interaction.response.defer()
             entries = min(max(entries, 1), MAX_ENTRIES)
             
@@ -1015,6 +1024,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                 await interaction.followup.send(embed=embed, file=file)
                 
         except Exception as e:
+            print(f"view_earnings: Error: {str(e)}")
             await interaction.followup.send(f"❌ Error: {str(e)}")
 
     @app_commands.command(
@@ -1222,8 +1232,8 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         entries: Optional[int] = 50,
         export: Optional[str] = "none",
         send_to: Optional[str] = None,
-        range_from: Optional[str] = None,
-        range_to: Optional[str] = None
+        range_from: Optional[str] = "01/01/2025",
+        range_to: Optional[str] = "~"
     ):
         """Command for users to view their own earnings in table format"""
         try:
