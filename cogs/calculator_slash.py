@@ -572,7 +572,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                     avg_gross = sum(e["gross_revenue"] for e in all_entries[:-1]) / len(all_entries[:-1])
                     current_gross = float(results["gross_revenue"].replace('$', '').replace(',', ''))
                     performance = (current_gross / avg_gross) * 100 - 100
-                    performance_text = f" (↑ {performance:.1f}% above average)" if performance > 0 else f" (↓ {abs(performance):.1f}% below average)"
+                    performance_text = f" (↑ {performance:.1f}% avg.)" if performance > 0 else f" (↓ {abs(performance):.1f}% avg.)"
                 else:
                     performance_text = " (First entry for this period type)"
             except Exception as e:

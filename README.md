@@ -251,6 +251,7 @@
     - [x] (v0.97.0) `list-models`
     - [x] (v0.98.0) `set-model`
     - [x] (v0.99.0) `remove-model`
+    - [x] (v0.100.0) `toggle-average`
     - [x] make helper functions
 - [ ] Remove `reset-earnings-config`
 - [ ] Separate data and backup data

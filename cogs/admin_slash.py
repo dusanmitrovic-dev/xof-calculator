@@ -359,9 +359,11 @@ class AdminSlashCommands(commands.Cog, name="admin"):
     @app_commands.default_permissions(administrator=True)
     async def toggle_average(self, interaction: discord.Interaction):
         """Toggle the display of performance averages in calculation embeds"""
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+
         # Only admins can use this command
         if not interaction.user.guild_permissions.administrator:
-            await interaction.response.send_message("❌ You need administrator permissions to use this command.", ephemeral=True)
+            await interaction.response.send_message("❌ You need administrator permissions to use this command.", ephemeral=ephemeral)
             return
         
         guild_id = str(interaction.guild_id)
@@ -384,10 +386,10 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         if success:
             status = "enabled" if new_setting else "disabled"
             logger.info(f"User {interaction.user.name} ({interaction.user.id}) {status} average display for guild {guild_id}")
-            await interaction.response.send_message(f"✅ Performance average display is now **{status}**.", ephemeral=True)
+            await interaction.response.send_message(f"✅ Performance average display is now **{status}**.", ephemeral=ephemeral)
         else:
             logger.error(f"Failed to save display settings for guild {guild_id}")
-            await interaction.response.send_message("❌ Failed to update settings. Please try again.", ephemeral=True)
+            await interaction.response.send_message("❌ Failed to update settings. Please try again.", ephemeral=ephemeral)
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(
@@ -462,13 +464,13 @@ class AdminSlashCommands(commands.Cog, name="admin"):
     @app_commands.command(name="set-role", description="[Admin] Set a role's percentage cut")
     @app_commands.describe(role="The role to configure", percentage="The percentage cut (e.g., 6.5)")
     async def set_role(self, interaction: discord.Interaction, role: discord.Role, percentage: str):
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+
         if not interaction.user.guild_permissions.administrator:
             await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=True)
             return
         
         try:
-            ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
-
             logger.info(f"User {interaction.user.name} ({interaction.user.id}) used set-role command for role {role.name} with percentage {percentage}")
             
             percentage_decimal = validators.validate_percentage(percentage)
@@ -502,13 +504,13 @@ class AdminSlashCommands(commands.Cog, name="admin"):
     @app_commands.command(name="remove-role", description="[Admin] Remove a role's percentage configuration")
     @app_commands.describe(role="The role to remove")
     async def remove_role(self, interaction: discord.Interaction, role: discord.Role):
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+
         if not interaction.user.guild_permissions.administrator:
             await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=True)
             return
         
         try:
-            ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
-
             logger.info(f"User {interaction.user.name} ({interaction.user.id}) used remove-role command for role {role.name}")
             
             guild_id = str(interaction.guild.id)
@@ -539,13 +541,13 @@ class AdminSlashCommands(commands.Cog, name="admin"):
     @app_commands.command(name="set-shift", description="[Admin] Add a valid shift name")
     @app_commands.describe(shift="The name of the shift to add")
     async def set_shift(self, interaction: discord.Interaction, shift: str):
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+        
         if not interaction.user.guild_permissions.administrator:
             await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=True)
             return
         
         try:
-            ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
-
             logger.info(f"User {interaction.user.name} used set-shift command for shift '{shift}'")
             
             if not shift.strip():
@@ -575,13 +577,13 @@ class AdminSlashCommands(commands.Cog, name="admin"):
     @app_commands.command(name="remove-shift", description="[Admin] Remove a shift configuration")
     @app_commands.describe(shift="The name of the shift to remove")
     async def remove_shift(self, interaction: discord.Interaction, shift: str):
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+        
         if not interaction.user.guild_permissions.administrator:
             await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=True)
             return
         
         try:
-            ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
-
             guild_id = str(interaction.guild.id)
             shift_data = await file_handlers.load_json(settings.SHIFT_DATA_FILE, settings.DEFAULT_SHIFT_DATA)
             existing_shifts = shift_data.get(guild_id, [])
@@ -607,6 +609,8 @@ class AdminSlashCommands(commands.Cog, name="admin"):
     @app_commands.command(name="set-period", description="[Admin] Add a valid period name")
     @app_commands.describe(period="The name of the period to add")
     async def set_period(self, interaction: discord.Interaction, period: str):
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+        
         if not interaction.user.guild_permissions.administrator:
             await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=True)
             return
@@ -615,8 +619,6 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             if not period.strip():
                 await interaction.response.send_message("❌ Period name cannot be empty.", ephemeral=True)
                 return
-
-            ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
                 
             guild_id = str(interaction.guild.id)
             period_data = await file_handlers.load_json(settings.PERIOD_DATA_FILE, settings.DEFAULT_PERIOD_DATA)
@@ -641,11 +643,11 @@ class AdminSlashCommands(commands.Cog, name="admin"):
     @app_commands.command(name="remove-period", description="[Admin] Remove a period configuration")
     @app_commands.describe(period="The name of the period to remove")
     async def remove_period(self, interaction: discord.Interaction, period: str):
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+        
         if not interaction.user.guild_permissions.administrator:
             await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=True)
             return
-
-        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
         
         guild_id = str(interaction.guild.id)
         period_data = await file_handlers.load_json(settings.PERIOD_DATA_FILE, settings.DEFAULT_PERIOD_DATA)
@@ -673,11 +675,11 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         bonus="Bonus amount (e.g., 50)"
     )
     async def set_bonus_rule(self, interaction: discord.Interaction, from_range: str, to_range: str, bonus: str):
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+        
         if not interaction.user.guild_permissions.administrator:
             await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=True)
             return
-
-        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
         
         from_num = validators.parse_money(from_range)
         to_num = validators.parse_money(to_range)
@@ -716,11 +718,11 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         to_range="Upper bound of revenue"
     )
     async def remove_bonus_rule(self, interaction: discord.Interaction, from_range: str, to_range: str):
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+        
         if not interaction.user.guild_permissions.administrator:
             await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=True)
             return
-
-        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
         
         from_num = validators.parse_money(from_range)
         to_num = validators.parse_money(to_range)
@@ -837,11 +839,11 @@ class AdminSlashCommands(commands.Cog, name="admin"):
     @app_commands.command(name="set-model", description="[Admin] Add a valid model name")
     @app_commands.describe(model="The name of the model to add")
     async def set_model(self, interaction: discord.Interaction, model: str):
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+        
         if not interaction.user.guild_permissions.administrator:
             await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=True)
             return
-
-        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
         
         logger.info(f"User {interaction.user.name} used set-model command for model '{model}'")
         
@@ -869,11 +871,11 @@ class AdminSlashCommands(commands.Cog, name="admin"):
     @app_commands.command(name="remove-model", description="[Admin] Remove a model configuration")
     @app_commands.describe(model="The name of the model to remove")
     async def remove_model(self, interaction: discord.Interaction, model: str):
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+        
         if not interaction.user.guild_permissions.administrator:
             await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=True)
             return
-
-        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
         
         guild_id = str(interaction.guild.id)
         model_data = await file_handlers.load_json(settings.MODELS_DATA_FILE, settings.DEFAULT_MODELS_DATA)

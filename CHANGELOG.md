@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.100.0] - 2025-03-09
+### Changed
+- `toggle-average` now has fully ephemeral support.
+
 ## [0.99.0] - 2025-03-09
 ### Changed
 - `remove-model` now has fully ephemeral support.
