@@ -279,6 +279,7 @@
     - [x] (v0.104.0) `set-user-hourly`
     - [x] (v0.104.0) `toggle-user-role-override`
     - [x] (v0.104.0) `help` slash
+    - [x] (v0.105.0) `calculate workflow`
     - [x] make helper functions
 - [ ] Remove `reset-earnings-config`
 - [ ] Separate data and backup data

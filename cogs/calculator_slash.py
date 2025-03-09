@@ -3,21 +3,22 @@ import io
 import logging
 import discord
 import asyncio
+import pandas as pd
+import matplotlib.pyplot as plt
 
-from discord import ui, app_commands
+import zipfile
+from pathlib import Path
 from config import settings
 from decimal import Decimal
-import zipfile
 from datetime import datetime
-from pathlib import Path
 from discord.ext import commands
-from typing import Optional, List, Dict
-from utils import file_handlers, validators, calculations
-import pandas as pd
+from utils import file_handlers
 from reportlab.lib import colors
+from discord import ui, app_commands
+from typing import Optional, List, Dict
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
-import matplotlib.pyplot as plt
+from utils import file_handlers, validators, calculations
 
 SUPPORTED_EXPORTS = ["none", "txt", "csv", "json", "xlsx", "pdf", "png", "zip"]
 MAX_ENTRIES = 50
@@ -85,6 +86,11 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
     def __init__(self, bot):
         self.bot = bot
         super().__init__()
+
+    async def get_ephemeral_setting(self, guild_id):
+        display_settings = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
+        guild_settings = display_settings.get(str(guild_id), {})
+        return guild_settings.get('ephemeral_responses', True)
 
     async def generate_export_file(self, user_earnings, user, export_format):
         """Generate export file based on format choice"""
@@ -215,12 +221,14 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
     )
     async def calculate_slash(self, interaction: discord.Interaction):
         """Interactive workflow to calculate earnings"""
+        ephemeral = await self.get_ephemeral_setting(interaction.guild_id)
+
         # Log command usage
         logger.info(f"User {interaction.user.name} ({interaction.user.id}) started calculate workflow")
         
         # Start the interactive workflow with compensation type selection
         view = CompensationTypeSelectionView(self)
-        await interaction.response.send_message("Select a compensation type:", view=view, ephemeral=True)
+        await interaction.response.send_message("Select a compensation type:", view=view, ephemeral=ephemeral)
 
     async def start_period_selection(self, interaction: discord.Interaction, compensation_type: str):
         """First step: Period selection"""

@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.106.0] - 2025-03-09
+### Changed
+- Command `calculate workflow` now fully supports ephemeral logic.
+
 ## [0.105.0] - 2025-03-09
 ### Fixed
 - Fixed backup restoration process with improved interaction handling
