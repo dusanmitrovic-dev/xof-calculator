@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.98.0] - 2025-03-09
+### Changed
+- `set-models` now has fully ephemeral support.
+
 ## [0.97.0] - 2025-03-09
 ### Changed
 - `list-models` now has fully ephemeral support.

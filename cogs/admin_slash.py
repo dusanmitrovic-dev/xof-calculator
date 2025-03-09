@@ -840,11 +840,13 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         if not interaction.user.guild_permissions.administrator:
             await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=True)
             return
+
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
         
         logger.info(f"User {interaction.user.name} used set-model command for model '{model}'")
         
         if not model.strip():
-            await interaction.response.send_message("❌ Model name cannot be empty.")
+            await interaction.response.send_message("❌ Model name cannot be empty.", ephemeral=ephemeral)
             return
             
         guild_id = str(interaction.guild.id)
@@ -852,16 +854,16 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         existing_models = model_data.get(guild_id, [])
         
         if model.lower() in [m.lower() for m in existing_models]:
-            await interaction.response.send_message(f"❌ Model '{model}' already exists!")
+            await interaction.response.send_message(f"❌ Model '{model}' already exists!", ephemeral=ephemeral)
             return
         
         model_data.setdefault(guild_id, []).append(model)
         success = await file_handlers.save_json(settings.MODELS_DATA_FILE, model_data)
         
         if success:
-            await interaction.response.send_message(f"✅ Model '{model}' added!", ephemeral=True)
+            await interaction.response.send_message(f"✅ Model '{model}' added!", ephemeral=ephemeral)
         else:
-            await interaction.response.send_message("❌ Failed to save model data. Please try again later.")
+            await interaction.response.send_message("❌ Failed to save model data. Please try again later.", ephemeral=ephemeral)
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="remove-model", description="[Admin] Remove a model configuration")
