@@ -1021,7 +1021,8 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         view.add_item(discord.ui.Button(label="Confirm", style=discord.ButtonStyle.danger, custom_id="confirm_restore_backup"))
         view.add_item(discord.ui.Button(label="Cancel", style=discord.ButtonStyle.success, custom_id="cancel_restore_backup"))
 
-        async def confirm_callback(interaction):
+        async def confirm_callback(interaction: discord.Interaction):
+            # Defer the interaction to prevent timeout
             await interaction.response.defer(ephemeral=ephemeral)
 
             cogs_dir = os.path.dirname(os.path.abspath(__file__))
@@ -1031,7 +1032,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             backup_files = glob.glob(os.path.join(data_dir, "*.bak"))
 
             if not backup_files:
-                await interaction.response.edit_message(content="❌ No backup files found!", view=None)
+                await interaction.edit_original_response(content="❌ No backup files found!", view=None)
                 return
 
             restored_count = 0
@@ -1042,24 +1043,32 @@ class AdminSlashCommands(commands.Cog, name="admin"):
                     continue
 
                 try:
-                    original_file = bak_file[:-4]
+                    original_file = bak_file[:-4]  # Remove .bak extension
                     shutil.copy2(bak_file, original_file)
                     restored_count += 1
                 except Exception as e:
                     print(f"Failed to restore {bak_file}: {str(e)}")
                     failed_count += 1
 
+            # Prepare the response content
             if failed_count == 0:
-                await interaction.response.edit_message(content=f"✅ Successfully restored {restored_count} backup files.", view=None)
+                content = f"✅ Successfully restored {restored_count} backup files."
             else:
-                await interaction.response.edit_message(content=f"⚠️ Restored {restored_count} files, but {failed_count} failed. Check console for details.", view=None)
+                content = f"⚠️ Restored {restored_count} files, but {failed_count} failed. Check console for details."
 
-        async def cancel_callback(interaction):
+            # Edit the original message to show the result and remove buttons
+            await interaction.edit_original_response(content=content, view=None)
+
+        async def cancel_callback(interaction: discord.Interaction):
             await interaction.response.edit_message(content="❌ Canceled.", view=None)
 
         view.children[0].callback = confirm_callback
         view.children[1].callback = cancel_callback
-        await interaction.response.send_message(content="‼️🚨‼ Are you sure you want to restore the latest configuration backup?", view=view, ephemeral=ephemeral)
+        await interaction.response.send_message(
+            content="‼️🚨‼ Are you sure you want to restore the latest configuration backup?",
+            view=view,
+            ephemeral=ephemeral
+        )
 
     async def reset_shift(self, interaction: discord.Interaction):
         await file_handlers.save_json(settings.SHIFT_DATA_FILE, settings.DEFAULT_SHIFT_DATA)

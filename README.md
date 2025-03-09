@@ -313,6 +313,7 @@
 - [x] (v0.103.0) Remove unnecessary command descriptions
 - [x] (v0.103.0) Rename `reset_models_settings` to `reset_models`
 - [x] (v0.103.0) New command `view-display-settings`
+- [x] (v0.104.0) fix restore-latest-backup response handling
 - [ ] Add functionality to select column names to display in `view-earnings`
 - [ ] Pip freeze > requirements.txt
 - [ ] View earnings remove period use role instead
