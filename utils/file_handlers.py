@@ -72,7 +72,7 @@ async def load_json(filename: str, default: Optional[Union[Dict, List]] = None) 
             logger.error(f"Unexpected error loading {file_path}: {e}")
             return default
 
-async def save_json(filename: str, data: Union[Dict, List], pretty: bool = True) -> bool:
+async def save_json(filename: str, data: Union[Dict, List], pretty: bool = True, make_backup: bool = True) -> bool:
     """
     Safely save data to a JSON file with atomic write operations
     
@@ -95,7 +95,7 @@ async def save_json(filename: str, data: Union[Dict, List], pretty: bool = True)
             os.makedirs(os.path.dirname(file_path), exist_ok=True)
             
             # Create backup of existing file
-            if os.path.exists(file_path):
+            if os.path.exists(file_path) and make_backup:
                 try:
                     shutil.copy2(file_path, backup_path)
                 except Exception as backup_error:

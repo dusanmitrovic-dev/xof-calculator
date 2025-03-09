@@ -252,6 +252,8 @@
     - [x] (v0.98.0) `set-model`
     - [x] (v0.99.0) `remove-model`
     - [x] (v0.100.0) `toggle-average`
+    - [x] (v0.101.0) `reset-shift-backup`
+    - [x] (v0.101.0) `restore-shift-backup`
     - [x] make helper functions
 - [ ] Remove `reset-earnings-config`
 - [ ] Separate data and backup data
@@ -279,6 +281,7 @@
     - [x] (v0.85.0) `view-earnings-admin`
     - [x] (v0.86.0) `view-earnings-table`
 - [x] (v0.87.0) Merge `view-earnings` functions and add new `as_table` parameter
+- [x] (v0.101.0) `save_json` bool argument `make_backup` (default `True`)
 - [ ] Add functionality to select column names to display in `view-earnings`
 - [ ] Pip freeze > requirements.txt
 - [ ] View earnings remove period use role instead

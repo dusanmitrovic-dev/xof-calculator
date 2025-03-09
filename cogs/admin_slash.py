@@ -1002,15 +1002,18 @@ class AdminSlashCommands(commands.Cog, name="admin"):
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="reset-shift-config", description="[Admin] Reset shift configuration")
     async def reset_shift_config(self, interaction: discord.Interaction):
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+
         async def reset_action(interaction: discord.Interaction):
             await self.reset_shift(interaction)
             await interaction.response.edit_message(content="✅ Shift configuration reset.", view=None)
 
         view = ConfirmButton(reset_action, interaction.user.id)
+
         await interaction.response.send_message(
             "⚠️ Are you sure you want to reset the shift configuration? This will delete all existing shift.", 
             view=view, 
-            ephemeral=True
+            ephemeral=ephemeral
         )
 
     async def reset_period(self, interaction: discord.Interaction):
@@ -1136,6 +1139,8 @@ class AdminSlashCommands(commands.Cog, name="admin"):
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="restore-shift-backup", description="[Admin] Restore the latest shift configuration backup")
     async def restore_shift_backup(self, interaction: discord.Interaction):
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+
         async def restore_action(interaction: discord.Interaction):
             backup_file = os.path.join(settings.DATA_DIRECTORY, f"{settings.SHIFT_DATA_FILE}.bak")
             if os.path.exists(backup_file):
@@ -1145,10 +1150,11 @@ class AdminSlashCommands(commands.Cog, name="admin"):
                 await interaction.response.edit_message(content="❌ No shift configuration backup found.", view=None)
 
         view = ConfirmButton(restore_action, interaction.user.id)
+        
         await interaction.response.send_message(
             "⚠️ Are you sure you want to restore the shift configuration backup? This will replace the current configuration.", 
             view=view, 
-            ephemeral=True
+            ephemeral=ephemeral
         )
 
     @app_commands.default_permissions(administrator=True)

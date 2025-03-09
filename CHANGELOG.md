@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [0.101.0] - 2025-03-09
+### Changed
+- `reset-shift-config` now has fully ephemeral support,
+- `restore-shift-backup` now has fully ephemeral support,
+- `save_json` has a new argument `make_backup` which allows you to save a backup if set to `True` (default is `True`).
+
 ## [0.100.0] - 2025-03-09
 ### Changed
 - `toggle-average` now has fully ephemeral support.
