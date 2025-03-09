@@ -807,12 +807,14 @@ class AdminSlashCommands(commands.Cog, name="admin"):
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="list-bonus-rules", description="[Admin] List configured bonus rules")
     async def list_bonus_rules(self, interaction: discord.Interaction):
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+
         guild_id = str(interaction.guild.id)
         bonus_rules = await file_handlers.load_json(settings.BONUS_RULES_FILE, settings.DEFAULT_BONUS_RULES)
         guild_rules = bonus_rules.get(guild_id, [])
         
         if not guild_rules:
-            await interaction.response.send_message("❌ No bonus rules configured.")
+            await interaction.response.send_message("❌ No bonus rules configured.", ephemeral=ephemeral)
             return
             
         embed = discord.Embed(title="Bonus Rules", color=discord.Color.green())
@@ -824,7 +826,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
                 inline=False
             )
 
-        await interaction.response.send_message(embed=embed, ephemeral=True)
+        await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
 
     # Model Management
     @app_commands.default_permissions(administrator=True)

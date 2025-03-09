@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.95.0] - 2025-03-09
+### Changed
+- `list-bonus-rules` now has fully ephemeral support.
+
 ## [0.94.0] - 2025-03-09
 ### Changed
 - `list-periods` now has fully ephemeral support.
