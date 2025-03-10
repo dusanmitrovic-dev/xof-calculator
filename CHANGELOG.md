@@ -158,9 +158,9 @@
 
 ## [0.83.0] - 2025-03-08
 ### Added
-- Added `range_from` and `range_to` parameters for filtering earnings by date.
-- Implemented `send_to` functionality to send reports via DM to users/roles.
-- Improved earnings display with separators and additional fields.
+- Added `range_from` and `range_to` parameters for filtering earnings by date,
+- Implemented `send_to` functionality to send reports via DM to users/roles,
+- Improved earnings display with separators and additional fields,
 - Enhanced export handling with better error messages.
 
 ## [0.82.0] - 2025-03-08
