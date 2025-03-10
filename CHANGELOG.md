@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.111.0] - 2025-03-10
+### Added
+- Add sent by field in report message sent to the `sent_to` user in `view-earnings` command.
+
 ## [0.110.0] - 2025-03-10
 ### Changed
 - `view-earnings` now has `user` admin parameter that allows to select user which earnings will be displayed

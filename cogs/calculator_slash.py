@@ -1179,6 +1179,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                             title="Report message",
                             description=f"{send_to_message}"
                         )
+                        report_embed.add_field(name="Sent by", value=interaction.user.mention, inline=False)
                         await send_to.send(embed=report_embed)
                         await interaction.followup.send(f"✅ Report message sent with content: ", embed=report_embed, ephemeral=ephemeral)
                     await interaction.followup.send(f"✅ Report sent to {send_to.mention}", ephemeral=ephemeral)
