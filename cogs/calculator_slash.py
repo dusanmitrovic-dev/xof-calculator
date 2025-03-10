@@ -1030,6 +1030,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         description="View your earnings"
     )
     @app_commands.describe(
+        user="[Admin] The user whose earnings you want to view",
         entries=f"Number of entries to return (max {MAX_ENTRIES})",
         export="Export format",
         display_entries="Whether entries will be displayed or not",
@@ -1054,6 +1055,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
     async def view_earnings(
         self,
         interaction: discord.Interaction,
+        user: Optional[discord.User] = None,
         entries: Optional[int] = 50,
         export: Optional[str] = "none",
         display_entries: Optional[bool] = False,
@@ -1067,6 +1069,10 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
         
         try:
+            if not interaction.user.guild_permissions.administrator and user:
+                await interaction.response.send_message("❌ You need administrator permissions to see other user's earnings.", ephemeral=ephemeral)
+                return
+
             await interaction.response.defer(ephemeral=ephemeral)
 
             # Validate entries count
@@ -1074,7 +1080,12 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
 
             # Load and filter data
             earnings_data = await file_handlers.load_json(settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS)
-            user_earnings = earnings_data.get(interaction.user.mention, [])
+            user_earnings = None
+
+            if user:
+                user_earnings = earnings_data.get(user.mention, [])
+            else:
+                user_earnings = earnings_data.get(interaction.user.mention, [])
 
             # Date filtering
             if range_from or range_to:

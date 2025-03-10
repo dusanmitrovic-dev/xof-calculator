@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.110.0] - 2025-03-10
+### Changed
+- `view-earnings` now has `user` admin parameter that allows to select user which earnings will be displayed
+
 ## [0.109.0] - 2025-03-10
 ### Changed
 - Second stage of merging `view-earnings` and `view-earnings-table`

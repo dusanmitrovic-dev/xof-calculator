@@ -317,6 +317,8 @@
 - [x] (v0.104.0) Fix restore-latest-backup response handling
 - [x] (v0.109.0) Merge `view-earnings` and `view-earnings-table`
 - [x] (v0.109.0) `send_to_message` add to `view-earnings` command
+- [x] (v0.110.0) Add `user` parameter to `view-earnings`
+- [ ] Add who sent the `send_to_message`
 - [ ] Display hourly cut in employee cut?
 - [ ] Add functionality to select column names to display in `view-earnings`
 - [ ] Pip freeze > requirements.txt
