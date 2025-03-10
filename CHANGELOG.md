@@ -2,7 +2,13 @@
 
 ## [Unreleased]
 
-## [0.107.0] - 2025-03-09
+## [0.109.0] - 2025-03-10
+### Changed
+- Second stage of merging `view-earnings` and `view-earnings-table`
+- View earnings is now working independently
+- `send_to_message` command parameter added
+
+## [0.107.0] - 2025-03-10
 ### Changed
 - First stage of merging `view-earnings` and `view-earnings-table`.
 

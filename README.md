@@ -314,7 +314,9 @@
 - [x] (v0.103.0) Remove unnecessary command descriptions
 - [x] (v0.103.0) Rename `reset_models_settings` to `reset_models`
 - [x] (v0.103.0) New command `view-display-settings`
-- [x] (v0.104.0) fix restore-latest-backup response handling
+- [x] (v0.104.0) Fix restore-latest-backup response handling
+- [x] (v0.109.0) Merge `view-earnings` and `view-earnings-table`
+- [x] (v0.109.0) `send_to_message` add to `view-earnings` command
 - [ ] Display hourly cut in employee cut?
 - [ ] Add functionality to select column names to display in `view-earnings`
 - [ ] Pip freeze > requirements.txt

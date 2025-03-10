@@ -1,5 +1,6 @@
 import os
 import io
+import json
 import logging
 import discord
 import asyncio
@@ -92,6 +93,143 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         guild_settings = display_settings.get(str(guild_id), {})
         return guild_settings.get('ephemeral_responses', True)
 
+    # async def generate_export_file(self, user_earnings, user, export_format): # todo remove
+    #     """Generate export file based on format choice"""
+    #     sanitized_name = Path(user.display_name).stem[:32].replace(" ", "_")
+    #     base_name = f"{sanitized_name}_earnings_{datetime.now().strftime('%d_%m_%Y')}"
+        
+    #     buffer = io.BytesIO()
+        
+    #     if export_format == "csv":
+    #         df = pd.DataFrame(user_earnings)
+    #         df.to_csv(buffer, index=False)
+        
+    #     elif export_format == "json":
+    #         buffer.write(json.dumps(user_earnings, indent=2).encode('utf-8'))
+        
+    #     elif export_format == "xlsx":
+    #         df = pd.DataFrame(user_earnings)
+    #         with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
+    #             df.to_excel(writer, index=False, sheet_name='Earnings')
+        
+    #     elif export_format == "pdf":
+    #         doc = SimpleDocTemplate(buffer, pagesize=letter)
+    #         data = [["Date", "Role", "Gross", "Total Cut"]]
+    #         data += [[
+    #             entry['date'],
+    #             entry['role'],
+    #             f"${float(entry['gross_revenue']):.2f}",
+    #             f"${float(entry['total_cut']):.2f}"
+    #         ] for entry in user_earnings]
+            
+    #         table = Table(data)
+    #         table.setStyle(TableStyle([
+    #             ('BACKGROUND', (0,0), (-1,0), colors.grey),
+    #             ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+    #             ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+    #             ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+    #             ('BOTTOMPADDING', (0,0), (-1,0), 12),
+    #             ('BACKGROUND', (0,1), (-1,-1), colors.beige),
+    #             ('GRID', (0,0), (-1,-1), 1, colors.black)
+    #         ]))
+    #         doc.build([table])
+        
+    #     elif export_format == "png":
+    #         plt.figure(figsize=(10, 6))
+    #         dates = [datetime.strptime(entry['date'], '%d/%m/%Y') for entry in user_earnings]
+    #         plt.plot(dates, [float(e['gross_revenue']) for e in user_earnings], label='Gross Revenue')
+    #         plt.plot(dates, [float(e['total_cut']) for e in user_earnings], label='Total Cut')
+    #         plt.legend()
+    #         plt.tight_layout()
+    #         plt.savefig(buffer, format='png')
+    #         plt.close()
+        
+    #     # elif export_format == "zip": # todo old version
+    #     #     with zipfile.ZipFile(buffer, 'w') as zip_file:
+    #     #         for fmt in ['csv', 'json', 'xlsx', 'pdf', 'png', 'txt']:
+    #     #             fmt_buffer = await self.generate_export_file(user_earnings, user, fmt)
+    #     #             zip_file.writestr(f"{base_name}.{fmt}", fmt_buffer.getvalue())
+
+    #     elif export_format == "zip":
+    #         with zipfile.ZipFile(buffer, 'w') as zip_file:
+    #             formats = ['csv', 'json', 'xlsx', 'pdf', 'png', 'txt']
+                
+    #             for fmt in formats:
+    #                 fmt_buffer = io.BytesIO()
+                    
+    #                 if fmt == "csv":
+    #                     df = pd.DataFrame(user_earnings)
+    #                     df.to_csv(fmt_buffer, index=False)
+                    
+    #                 elif fmt == "json":
+    #                     fmt_buffer.write(json.dumps(user_earnings, indent=2).encode('utf-8'))
+                    
+    #                 elif fmt == "xlsx":
+    #                     df = pd.DataFrame(user_earnings)
+    #                     with pd.ExcelWriter(fmt_buffer, engine='openpyxl') as writer:
+    #                         df.to_excel(writer, index=False, sheet_name='Earnings')
+                    
+    #                 elif fmt == "pdf":
+    #                     # FIX: Use fmt_buffer instead of main buffer
+    #                     doc = SimpleDocTemplate(fmt_buffer, pagesize=letter)
+    #                     data = [["Date", "Role", "Gross", "Total Cut"]]
+    #                     data += [[
+    #                         entry['date'],
+    #                         entry['role'],
+    #                         f"${float(entry['gross_revenue']):.2f}",
+    #                         f"${float(entry['total_cut']):.2f}"
+    #                     ] for entry in user_earnings]
+                        
+    #                     table = Table(data)
+    #                     table.setStyle(TableStyle([
+    #                         ('BACKGROUND', (0,0), (-1,0), colors.grey),
+    #                         ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+    #                         ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+    #                         ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+    #                         ('BOTTOMPADDING', (0,0), (-1,0), 12),
+    #                         ('BACKGROUND', (0,1), (-1,-1), colors.beige),
+    #                         ('GRID', (0,0), (-1,-1), 1, colors.black)
+    #                     ]))
+    #                     doc.build([table])
+                    
+    #                 elif fmt == "png":
+    #                     # FIX: Use fmt_buffer instead of main buffer
+    #                     plt.figure(figsize=(10, 6))
+    #                     dates = [datetime.strptime(entry['date'], '%d/%m/%Y') for entry in user_earnings]
+    #                     plt.plot(dates, [float(e['gross_revenue']) for e in user_earnings], label='Gross Revenue')
+    #                     plt.plot(dates, [float(e['total_cut']) for e in user_earnings], label='Total Cut')
+    #                     plt.legend()
+    #                     plt.tight_layout()
+    #                     plt.savefig(fmt_buffer, format='png')
+    #                     plt.close()
+                    
+    #                 else:  # txt
+    #                     # FIX: Use fmt_buffer instead of main buffer
+    #                     text_content = f"Earnings Report for {user.display_name}\n\n"
+    #                     text_content += "\n".join(
+    #                         f"{entry['date']} | {entry['role']:9} | ${float(entry['gross_revenue']):8.2f} | ${float(entry['total_cut']):8.2f}"
+    #                         for entry in user_earnings
+    #                     )
+    #                     fmt_buffer.write(text_content.encode('utf-8'))
+
+    #                 fmt_buffer.seek(0)
+    #                 zip_file.writestr(f"{base_name}.{fmt}", fmt_buffer.getvalue())
+    #                 fmt_buffer.close()  # Important for memory cleanup
+                    
+    #             buffer.seek(0)
+    #             return discord.File(buffer, filename=f"{base_name}.zip")
+        
+    #     else:  # txt
+    #         text_content = f"Earnings Report for {user.display_name}\n\n"
+    #         text_content += "\n".join(
+    #             f"{entry['date']} | {entry['role']:9} | ${float(entry['gross_revenue']):8.2f} | ${float(entry['total_cut']):8.2f}"
+    #             for entry in user_earnings
+    #         )
+    #         buffer.write(text_content.encode('utf-8'))
+
+    #     buffer.seek(0)
+    #     return discord.File(buffer, filename=f"{base_name}.{export_format if export_format != 'zip' else 'zip'}")
+
     async def generate_export_file(self, user_earnings, user, export_format):
         """Generate export file based on format choice"""
         sanitized_name = Path(user.display_name).stem[:32].replace(" ", "_")
@@ -99,120 +237,133 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         
         buffer = io.BytesIO()
         
-        if export_format == "csv":
+        if export_format == "zip":
+            with zipfile.ZipFile(buffer, 'w') as zip_file:
+                formats = ['csv', 'json', 'xlsx', 'pdf', 'png', 'txt']
+                
+                fmt_buffer = None
+                for fmt in formats:
+                    fmt_buffer = io.BytesIO()
+                    
+                    try:
+                        if fmt == "csv":
+                            df = pd.DataFrame(user_earnings)
+                            df.to_csv(fmt_buffer, index=False)
+                        
+                        elif fmt == "json":
+                            fmt_buffer.write(json.dumps(user_earnings, indent=2).encode('utf-8'))
+                        
+                        elif fmt == "xlsx":
+                            df = pd.DataFrame(user_earnings)
+                            with pd.ExcelWriter(fmt_buffer, engine='openpyxl') as writer:
+                                df.to_excel(writer, index=False, sheet_name='Earnings')
+                        
+                        elif fmt == "pdf":
+                            # FIX: Use fmt_buffer instead of main buffer
+                            doc = SimpleDocTemplate(fmt_buffer, pagesize=letter)
+                            data = [["Date", "Role", "Gross", "Total Cut"]]
+                            data += [[
+                                entry['date'],
+                                entry['role'],
+                                f"${float(entry['gross_revenue']):.2f}",
+                                f"${float(entry['total_cut']):.2f}"
+                            ] for entry in user_earnings]
+                            
+                            table = Table(data)
+                            table.setStyle(TableStyle([
+                                ('BACKGROUND', (0,0), (-1,0), colors.grey),
+                                ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+                                ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+                                ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+                                ('BOTTOMPADDING', (0,0), (-1,0), 12),
+                                ('BACKGROUND', (0,1), (-1,-1), colors.beige),
+                                ('GRID', (0,0), (-1,-1), 1, colors.black)
+                            ]))
+                            doc.build([table])
+                        
+                        elif fmt == "png":
+                            # FIX: Use fmt_buffer instead of main buffer
+                            plt.figure(figsize=(10, 6))
+                            dates = [datetime.strptime(entry['date'], '%d/%m/%Y') for entry in user_earnings]
+                            plt.plot(dates, [float(e['gross_revenue']) for e in user_earnings], label='Gross Revenue')
+                            plt.plot(dates, [float(e['total_cut']) for e in user_earnings], label='Total Cut')
+                            plt.legend()
+                            plt.tight_layout()
+                            plt.savefig(fmt_buffer, format='png')
+                            plt.close()
+                        
+                        else:  # txt
+                            # FIX: Use fmt_buffer instead of main buffer
+                            text_content = f"Earnings Report for {user.display_name}\n\n"
+                            text_content += "\n".join(
+                                f"{entry['date']} | {entry['role']:9} | ${float(entry['gross_revenue']):8.2f} | ${float(entry['total_cut']):8.2f}"
+                                for entry in user_earnings
+                            )
+                            fmt_buffer.write(text_content.encode('utf-8'))
+                    
+                    finally:
+                        fmt_buffer.seek(0)
+                        zip_file.writestr(f"{base_name}.{fmt}", fmt_buffer.getvalue())
+                        fmt_buffer.close()
+
+            buffer.seek(0)
+            return discord.File(buffer, filename=f"{base_name}.zip")
+        
+        # Handle non-zip formats (original code remains unchanged)
+        elif export_format == "csv":
             df = pd.DataFrame(user_earnings)
             df.to_csv(buffer, index=False)
-            buffer.seek(0)
-            return discord.File(buffer, filename=f"{base_name}.csv")
         
         elif export_format == "json":
-            import json
             buffer.write(json.dumps(user_earnings, indent=2).encode('utf-8'))
-            buffer.seek(0)
-            return discord.File(buffer, filename=f"{base_name}.json")
         
         elif export_format == "xlsx":
             df = pd.DataFrame(user_earnings)
             with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
                 df.to_excel(writer, index=False, sheet_name='Earnings')
-            buffer.seek(0)
-            return discord.File(buffer, filename=f"{base_name}.xlsx")
         
         elif export_format == "pdf":
             doc = SimpleDocTemplate(buffer, pagesize=letter)
-            elements = []
-            
-            # Create data table
             data = [["Date", "Role", "Gross", "Total Cut"]]
-            for entry in user_earnings:
-                data.append([
-                    entry['date'],
-                    entry['role'],
-                    f"${float(entry['gross_revenue']):.2f}",
-                    f"${float(entry['total_cut']):.2f}"
-                ])
-            
+            data += [[
+                entry['date'],
+                entry['role'],
+                f"${float(entry['gross_revenue']):.2f}",
+                f"${float(entry['total_cut']):.2f}"
+            ] for entry in user_earnings]
+                            
             table = Table(data)
-            style = TableStyle([
+            table.setStyle(TableStyle([
                 ('BACKGROUND', (0,0), (-1,0), colors.grey),
                 ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
                 ('ALIGN', (0,0), (-1,-1), 'CENTER'),
                 ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
-                ('FONTSIZE', (0,0), (-1,0), 14),
                 ('BOTTOMPADDING', (0,0), (-1,0), 12),
                 ('BACKGROUND', (0,1), (-1,-1), colors.beige),
                 ('GRID', (0,0), (-1,-1), 1, colors.black)
-            ])
-            table.setStyle(style)
-            elements.append(table)
-            
-            doc.build(elements)
-            buffer.seek(0)
-            return discord.File(buffer, filename=f"{base_name}.pdf")
+            ]))
+            doc.build([table])
         
         elif export_format == "png":
             plt.figure(figsize=(10, 6))
             dates = [datetime.strptime(entry['date'], '%d/%m/%Y') for entry in user_earnings]
-            gross = [float(entry['gross_revenue']) for entry in user_earnings]
-            cuts = [float(entry['total_cut']) for entry in user_earnings]
-            
-            plt.plot(dates, gross, label='Gross Revenue', marker='o')
-            plt.plot(dates, cuts, label='Total Cut', marker='x')
-            plt.title(f'Earnings Trend for {user.display_name}')
-            plt.xlabel('Date')
-            plt.ylabel('Amount ($)')
+            plt.plot(dates, [float(e['gross_revenue']) for e in user_earnings], label='Gross Revenue')
+            plt.plot(dates, [float(e['total_cut']) for e in user_earnings], label='Total Cut')
             plt.legend()
-            plt.grid(True)
             plt.tight_layout()
-            
             plt.savefig(buffer, format='png')
             plt.close()
-            buffer.seek(0)
-            return discord.File(buffer, filename=f"{base_name}.png")
         
-        elif export_format == "zip":
-            zip_buffer = io.BytesIO()
-            with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
-                # Add CSV
-                csv_file = await self.generate_export_file(user_earnings, user, "csv")
-                zip_file.writestr(f"{base_name}.csv", csv_file.fp.getvalue())
-                
-                # Add PDF
-                pdf_file = await self.generate_export_file(user_earnings, user, "pdf")
-                zip_file.writestr(f"{base_name}.pdf", pdf_file.fp.getvalue())
-
-                # Add PNG
-                png_file = await self.generate_export_file(user_earnings, user, "png")
-                zip_file.writestr(f"{base_name}.png", png_file.fp.getvalue())
-                
-                # Add JSON
-                json_file = await self.generate_export_file(user_earnings, user, "json")
-                zip_file.writestr(f"{base_name}.json", json_file.fp.getvalue())
-
-                # Add XLSX
-                xlsx_file = await self.generate_export_file(user_earnings, user, "xlsx")
-                zip_file.writestr(f"{base_name}.xlsx", xlsx_file.fp.getvalue())
-
-                # Add TXT
-                txt_file = await self.generate_export_file(user_earnings, user, "txt")
-                zip_file.writestr(f"{base_name}.txt", txt_file.fp.getvalue())
-            
-            zip_buffer.seek(0)
-            return discord.File(zip_buffer, filename=f"{base_name}.zip")
-        
-        else:  # txt format
+        else:  # txt
             text_content = f"Earnings Report for {user.display_name}\n\n"
-            text_content += "Date       | Role       | Gross     | Total Cut\n"
-            text_content += "-"*40 + "\n"
-            for entry in user_earnings:
-                text_content += (
-                    f"{entry['date']} | {entry['role'].ljust(10)} | "
-                    f"${float(entry['gross_revenue']):>8.2f} | "
-                    f"${float(entry['total_cut']):>9.2f}\n"
-                )
+            text_content += "\n".join(
+                f"{entry['date']} | {entry['role']:9} | ${float(entry['gross_revenue']):8.2f} | ${float(entry['total_cut']):8.2f}"
+                for entry in user_earnings
+            )
             buffer.write(text_content.encode('utf-8'))
-            buffer.seek(0)
-            return discord.File(buffer, filename=f"{base_name}.txt")
+
+        buffer.seek(0)
+        return discord.File(buffer, filename=f"{base_name}.{export_format}")
     
     # New interactive slash command
     @app_commands.command(
@@ -815,14 +966,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         except Exception as e:
             await interaction.followup.send(f"❌ Error: {str(e)}")
 
-    async def create_table_embed(self, interaction, user_earnings):
-        # Create table content
-        embed = discord.Embed(
-                title=f"📊 Earnings Summary - {interaction.user.display_name}",
-                color=0x2ECC71,
-                timestamp=interaction.created_at
-            )
-        
+    async def create_table_embed(self, interaction, user_earnings, embed):        
         table_header = "```\n  # |   Date     |   Role    |  Gross   |  Total   \n----|------------|-----------|----------|--------\n"
         table_rows = []
         total_gross = 0
@@ -835,25 +979,21 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             total_cut_sum += total_cut
             table_rows.append(f"{index:3} | {entry['date']:10} | {entry['role'].capitalize():<9} | {gross_revenue:8.2f} | {total_cut:6.2f}\n")
 
-        # Build table chunks
+        # Build table chunks with proper overflow handling
         current_chunk = table_header
         for row in table_rows:
             if len(current_chunk) + len(row) + 3 > 1024:
-                # Check if current chunk (without new row) + closing fits
-                if len(current_chunk) + 3 <= 1024:
+                # Add current chunk if it has content beyond header
+                if current_chunk != table_header:
                     embed.add_field(name="", value=current_chunk + "```", inline=False)
-                else:
-                    # Handle overflow by splitting current_chunk (complex, may need truncation)
-                    pass
-                current_chunk = "```\n"
+                # current_chunk = table_header  # Start new chunk # todo remove
+                current_chunk = "```\n"  # Start new chunk without table header 
+                
             current_chunk += row
 
+        # Add remaining content
         if current_chunk != table_header:
-            if len(current_chunk) + 3 <= 1024:
-                embed.add_field(name="", value=current_chunk + "```", inline=False)
-            else:
-                # Handle overflow
-                pass
+            embed.add_field(name="", value=current_chunk + "```", inline=False)
             
         # Add totals
         embed.add_field(name="Total Gross", value=f"```\n{total_gross:.2f}\n```", inline=True)
@@ -861,52 +1001,30 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
 
         return embed
 
-    async def create_list_embed(self, interaction, user_earnings):
-        embed = discord.Embed(
-            title=f"📊 Earnings Summary - {interaction.user.display_name}",
-            color=0x2ECC71,
-            timestamp=interaction.created_at
-        )
-
+    async def create_list_embed(self, interaction, user_earnings, embed):
         current_chunk = []
         for idx, entry in enumerate(user_earnings, start=1):
-            # Calculate additional fields
             gross_revenue = float(entry['gross_revenue'])
-            total_cut_percent = (float(entry['total_cut']) / gross_revenue) * 100 if gross_revenue != 0 else 0.0
+            total_cut_percent = (float(entry['total_cut']) / gross_revenue * 100 if gross_revenue != 0 else 0.0)
             entry_text = (
                 f"**Date:** {entry['date']}\n"
                 f"**Role:** {entry['role'].capitalize()}\n"
                 f"**Gross Revenue:** ${gross_revenue:.2f}\n"
-                f"**Total Cut:** ${float(entry['total_cut']):.2f} ({total_cut_percent:.1f}% + Bonus)\n"
+                f"**Total Cut:** ${float(entry['total_cut']):.2f} ({total_cut_percent:.1f}%)\n"
             )
 
-            # Calculate proposed chunk length
-            if current_chunk:
-                # Join existing chunk and new entry with a newline
-                proposed_value = "\n".join(current_chunk + [entry_text])
-            else:
-                proposed_value = entry_text
-
-            if len(proposed_value) > 1024:
-                if current_chunk:
-                    # Add current chunk to embed
-                    embed.add_field(name="", value="\n".join(current_chunk), inline=False)
-                    current_chunk = []
-                # Check if the new entry alone exceeds the limit
-                if len(entry_text) > 1024:
-                    # Truncate or split the entry_text (here we truncate for simplicity)
-                    entry_text = entry_text[:1021] + "..."  # Ensure truncation leaves room for ellipsis
-                current_chunk.append(entry_text)
+            if len("\n".join(current_chunk + [entry_text])) > 1024:
+                embed.add_field(name="", value="\n".join(current_chunk), inline=False)
+                current_chunk = [entry_text]
             else:
                 current_chunk.append(entry_text)
 
-        # Add any remaining entries
         if current_chunk:
             embed.add_field(name="", value="\n".join(current_chunk), inline=False)
 
         return embed
 
-    # Modified command implementation
+    # Command implementation
     @app_commands.command(
         name="view-earnings",
         description="View your earnings"
@@ -919,6 +1037,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         send_to="User to send the report to",
         range_from="Starting date (dd/mm/yyyy)",
         range_to="Ending date (dd/mm/yyyy)",
+        send_to_message="Message to send to the selected users or roles"
     )
     @app_commands.choices(
         export=[
@@ -939,9 +1058,10 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         export: Optional[str] = "none",
         display_entries: Optional[bool] = False,
         as_table: Optional[bool] = False,
-        send_to: Optional[str] = None,
+        send_to: Optional[discord.User] = None,
         range_from: Optional[str] = None,
-        range_to: Optional[str] = None
+        range_to: Optional[str] = None,
+        send_to_message: Optional[str] = None
     ):
         """Command for users to view their own earnings"""
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
@@ -949,17 +1069,14 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         try:
             await interaction.response.defer(ephemeral=ephemeral)
 
-            # await interaction.followup.send("Hello world!") # todo remove
+            # Validate entries count
             entries = min(max(entries, 1), MAX_ENTRIES)
-            # await interaction.followup.send(f"Entries: {entries}", ephemeral=ephemeral) # todo remove
-            
-            # # Load and filter data
+
+            # Load and filter data
             earnings_data = await file_handlers.load_json(settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS)
             user_earnings = earnings_data.get(interaction.user.mention, [])
 
-            # await interaction.followup.send(f"User earnings: {str(user_earnings)[:50]}...", ephemeral=ephemeral) # todo remove
-            
-            # # Date filtering
+            # Date filtering
             if range_from or range_to:
                 try:
                     from_date = datetime.strptime(range_from, "%d/%m/%Y") if range_from else datetime.min
@@ -968,29 +1085,22 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                     )
                     to_date = to_date.replace(hour=23, minute=59, second=59)
 
-                    filtered = []
-                    for entry in user_earnings:
-                        entry_date = datetime.strptime(entry['date'], "%d/%m/%Y")
-                        if from_date <= entry_date <= to_date:
-                            filtered.append(entry)
-                    user_earnings = filtered
+                    user_earnings = [
+                        entry for entry in user_earnings
+                        if from_date <= datetime.strptime(entry['date'], "%d/%m/%Y") <= to_date
+                    ]
                 except ValueError:
-                    await interaction.followup.send("❌ Invalid date format. Use dd/mm/yyyy.", ephemeral=True)
-                    return
+                    return await interaction.followup.send("❌ Invalid date format. Use dd/mm/yyyy.", ephemeral=ephemeral)
 
-            # await interaction.followup.send(f"Filtered user earnings: {str(user_earnings)[:50]}...", ephemeral=ephemeral) # todo remove
-
+            # Sort and truncate entries
             user_earnings = sorted(
                 user_earnings,
                 key=lambda x: datetime.strptime(x['date'], "%d/%m/%Y"),
                 reverse=True
             )[:entries]
 
-            # await interaction.followup.send(f"Sorted user earnings: {str(user_earnings)[:50]}...", ephemeral=ephemeral) # todo remove
-            
             if not user_earnings:
-                await interaction.followup.send("❌ No earnings data found.", ephemeral=ephemeral)
-                return
+                return await interaction.followup.send("❌ No earnings data found.", ephemeral=ephemeral)
 
             # Create embed
             embed = discord.Embed(
@@ -999,147 +1109,78 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                 timestamp=interaction.created_at
             )
 
-            # embed.set_thumbnail(url=interaction.user.avatar.url if interaction.user.avatar else None)
-            
             if interaction.user.avatar:
-                embed.set_thumbnail(url=interaction.user.avatar.url)   
+                    embed.set_thumbnail(url=interaction.user.avatar.url)
 
-            await interaction.followup.send(embed=embed, ephemeral=ephemeral) # todo remove
+            total_gross = 0
+            total_cut_sum = 0
+            for index, entry in enumerate(user_earnings, start=1):
+                gross_revenue = float(entry['gross_revenue'])
+                total_cut = float(entry['total_cut'])
+                total_gross += gross_revenue
+                total_cut_sum += total_cut
+            embed.add_field(name="Total Gross", value=f"```\n{total_gross:.2f}\n```", inline=True)
+            embed.add_field(name="Total Cut", value=f"```\n{total_cut_sum:.2f}\n```", inline=True)
 
-            # todo remove =============================================
-            if display_entries: 
-                embed = None
-                if as_table:
-                    # Create table content
-                    embed = await self.create_table_embed(interaction, user_earnings)
-                else:
-                    # set embed to list format
-                    embed = await self.create_list_embed(interaction, user_earnings)
+            await interaction.followup.send(embed=embed, ephemeral=ephemeral)
+
+            if display_entries:
+                embed = discord.Embed(
+                    title=f"📊 Earnings {('Table' if display_entries and as_table else 'List')}",
+                    color=0x2ECC71,
+                    timestamp=interaction.created_at
+                )
+
+                embed = await self.create_table_embed(interaction, user_earnings, embed) if as_table \
+                    else await self.create_list_embed(interaction, user_earnings, embed)
                 
-                await interaction.followup.send(embed=embed, ephemeral=ephemeral) # todo remove
-            # todo remove =============================================
-
-
-            # if display_entries:
-            #     embed.add_field( #todo better view
-            #         name="\u200b",
-            #         value="=============================================",
-            #         inline=False
-            #     )
-            
-            #     # Add entries
-            #     for idx, entry in enumerate(user_earnings, start=1):
-            #         # Calculate additional fields
-            #         net_revenue = float(entry['gross_revenue']) * 0.8
-            #         total_cut_percent = (float(entry['total_cut']) / float(entry['gross_revenue'])) * 100
-                    
-            #         entry_text = (
-            #             f"**Date:** {entry['date']}\n"
-            #             # f"**Shift:** {entry['shift'].title()}\n"
-            #             f"**Role:** {entry['role']}\n"
-            #             # f"**Period:** {entry['period'].title()}\n"
-            #             f"**Gross Revenue:** ${float(entry['gross_revenue']):.2f}\n"
-            #             # f"**Net Revenue:** ${net_revenue:.2f} (80%)\n"
-            #             # f"**Bonus:** $0.00\n"  # Replace with actual bonus field if available
-            #             f"**Total Cut:** ${float(entry['total_cut']):.2f} ({total_cut_percent:.1f}% + Bonus)\n"
-            #             # f"**Models:** {entry['models'] or 'None'}"
-            #         )
-                    
-            #         embed.add_field(
-            #             name=f"#{idx}",
-            #             value=entry_text,
-            #             inline=False
-            #         )
-                    
-            #         # Add visual separator
-            #         embed.add_field(
-            #             name="\u200b",
-            #             value="▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
-            #             inline=False
-            #         )
-
-            # # Add totals
-            # total_gross = sum(float(e['gross_revenue']) for e in user_earnings)
-            # total_cut = sum(float(e['total_cut']) for e in user_earnings)
-            # embed.set_footer(text=f"Total Gross: ${total_gross:.2f} | Total Cut: ${total_cut:.2f}")
-
-            # # Handle export
-            # file = None
-            # if export != "none":
-            #     try:
-            #         file = await self.generate_export_file(user_earnings, interaction.user, export)
-            #     except Exception as e:
-            #         await interaction.followup.send(f"❌ Export failed: {str(e)}")
-            #         return
-            
-            # # Get recipients
-            # recipients = []
-            # if send_to:
-            #     # Parse mentions from interaction data
-            #     resolved = interaction.data.get("resolved", {})
-            #     if resolved:
-            #         # Get mentioned users
-            #         users = [await self.bot.fetch_user(int(u)) for u in resolved.get("users", {})]
-            #         # Get mentioned roles
-            #         roles = [interaction.guild.get_role(int(r)) for r in resolved.get("roles", {})]
-                    
-            #         # Get all member IDs from mentioned roles
-            #         role_member_ids = {m.id for r in roles for m in r.members}
-                    
-            #         # Filter out users who are already in mentioned roles
-            #         filtered_users = [u for u in users if u.id not in role_member_ids]
-                    
-            #         recipients = filtered_users + roles
-
-            # # Send to recipients
-            # successful = []
-            # failed = []
-            # already_sent = set()  # Track sent user IDs to prevent duplicates
-            
-            # if recipients:
-            #     for recipient in recipients:
-            #         try:
-            #             if isinstance(recipient, (discord.User, discord.Member)):
-            #                 if recipient.id in already_sent:
-            #                     continue
-                                
-            #                 dm_channel = await recipient.create_dm()
-            #                 await dm_channel.send(embed=embed, file=file)
-            #                 successful.append(f"User: {recipient.mention}")
-            #                 already_sent.add(recipient.id)
-
-            #             elif isinstance(recipient, discord.Role):
-            #                 for member in recipient.members:
-            #                     if member.id in already_sent:
-            #                         continue
-                                    
-            #                     try:
-            #                         dm_channel = await member.create_dm()
-            #                         await dm_channel.send(embed=embed, file=file)
-            #                         successful.append(f"Role Member: {member.mention}")
-            #                         already_sent.add(member.id)
-            #                     except Exception as e:
-            #                         failed.append(f"{member.mention} ({str(e)})")
-            #         except Exception as e:
-            #             failed.append(f"{getattr(recipient, 'mention', str(recipient))} ({str(e)})")
+                await interaction.followup.send(embed=embed, ephemeral=ephemeral)
                 
-            #     result_msg = []
-            #     if successful:
-            #         result_msg.append("✅ Sent to:\n" + "\n".join(successful[:5]))
-            #         if len(successful) > 5:
-            #             result_msg.append(f"*...and {len(successful)-5} more*")
-            #     if failed:
-            #         result_msg.append("❌ Failed to send to:\n" + "\n".join(failed[:5]))
-            #         if len(failed) > 5:
-            #             result_msg.append(f"*...and {len(failed)-5} more*")
-                
-            #     await interaction.followup.send("\n\n".join(result_msg), ephemeral=True)
-            # else:
-            #     await interaction.followup.send(embed=embed, file=file)
-                
+            else:
+                pass
+
+            # Handle exports
+            file = None
+            if export != "none":
+                try:
+                    file = await self.generate_export_file(user_earnings, interaction.user, export)
+                except Exception as e:
+                    return await interaction.followup.send(f"❌ Export failed: {str(e)}", ephemeral=ephemeral)
+
+            if file:
+                await interaction.followup.send(file=file, ephemeral=ephemeral)
+
+            file = None
+            if export != "none":
+                try:
+                    file = await self.generate_export_file(user_earnings, interaction.user, export)
+                except Exception as e:
+                    return await interaction.followup.send(f"❌ Export failed: {str(e)}", ephemeral=ephemeral)
+
+            # Send to recipients
+            if send_to:
+                try:
+                    if file:
+                        await send_to.send(file=file)
+                    await send_to.send(embed=embed)
+                    if send_to_message:
+                        report_embed = discord.Embed(
+                            title="Report message",
+                            description=f"{send_to_message}"
+                        )
+                        await send_to.send(embed=report_embed)
+                        await interaction.followup.send(f"✅ Report message sent with content: ", embed=report_embed, ephemeral=ephemeral)
+                    await interaction.followup.send(f"✅ Report sent to {send_to.mention}", ephemeral=ephemeral)
+                except Exception as e:
+                    await interaction.followup.send(f"❌ Failed to send to {send_to.mention}: {str(e)}", ephemeral=ephemeral)
+            else:
+                if file:
+                    await interaction.followup.send(file=file, ephemeral=ephemeral)
+                # await interaction.followup.send(embed=embed, ephemeral=ephemeral) # todo check if this is needed if not remove
+
         except Exception as e:
-            print(f"view_earnings: Error: {e}")
-            await interaction.followup.send(f"❌ Error: {str(e)}", ephemeral=ephemeral)
+            logger.error(f"view_earnings error: {str(e)}")
+            await interaction.followup.send(f"❌ An error occurred: {str(e)}", ephemeral=ephemeral)
 
     @app_commands.command(
         name="view-earnings-admin",
