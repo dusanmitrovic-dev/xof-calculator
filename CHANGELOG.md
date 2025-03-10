@@ -4,7 +4,7 @@
 
 ## [0.112.0] - 2025-03-10
 ### Added
-- `view-earnings` command will now tag user to whom it sent DM
+- `view-earnings` command will now tag user to whom it sent DM.
 
 ## [0.111.0] - 2025-03-10
 ### Added
