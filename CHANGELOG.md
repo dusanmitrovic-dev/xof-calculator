@@ -169,10 +169,10 @@
 
 ## [0.81.0] - 2025-03-08
 ### Added
-- `range_from` and `range_to` parameters
-- send_to: that will send report to the user DM
-- new export formats for `view-earnings-table`
-- new command `view-earnings-table`
+- `range_from` and `range_to` parameters,
+- send_to: that will send report to the user DM,
+- new export formats for `view-earnings-table`,
+- new command `view-earnings-table`.
 
 ## [0.80.2] - 2025-03-08
 ### Fixed
