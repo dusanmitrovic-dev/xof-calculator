@@ -1171,6 +1171,8 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             # Send to recipients
             if send_to:
                 try:
+                    await send_to.send(f"{send_to.mention}")
+                    
                     if file:
                         await send_to.send(file=file)
                     await send_to.send(embed=embed)

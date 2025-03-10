@@ -318,7 +318,8 @@
 - [x] (v0.109.0) Merge `view-earnings` and `view-earnings-table`
 - [x] (v0.109.0) `send_to_message` add to `view-earnings` command
 - [x] (v0.110.0) Add `user` parameter to `view-earnings`
-- [x] (v0.111.0) add sent by field in report message sent to the `sent_to` user in `view-earnings` command
+- [x] (v0.111.0) Add sent by field in report message sent to the `sent_to` user in `view-earnings` command
+- [x] (v0.112.0) `view-earnings` command should tag user to whom it sent DM
 - [ ] Add who sent the `send_to_message`
 - [ ] Display hourly cut in employee cut?
 - [ ] Add functionality to select column names to display in `view-earnings`
