@@ -872,7 +872,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                 if file:
                     await interaction.followup.send(file=file, ephemeral=ephemeral)
                 # await interaction.followup.send(embed=embed, ephemeral=ephemeral) # todo check if this is needed if not remove
-
         except Exception as e:
             logger.error(f"view_earnings error: {str(e)}")
             await interaction.followup.send(f"❌ An error occurred: {str(e)}", ephemeral=ephemeral)
