@@ -886,10 +886,24 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             if send_to:
                 await self.send_to_users_and_roles(interaction, send_to, send_to_message, file, embed)
 
-        except Exception as e:
-            logger.error(f"view_earnings error: {str(e)}")
-            await interaction.followup.send(f"❌ An error occurred: {str(e)}", ephemeral=ephemeral)
-
+                    if file:
+                        await send_to.send(file=file)
+                    await send_to.send(embed=embed)
+                    if send_to_message:
+                        report_embed = discord.Embed(
+                            title="Report message",
+                            description=f"{send_to_message}"
+                        )
+                        report_embed.add_field(name="Sent by", value=interaction.user.mention, inline=False)
+                        await send_to.send(embed=report_embed)
+                        await interaction.followup.send(f"✅ Report message sent with content: ", embed=report_embed, ephemeral=ephemeral)
+                    await interaction.followup.send(f"✅ Report sent to {send_to.mention}", ephemeral=ephemeral)
+                except Exception as e:
+                    await interaction.followup.send(f"❌ Failed to send to {send_to.mention}: {str(e)}", ephemeral=ephemeral)
+            else:
+                if file:
+                    await interaction.followup.send(file=file, ephemeral=ephemeral)
+                # await interaction.followup.send(embed=embed, ephemeral=ephemeral) # todo check if this is needed if not remove
         except Exception as e:
             logger.error(f"view_earnings error: {str(e)}")
             await interaction.followup.send(f"❌ An error occurred: {str(e)}", ephemeral=ephemeral)

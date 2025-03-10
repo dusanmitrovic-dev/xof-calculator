@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.114.0] - 2025-03-10
+### Rollback
+- Reverting project to `v0.113.0` state
+
 ## [0.113.0] - 2025-03-10
 ### Removed
 - Removed deprecated methods:
