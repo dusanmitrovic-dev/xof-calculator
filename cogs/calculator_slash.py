@@ -16,7 +16,7 @@ from discord.ext import commands
 from utils import file_handlers
 from reportlab.lib import colors
 from discord import ui, app_commands
-from typing import Optional, List, Dict
+from typing import Union, Optional, List, Dict
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 from utils import file_handlers, validators, calculations
@@ -705,7 +705,50 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
 
         return embed
 
+    async def send_to_users_and_roles(
+        self,
+        interaction: discord.Interaction,
+        send_to: Optional[Union[discord.User, discord.Role, List[Union[discord.User, discord.Role]]]],
+        send_to_message: Optional[str] = None,
+        file: Optional[discord.File] = None,
+        embed: Optional[discord.Embed] = None
+    ):
+        """Send a message to specified users and roles, prioritizing users and avoiding duplicates."""
+        if not send_to:
+            return
+
+        # Ensure send_to is a list for uniform processing
+        if not isinstance(send_to, list):
+            send_to = [send_to]
+
+        # Collect unique users, prioritizing direct mentions
+        unique_users = set()
+        for target in send_to:
+            if isinstance(target, (discord.User, discord.Member)):
+                unique_users.add(target.id)
+            elif isinstance(target, discord.Role):
+                for member in target.members:
+                    unique_users.add(member.id)
+
+        # Send messages to each unique user
+        for user_id in unique_users:
+            user = interaction.guild.get_member(user_id)
+            if user:
+                try:
+                    await user.send(send_to_message or "Here is your earnings report.")
+                    if file:
+                        await user.send(file=file)
+                    if embed:
+                        await user.send(embed=embed)
+                except discord.Forbidden:
+                    await interaction.followup.send(f"❌ Could not send a message to {user.mention}. They may have DMs disabled.", ephemeral=True)
+                except Exception as e:
+                    await interaction.followup.send(f"❌ Failed to send a message to {user.mention}: {str(e)}", ephemeral=True)
+
+        await interaction.followup.send("✅ Messages sent successfully.", ephemeral=True)
+
     # Command implementation
+      # Command implementation
     @app_commands.command(
         name="view-earnings",
         description="View your earnings"
@@ -741,7 +784,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         export: Optional[str] = "none",
         display_entries: Optional[bool] = False,
         as_table: Optional[bool] = False,
-        send_to: Optional[discord.User] = None,
+        send_to: Optional[Union[discord.User, discord.Role, List[Union[discord.User, discord.Role]]]] = None,
         range_from: Optional[str] = None,
         range_to: Optional[str] = None,
         send_to_message: Optional[str] = None
@@ -839,20 +882,9 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                 except Exception as e:
                     return await interaction.followup.send(f"❌ Export failed: {str(e)}", ephemeral=ephemeral)
 
-            if file:
-                await interaction.followup.send(file=file, ephemeral=ephemeral)
-
-            file = None
-            if export != "none":
-                try:
-                    file = await self.generate_export_file(user_earnings, interaction.user, export)
-                except Exception as e:
-                    return await interaction.followup.send(f"❌ Export failed: {str(e)}", ephemeral=ephemeral)
-
             # Send to recipients
             if send_to:
-                try:
-                    await send_to.send(f"{send_to.mention}")
+                await self.send_to_users_and_roles(interaction, send_to, send_to_message, file, embed)
 
                     if file:
                         await send_to.send(file=file)

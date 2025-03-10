@@ -7,8 +7,11 @@
 - Reverting project to `v0.113.0` state
 
 ## [0.113.0] - 2025-03-10
-### Added
-- `view-earnings` command will now tag user to whom it sent DM.
+### Removed
+- Removed deprecated methods:
+    - `view-earnings-table`,
+    - `view-earnings-table-admin`,
+    - `view-earnings-admin`.
 
 ## [0.112.0] - 2025-03-10
 ### Added
@@ -24,9 +27,9 @@
 
 ## [0.109.0] - 2025-03-10
 ### Changed
-- Second stage of merging `view-earnings` and `view-earnings-table`
-- View earnings is now working independently
-- `send_to_message` command parameter added
+- Second stage of merging `view-earnings` and `view-earnings-table`,
+- View earnings is now working independently,
+- `send_to_message` command parameter added.
 
 ## [0.107.0] - 2025-03-10
 ### Changed
@@ -159,9 +162,9 @@
 
 ## [0.83.0] - 2025-03-08
 ### Added
-- Added `range_from` and `range_to` parameters for filtering earnings by date.
-- Implemented `send_to` functionality to send reports via DM to users/roles.
-- Improved earnings display with separators and additional fields.
+- Added `range_from` and `range_to` parameters for filtering earnings by date,
+- Implemented `send_to` functionality to send reports via DM to users/roles,
+- Improved earnings display with separators and additional fields,
 - Enhanced export handling with better error messages.
 
 ## [0.82.0] - 2025-03-08
@@ -170,10 +173,10 @@
 
 ## [0.81.0] - 2025-03-08
 ### Added
-- `range_from` and `range_to` parameters
-- send_to: that will send report to the user DM
-- new export formats for `view-earnings-table`
-- new command `view-earnings-table`
+- `range_from` and `range_to` parameters,
+- send_to: that will send report to the user DM,
+- new export formats for `view-earnings-table`,
+- new command `view-earnings-table`.
 
 ## [0.80.2] - 2025-03-08
 ### Fixed
@@ -181,9 +184,9 @@
 
 ## [0.80.1] - 2025-03-07
 ### Fixed
-Fix bug where view-earnings command did not display
+- Fix bug where view-earnings command did not display:
 
-Resolved issue where both `view-earnings` and `view-earnings-table` had the same method name, 
+Resolved issue where both `view-earnings` and `view-earnings-table` had the same method name
 causing the `/view-earnings` command to not register.
 This bug was introduced while adding the `/view-earnings-table` feature.
 
