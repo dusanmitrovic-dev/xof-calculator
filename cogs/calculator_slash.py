@@ -748,6 +748,34 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         await interaction.followup.send("✅ Messages sent successfully.", ephemeral=True)
 
     # Command implementation
+      # Command implementation
+    @app_commands.command(
+        name="view-earnings",
+        description="View your earnings"
+    )
+    @app_commands.describe(
+        user="[Admin] The user whose earnings you want to view",
+        entries=f"Number of entries to return (max {MAX_ENTRIES})",
+        export="Export format",
+        display_entries="Whether entries will be displayed or not",
+        as_table="Display earnings in a table format",
+        send_to="User to send the report to",
+        range_from="Starting date (dd/mm/yyyy)",
+        range_to="Ending date (dd/mm/yyyy)",
+        send_to_message="Message to send to the selected users or roles"
+    )
+    @app_commands.choices(
+        export=[
+            app_commands.Choice(name="None", value="none"),
+            app_commands.Choice(name="Text File", value="txt"),
+            app_commands.Choice(name="CSV", value="csv"),
+            app_commands.Choice(name="JSON", value="json"),
+            app_commands.Choice(name="Excel", value="xlsx"),
+            app_commands.Choice(name="PDF", value="pdf"),
+            app_commands.Choice(name="PNG Chart", value="png"),
+            app_commands.Choice(name="ZIP Archive", value="zip")
+        ]
+    )
     async def view_earnings(
         self,
         interaction: discord.Interaction,
