@@ -180,9 +180,9 @@
 
 ## [0.80.1] - 2025-03-07
 ### Fixed
-Fix bug where view-earnings command did not display:
+- Fix bug where view-earnings command did not display:
 
-Resolved issue where both `view-earnings` and `view-earnings-table` had the same method name, 
+Resolved issue where both `view-earnings` and `view-earnings-table` had the same method name
 causing the `/view-earnings` command to not register.
 This bug was introduced while adding the `/view-earnings-table` feature.
 
