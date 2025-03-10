@@ -16,7 +16,7 @@ from discord.ext import commands
 from utils import file_handlers
 from reportlab.lib import colors
 from discord import ui, app_commands
-from typing import Optional, List, Dict
+from typing import Union, Optional, List, Dict
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 from utils import file_handlers, validators, calculations
@@ -705,34 +705,49 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
 
         return embed
 
+    async def send_to_users_and_roles(
+        self,
+        interaction: discord.Interaction,
+        send_to: Optional[Union[discord.User, discord.Role, List[Union[discord.User, discord.Role]]]],
+        send_to_message: Optional[str] = None,
+        file: Optional[discord.File] = None,
+        embed: Optional[discord.Embed] = None
+    ):
+        """Send a message to specified users and roles, prioritizing users and avoiding duplicates."""
+        if not send_to:
+            return
+
+        # Ensure send_to is a list for uniform processing
+        if not isinstance(send_to, list):
+            send_to = [send_to]
+
+        # Collect unique users, prioritizing direct mentions
+        unique_users = set()
+        for target in send_to:
+            if isinstance(target, (discord.User, discord.Member)):
+                unique_users.add(target.id)
+            elif isinstance(target, discord.Role):
+                for member in target.members:
+                    unique_users.add(member.id)
+
+        # Send messages to each unique user
+        for user_id in unique_users:
+            user = interaction.guild.get_member(user_id)
+            if user:
+                try:
+                    await user.send(send_to_message or "Here is your earnings report.")
+                    if file:
+                        await user.send(file=file)
+                    if embed:
+                        await user.send(embed=embed)
+                except discord.Forbidden:
+                    await interaction.followup.send(f"❌ Could not send a message to {user.mention}. They may have DMs disabled.", ephemeral=True)
+                except Exception as e:
+                    await interaction.followup.send(f"❌ Failed to send a message to {user.mention}: {str(e)}", ephemeral=True)
+
+        await interaction.followup.send("✅ Messages sent successfully.", ephemeral=True)
+
     # Command implementation
-    @app_commands.command(
-        name="view-earnings",
-        description="View your earnings"
-    )
-    @app_commands.describe(
-        user="[Admin] The user whose earnings you want to view",
-        entries=f"Number of entries to return (max {MAX_ENTRIES})",
-        export="Export format",
-        display_entries="Whether entries will be displayed or not",
-        as_table="Display earnings in a table format",
-        send_to="User to send the report to",
-        range_from="Starting date (dd/mm/yyyy)",
-        range_to="Ending date (dd/mm/yyyy)",
-        send_to_message="Message to send to the selected users or roles"
-    )
-    @app_commands.choices(
-        export=[
-            app_commands.Choice(name="None", value="none"),
-            app_commands.Choice(name="Text File", value="txt"),
-            app_commands.Choice(name="CSV", value="csv"),
-            app_commands.Choice(name="JSON", value="json"),
-            app_commands.Choice(name="Excel", value="xlsx"),
-            app_commands.Choice(name="PDF", value="pdf"),
-            app_commands.Choice(name="PNG Chart", value="png"),
-            app_commands.Choice(name="ZIP Archive", value="zip")
-        ]
-    )
     async def view_earnings(
         self,
         interaction: discord.Interaction,
@@ -741,7 +756,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         export: Optional[str] = "none",
         display_entries: Optional[bool] = False,
         as_table: Optional[bool] = False,
-        send_to: Optional[discord.User] = None,
+        send_to: Optional[Union[discord.User, discord.Role, List[Union[discord.User, discord.Role]]]] = None,
         range_from: Optional[str] = None,
         range_to: Optional[str] = None,
         send_to_message: Optional[str] = None
@@ -839,39 +854,13 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                 except Exception as e:
                     return await interaction.followup.send(f"❌ Export failed: {str(e)}", ephemeral=ephemeral)
 
-            if file:
-                await interaction.followup.send(file=file, ephemeral=ephemeral)
-
-            file = None
-            if export != "none":
-                try:
-                    file = await self.generate_export_file(user_earnings, interaction.user, export)
-                except Exception as e:
-                    return await interaction.followup.send(f"❌ Export failed: {str(e)}", ephemeral=ephemeral)
-
             # Send to recipients
             if send_to:
-                try:
-                    await send_to.send(f"{send_to.mention}")
+                await self.send_to_users_and_roles(interaction, send_to, send_to_message, file, embed)
 
-                    if file:
-                        await send_to.send(file=file)
-                    await send_to.send(embed=embed)
-                    if send_to_message:
-                        report_embed = discord.Embed(
-                            title="Report message",
-                            description=f"{send_to_message}"
-                        )
-                        report_embed.add_field(name="Sent by", value=interaction.user.mention, inline=False)
-                        await send_to.send(embed=report_embed)
-                        await interaction.followup.send(f"✅ Report message sent with content: ", embed=report_embed, ephemeral=ephemeral)
-                    await interaction.followup.send(f"✅ Report sent to {send_to.mention}", ephemeral=ephemeral)
-                except Exception as e:
-                    await interaction.followup.send(f"❌ Failed to send to {send_to.mention}: {str(e)}", ephemeral=ephemeral)
-            else:
-                if file:
-                    await interaction.followup.send(file=file, ephemeral=ephemeral)
-                # await interaction.followup.send(embed=embed, ephemeral=ephemeral) # todo check if this is needed if not remove
+        except Exception as e:
+            logger.error(f"view_earnings error: {str(e)}")
+            await interaction.followup.send(f"❌ An error occurred: {str(e)}", ephemeral=ephemeral)
 
         except Exception as e:
             logger.error(f"view_earnings error: {str(e)}")
