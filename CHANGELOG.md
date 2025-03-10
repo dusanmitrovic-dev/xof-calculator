@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.107.0] - 2025-03-09
+### Changed
+- First stage of merging `view-earnings` and `view-earnings-table`.
+
 ## [0.106.0] - 2025-03-09
 ### Changed
 - Command `calculate workflow` now fully supports ephemeral logic.
