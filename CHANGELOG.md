@@ -12,7 +12,7 @@
 
 ## [0.121.0] - 2025-03-11
 ### Changed
-- Direct mentions now include username
+- Direct mentions now include username.
 
 ## [0.120.0] - 2025-03-11
 ### Changed
