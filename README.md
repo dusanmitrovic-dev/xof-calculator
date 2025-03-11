@@ -328,6 +328,9 @@
 - [x] (v0.116.0) DM-ed users first receive table then file
 - [x] (v0.117.0) Add functional success count to `view-earnings` `send_to` statistic
 - [x] (v0.118.0) correctly display report message sent
+- [x] (v0.119.0) Fix sending files to each send_to included user
+- [ ] Earnings Report Delivery Summary
+    - [ ] Add Successfully delivered to: @User (username)
 - [ ] Add who sent the `send_to_message`
 - [ ] Display hourly cut in employee cut?
 - [ ] Add functionality to select column names to display in `view-earnings`

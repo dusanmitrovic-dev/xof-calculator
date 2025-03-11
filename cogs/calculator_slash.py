@@ -959,18 +959,16 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             if export != "none":
                 try:
                     file = await self.generate_export_file(user_earnings, interaction.user, export)
+
+                    # # Create a copy of the file before sending # todo: remove
+                    # copy_buffer = io.BytesIO(file.fp.read())
+                    # file.fp.seek(0)  # Reset original file pointer
+
                 except Exception as e:
                     return await interaction.followup.send(f"❌ Export failed: {str(e)}", ephemeral=ephemeral)
 
             if file:
                 await interaction.followup.send(file=file, ephemeral=ephemeral)
-
-            file = None
-            if export != "none":
-                try:
-                    file = await self.generate_export_file(user_earnings, interaction.user, export)
-                except Exception as e:
-                    return await interaction.followup.send(f"❌ Export failed: {str(e)}", ephemeral=ephemeral)
 
             if send_to:
                 mentioned_users, mentioned_roles = self.parse_mentions(send_to, interaction.guild)
@@ -1013,9 +1011,18 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                     try:
                         await recipient.send(f"{recipient.mention}")
 
+                        file = None
+                        if export != "none":
+                            try:
+                                file = await self.generate_export_file(user_earnings, interaction.user, export)
+                            except Exception as e:
+                                return await interaction.followup.send(f"❌ Export failed: {str(e)}", ephemeral=ephemeral)
+                        
                         await recipient.send(embed=embed)
+
                         if file:
                             await recipient.send(file=file)
+
                         if send_to_message:
                             report__message_embed = discord.Embed(
                                 title="Report message",
