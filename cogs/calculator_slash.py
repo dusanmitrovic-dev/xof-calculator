@@ -792,8 +792,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         
         # Footer with context
         embed.set_footer(
-            text=f"Requested by {interaction.user.display_name} | " +
-                 "Note: Only members with visible roles will receive messages",
+            text=f"Requested by {interaction.user.display_name} ({interaction.user.name})\n",
             icon_url=interaction.user.display_avatar.url
         )
         

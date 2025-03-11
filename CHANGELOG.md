@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.120.0] - 2025-03-11
+### Changed
+- Changed footer for earnings report delivery summary
+
 ## [0.119.0] - 2025-03-11
 ### Fixed
 - Successfully sending files to each send_to included user
