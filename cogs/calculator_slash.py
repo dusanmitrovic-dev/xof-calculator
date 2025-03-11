@@ -706,7 +706,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
 
         return embed
 
-    # Added helper method to parse mentions
+    @staticmethod
     def parse_mentions(self, send_to_str: str, guild: discord.Guild) -> tuple[list[discord.Member], list[discord.Role]]:
         """Parse user and role mentions from a string"""
         user_mentions = []
@@ -873,105 +873,97 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                 except Exception as e:
                     return await interaction.followup.send(f"❌ Export failed: {str(e)}", ephemeral=ephemeral)
 
-            # # Send to recipients # todo remove
-            # if send_to:
-            #     try:
-            #         await send_to.send(f"{send_to.mention}")
-
-            #         if file:
-            #             await send_to.send(file=file)
-            #         await send_to.send(embed=embed)
-            #         if send_to_message:
-            #             report_embed = discord.Embed(
-            #                 title="Report message",
-            #                 description=f"{send_to_message}"
-            #             )
-            #             report_embed.add_field(name="Sent by", value=interaction.user.mention, inline=False)
-            #             await send_to.send(embed=report_embed)
-            #             await interaction.followup.send(f"✅ Report message sent with content: ", embed=report_embed, ephemeral=ephemeral)
-            #         await interaction.followup.send(f"✅ Report sent to {send_to.mention}", ephemeral=ephemeral)
-            #     except Exception as e:
-            #         await interaction.followup.send(f"❌ Failed to send to {send_to.mention}: {str(e)}", ephemeral=ephemeral)
-            # else:
-            #     if file:
-            #         await interaction.followup.send(file=file, ephemeral=ephemeral)
-                # await interaction.followup.send(embed=embed, ephemeral=ephemeral) # todo check if this is needed if not remove
+            success_count = 0
 
             # Modified send_to handling
             if send_to:
                 try:
-                    mentioned_users, mentioned_roles = self.parse_mentions(send_to, interaction.guild)
+                    # [Keep the existing recipient collection logic...]
+
+                    # After sending attempts, build an embed report
+                    report_embed = discord.Embed(
+                        title="📬 Earnings Report Delivery Summary",
+                        color=0x2ECC71 if success_count > 0 else 0xE74C3C,
+                        timestamp=interaction.created_at
+                    )
                     
-                    # Collect unique recipients
-                    recipients = []
-                    seen = set()
-                    
-                    # Add directly mentioned users first
-                    for user in mentioned_users:
-                        if user.id not in seen:
-                            recipients.append(user)
-                            seen.add(user.id)
-                    
-                    # Add role members excluding already mentioned users
-                    for role in mentioned_roles:
-                        for member in role.members:
-                            if member.id not in seen:
-                                recipients.append(member)
-                                seen.add(member.id)
-                    
-                    success_count = 0
-                    failures = []
-                    
-                    # Send to all recipients
-                    for recipient in recipients:
-                        try:
-                            # Send base message
-                            await recipient.send(f"📊 Earnings report from {interaction.user.mention}:")
-                            
-                            # Send embed
-                            await recipient.send(embed=embed)
-                            
-                            # Send file if exists
-                            if file:
-                                await recipient.send(file=file)
-                            
-                            # Send additional message
-                            if send_to_message:
-                                report_embed = discord.Embed(
-                                    title="Message from Sender",
-                                    description=send_to_message,
-                                    color=discord.Color.blue()
-                                )
-                                report_embed.set_author(
-                                    name=interaction.user.display_name,
-                                    icon_url=interaction.user.display_avatar.url
-                                )
-                                await recipient.send(embed=report_embed)
-                            
-                            success_count += 1
-                        except discord.Forbidden:
-                            failures.append(f"{recipient.mention} (Blocked DMs)")
-                        except Exception as e:
-                            failures.append(f"{recipient.mention} ({str(e)})")
-                    
-                    # Build confirmation message
-                    confirmation_parts = []
+                    # Targets Section
+                    targets_description = []
                     if mentioned_users:
-                        confirmation_parts.append(f"users: {', '.join(u.mention for u in mentioned_users)}")
+                        targets_description.append("**👤 Direct Mentions:**\n" + "\n".join(
+                            f"- {user.mention}" for user in mentioned_users[:5]
+                        ))
+                        if len(mentioned_users) > 5:
+                            targets_description.append(f"*(+ {len(mentioned_users)-5} more users)*")
+                    
                     if mentioned_roles:
-                        confirmation_parts.append(f"roles: {', '.join(r.mention for r in mentioned_roles)}")
+                        targets_description.append("\n**🎯 Role Targets:**")
+                        for role in mentioned_roles[:3]:
+                            members = [m for m in role.members if m.id in seen]
+                            targets_description.append(
+                                f"- {role.mention} ({len(members)}/{len(role.members)} members reached)"
+                            f" - {'🟢' if len(members) > 0 else '🔴'}"
+                            )
+                        if len(mentioned_roles) > 3:
+                            targets_description.append(f"*(+ {len(mentioned_roles)-3} more roles)*")
                     
-                    confirmation_msg = "✅ Report sent to "
-                    if confirmation_parts:
-                        confirmation_msg += " ".join(confirmation_parts) + f" - Reached {success_count} recipients"
-                    else:
-                        confirmation_msg += "0 recipients"
-                    
+                    report_embed.add_field(
+                        name="Targets",
+                        value="\n".join(targets_description) if targets_description else "No valid targets found",
+                        inline=False
+                    )
+
+                    # Statistics Section
+                    stats = [
+                        f"• Total Attempted: **{len(recipients)}**",
+                        f"• Successful Deliveries: **{success_count}** 🟢",
+                        f"• Failed Attempts: **{len(failures)}** 🔴",
+                        f"• File Attached: {'✅' if file else '❌'}"
+                    ]
+                    report_embed.add_field(
+                        name="Delivery Statistics",
+                        value="\n".join(stats),
+                        inline=False
+                    )
+
+                    # Failure Details (if any)
                     if failures:
-                        confirmation_msg += f"\n❌ Failed to send to {len(failures)}: {', '.join(failures[:5])}" + \
-                                        ("..." if len(failures) > 5 else "")
-                    
-                    await interaction.followup.send(confirmation_msg, ephemeral=ephemeral)
+                        failure_list = []
+                        for i, failure in enumerate(failures[:5], 1):
+                            parts = failure.split(" (")
+                            failure_list.append(
+                                f"{i}. {parts[0]} `({parts[1].rstrip(')')})`"
+                            )
+                        
+                        report_embed.add_field(
+                            name="Top Failures",
+                            value="\n".join(failure_list) + 
+                            (f"\n... *(+{len(failures)-5} more)*" if len(failures) > 5 else ""),
+                            inline=False
+                        )
+
+                    # Footer with contextual info
+                    report_embed.set_footer(
+                        text=f"Requested by {interaction.user.display_name} | " +
+                             "Note: Role targets include all members, even those offline",
+                        icon_url=interaction.user.display_avatar.url
+                    )
+
+                    # Create components for follow-up
+                    view = discord.ui.View()
+                    if failures:
+                        view.add_item(discord.ui.Button(
+                            style=discord.ButtonStyle.danger,
+                            label="Download Failure List",
+                            custom_id="failure_list",
+                            disabled=True  # You'd implement actual export logic
+                        ))
+
+                    await interaction.followup.send(
+                        embed=report_embed,
+                        view=view,
+                        ephemeral=ephemeral
+                    )
 
                 except Exception as e:
                     await interaction.followup.send(
