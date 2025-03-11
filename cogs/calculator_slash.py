@@ -297,7 +297,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                                 # Add a summary sheet
                                 summary = pd.DataFrame({
                                     'Metric': ['Total Gross Revenue', 'Total Earnings', 'Total Hours Worked', 
-                                            'Average Hourly Rate', 'Average Commission %'],
+                                            'Average Hourly', 'Average Commission %'],
                                     'Value': [
                                         f"${df['gross_revenue'].sum():.2f}", 
                                         f"${df['total_cut'].sum():.2f}",
@@ -349,7 +349,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                                 ["Total Gross Revenue", f"${df['gross_revenue'].sum():.2f}"],
                                 ["Total Earnings", f"${df['total_cut'].sum():.2f}"],
                                 ["Total Hours Worked", f"{df['hours_worked'].sum():.1f}"],
-                                ["Average Hourly Rate", f"${df['total_cut'].sum() / df['hours_worked'].sum():.2f}"],
+                                ["Average Hourly", f"${df['total_cut'].sum() / df['hours_worked'].sum():.2f}"],
                                 ["Average Commission %", f"{(df['total_cut'].sum() / df['gross_revenue'].sum() * 100):.2f}%"],
                             ]
                             
@@ -370,7 +370,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                             elements.append(Paragraph("Detailed Earnings", subtitle_style))
                             
                             # Format data for the table
-                            data = [["#", "Date", "Role", "Shift", "Hours", "Gross Revenue", "Earnings", "Hourly Rate"]]
+                            data = [["#", "Date", "Role", "Shift", "Hours", "Gross Revenue", "Earnings", "Hourly"]]
                             for i, entry in enumerate(user_earnings, 1):
                                 hourly = float(entry['total_cut']) / float(entry['hours_worked']) if float(entry['hours_worked']) > 0 else 0
                                 data.append([
@@ -536,7 +536,8 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                                     <p class="summary-item"><strong>Total Gross Revenue:</strong> ${df['gross_revenue'].sum():.2f}</p>
                                     <p class="summary-item"><strong>Total Earnings:</strong> ${df['total_cut'].sum():.2f}</p>
                                     <p class="summary-item"><strong>Total Hours Worked:</strong> {df['hours_worked'].sum():.1f}</p>
-                                    <p class="summary-item"><strong>Average Hourly Rate:</strong> ${df['total_cut'].sum() / df['hours_worked'].sum():.2f}</p>
+                                    <p class="summary-item"><strong>Average Hourly:</strong> ${df['total_cut'].sum() / df['hours_worked'].sum():.2f}</p>
+                                    <p class="summary-item"><strong>Total Hourly:</strong> ${df['total_cut'].sum():.2f}</p>
                                     <p class="summary-item"><strong>Average Commission:</strong> {(df['total_cut'].sum() / df['gross_revenue'].sum() * 100):.2f}%</p>
                                 </div>
                                 
@@ -550,7 +551,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                                         <th>Hours</th>
                                         <th>Gross Revenue</th>
                                         <th>Earnings</th>
-                                        <th>Hourly Rate</th>
+                                        <th>Hourly</th>
                                     </tr>
                             """
                             
@@ -579,7 +580,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                                         <th>Role</th>
                                         <th>Total Earnings</th>
                                         <th>Hours Worked</th>
-                                        <th>Average Hourly Rate</th>
+                                        <th>Average Hourly</th>
                                         <th>Percentage of Total</th>
                                     </tr>
                             """
@@ -625,13 +626,13 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
     - **Total Gross Revenue:** ${df['gross_revenue'].sum():.2f}
     - **Total Earnings:** ${df['total_cut'].sum():.2f}
     - **Total Hours Worked:** {df['hours_worked'].sum():.1f}
-    - **Average Hourly Rate:** ${df['total_cut'].sum() / df['hours_worked'].sum():.2f}
+    - **Average Hourly:** ${df['total_cut'].sum() / df['hours_worked'].sum():.2f}
     - **Average Commission:** {(df['total_cut'].sum() / df['gross_revenue'].sum() * 100):.2f}%
 
     ## Detailed Earnings
 
-    | # | Date | Role | Shift | Hours | Gross Revenue | Earnings | Hourly Rate |
-    |---|------|------|-------|-------|--------------|----------|-------------|
+    | # | Date | Role | Shift | Hours | Gross Revenue | Earnings | Hourly |
+    |---|------|------|-------|-------|--------------|----------|--------|
     """
                             
                             # Add table rows
@@ -640,8 +641,8 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                                 md_content += f"| {i} | {entry['date']} | {entry['role']} | {entry['shift'].capitalize()} | {float(entry['hours_worked']):.1f} | ${float(entry['gross_revenue']):.2f} | ${float(entry['total_cut']):.2f} | ${hourly:.2f} |\n"
                             
                             md_content += "\n## Earnings by Role\n\n"
-                            md_content += "| Role | Total Earnings | Hours Worked | Average Hourly Rate | Percentage of Total |\n"
-                            md_content += "|------|---------------|--------------|---------------------|--------------------|\n"
+                            md_content += "| Role | Total Earnings | Hours Worked | Average Hourly | Percentage of Total |\n"
+                            md_content += "|------|---------------|--------------|----------------|--------------------|\n"
                             
                             # Add role summary rows
                             role_summary = df.groupby('role').agg({
@@ -672,7 +673,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                             text_content += f"Total Gross Revenue: ${df['gross_revenue'].sum():.2f}\n"
                             text_content += f"Total Earnings:      ${df['total_cut'].sum():.2f}\n"
                             text_content += f"Total Hours Worked:  {df['hours_worked'].sum():.1f}\n"
-                            text_content += f"Average Hourly Rate: ${df['total_cut'].sum() / df['hours_worked'].sum():.2f}\n"
+                            text_content += f"Average Hourly: ${df['total_cut'].sum() / df['hours_worked'].sum():.2f}\n"
                             text_content += f"Average Commission:  {(df['total_cut'].sum() / df['gross_revenue'].sum() * 100):.2f}%\n\n"
                             
                             # Detailed section
@@ -732,7 +733,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                 # Add a summary sheet
                 summary = pd.DataFrame({
                     'Metric': ['Total Gross Revenue', 'Total Earnings', 'Total Hours Worked', 
-                            'Average Hourly Rate', 'Average Commission %'],
+                            'Average Hourly', 'Average Commission %'],
                     'Value': [
                         f"${df['gross_revenue'].sum():.2f}", 
                         f"${df['total_cut'].sum():.2f}",
@@ -784,7 +785,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                 ["Total Gross Revenue", f"${df['gross_revenue'].sum():.2f}"],
                 ["Total Earnings", f"${df['total_cut'].sum():.2f}"],
                 ["Total Hours Worked", f"{df['hours_worked'].sum():.1f}"],
-                ["Average Hourly Rate", f"${df['total_cut'].sum() / df['hours_worked'].sum():.2f}"],
+                ["Average Hourly", f"${df['total_cut'].sum() / df['hours_worked'].sum():.2f}"],
                 ["Average Commission %", f"{(df['total_cut'].sum() / df['gross_revenue'].sum() * 100):.2f}%"],
             ]
             
