@@ -1025,6 +1025,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                             await interaction.followup.send(f"✅ Report message sent with content: ", embed=report_embed, ephemeral=ephemeral)
                         # await interaction.followup.send(f"✅ Report sent to {recipient.mention}", ephemeral=ephemeral) # todo: remove
                         # note: sent success logic
+                        success_count += 1
                     except discord.Forbidden:
                         failures.append(f"{recipient.mention} (Blocked DMs)")
                     except Exception as e:

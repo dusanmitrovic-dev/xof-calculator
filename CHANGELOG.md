@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.117.0] - 2025-03-11
+### Added
+- Functional success count to `view-earnings` `send_to` statistic.
+
 ## [0.116.0] - 2025-03-11
 ### Changed
 - DM-ed users first receive table then file

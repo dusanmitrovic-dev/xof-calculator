@@ -326,6 +326,7 @@
         - `view-earnings-admin`
 - [x] (v0.115.0) `send_to` argument of `view-earnings` command that sends to multiple users and roles
 - [x] (v0.116.0) DM-ed users first receive table then file
+- [x] (v0.117.0) Add functional success count to `view-earnings` `send_to` statistic
 - [ ] Add who sent the `send_to_message`
 - [ ] Display hourly cut in employee cut?
 - [ ] Add functionality to select column names to display in `view-earnings`
