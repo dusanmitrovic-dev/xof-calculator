@@ -20,7 +20,7 @@
 
 ## [0.119.0] - 2025-03-11
 ### Fixed
-- Successfully sending files to each send_to included user
+- Successfully sending files to each send_to included user.
 
 ## [0.118.0] - 2025-03-11
 ### Fixed
