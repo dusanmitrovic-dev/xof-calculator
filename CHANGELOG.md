@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.123.0] - 2025-03-11
+### Changed
+- New export types and updated existing ones
+
 ## [0.122.0] - 2025-03-11
 ### Changed
 - Now displaying successfully sent to user list

@@ -332,6 +332,7 @@
 - [x] (v0.120.0) Change footer for earnings report delivery summary
 - [x] (v0.121.0) Include username in direct mentions
 - [x] (v0.122.0) Display successfully sent to user list
+- [x] (v0.123.0) Add new export types and update existing ones
 - [ ] Earnings Report Delivery Summary
     - [ ] Add Successfully delivered to: @User (username)
 - [ ] Add who sent the `send_to_message`

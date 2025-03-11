@@ -1,26 +1,28 @@
-import os
-import re
-import io
-import json
-import logging
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
 import discord
 import asyncio
-import pandas as pd
-import matplotlib.pyplot as plt
-
 import zipfile
-from pathlib import Path
-from config import settings
-from decimal import Decimal
-from datetime import datetime
-from discord.ext import commands
-from utils import file_handlers
-from reportlab.lib import colors
-from discord import ui, app_commands
+import logging
+import json
+import io
+import re
+import os
+
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
+from utils import file_handlers, validators, calculations
+from reportlab.lib.styles import getSampleStyleSheet
 from typing import Union, Optional, List, Dict
 from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
-from utils import file_handlers, validators, calculations
+from discord import ui, app_commands
+from discord.ext import commands
+from reportlab.lib import colors
+from utils import file_handlers
+from datetime import datetime
+from decimal import Decimal
+from config import settings
+from pathlib import Path
 
 SUPPORTED_EXPORTS = ["none", "txt", "csv", "json", "xlsx", "pdf", "png", "zip"]
 MAX_ENTRIES = 50
@@ -94,75 +96,616 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         guild_settings = display_settings.get(str(guild_id), {})
         return guild_settings.get('ephemeral_responses', True)
 
+    # async def generate_export_file(self, user_earnings, user, export_format): # todo: remove
+    #     """Generate export file based on format choice"""
+    #     sanitized_name = Path(user.display_name).stem[:32].replace(" ", "_")
+    #     base_name = f"{sanitized_name}_earnings_{datetime.now().strftime('%d_%m_%Y')}"
+        
+    #     buffer = io.BytesIO()
+        
+    #     if export_format == "zip":
+    #         with zipfile.ZipFile(buffer, 'w') as zip_file:
+    #             formats = ['csv', 'json', 'xlsx', 'pdf', 'png', 'txt']
+                
+    #             fmt_buffer = None
+    #             for fmt in formats:
+    #                 fmt_buffer = io.BytesIO()
+                    
+    #                 try:
+    #                     if fmt == "csv":
+    #                         df = pd.DataFrame(user_earnings)
+    #                         df.to_csv(fmt_buffer, index=False)
+                        
+    #                     elif fmt == "json":
+    #                         fmt_buffer.write(json.dumps(user_earnings, indent=2).encode('utf-8'))
+                        
+    #                     elif fmt == "xlsx":
+    #                         df = pd.DataFrame(user_earnings)
+    #                         with pd.ExcelWriter(fmt_buffer, engine='openpyxl') as writer:
+    #                             df.to_excel(writer, index=False, sheet_name='Earnings')
+                        
+    #                     elif fmt == "pdf":
+    #                         # FIX: Use fmt_buffer instead of main buffer
+    #                         doc = SimpleDocTemplate(fmt_buffer, pagesize=letter)
+    #                         data = [["Date", "Role", "Gross", "Total Cut"]]
+    #                         data += [[
+    #                             entry['date'],
+    #                             entry['role'],
+    #                             f"${float(entry['gross_revenue']):.2f}",
+    #                             f"${float(entry['total_cut']):.2f}"
+    #                         ] for entry in user_earnings]
+                            
+    #                         table = Table(data)
+    #                         table.setStyle(TableStyle([
+    #                             ('BACKGROUND', (0,0), (-1,0), colors.grey),
+    #                             ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+    #                             ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+    #                             ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+    #                             ('BOTTOMPADDING', (0,0), (-1,0), 12),
+    #                             ('BACKGROUND', (0,1), (-1,-1), colors.beige),
+    #                             ('GRID', (0,0), (-1,-1), 1, colors.black)
+    #                         ]))
+    #                         doc.build([table])
+                        
+    #                     elif fmt == "png":
+    #                         # FIX: Use fmt_buffer instead of main buffer
+    #                         plt.figure(figsize=(10, 6))
+    #                         dates = [datetime.strptime(entry['date'], '%d/%m/%Y') for entry in user_earnings]
+    #                         plt.plot(dates, [float(e['gross_revenue']) for e in user_earnings], label='Gross Revenue')
+    #                         plt.plot(dates, [float(e['total_cut']) for e in user_earnings], label='Total Cut')
+    #                         plt.legend()
+    #                         plt.tight_layout()
+    #                         plt.savefig(fmt_buffer, format='png')
+    #                         plt.close()
+                        
+    #                     else:  # txt
+    #                         # FIX: Use fmt_buffer instead of main buffer
+    #                         text_content = f"Earnings Report for {user.display_name}\n\n"
+    #                         text_content += "\n".join(
+    #                             f"{entry['date']} | {entry['role']:9} | ${float(entry['gross_revenue']):8.2f} | ${float(entry['total_cut']):8.2f}"
+    #                             for entry in user_earnings
+    #                         )
+    #                         fmt_buffer.write(text_content.encode('utf-8'))
+                    
+    #                 finally:
+    #                     fmt_buffer.seek(0)
+    #                     zip_file.writestr(f"{base_name}.{fmt}", fmt_buffer.getvalue())
+    #                     fmt_buffer.close()
+
+    #         buffer.seek(0)
+    #         return discord.File(buffer, filename=f"{base_name}.zip")
+        
+    #     # Handle non-zip formats (original code remains unchanged)
+    #     elif export_format == "csv":
+    #         df = pd.DataFrame(user_earnings)
+    #         df.to_csv(buffer, index=False)
+        
+    #     elif export_format == "json":
+    #         buffer.write(json.dumps(user_earnings, indent=2).encode('utf-8'))
+        
+    #     elif export_format == "xlsx":
+    #         df = pd.DataFrame(user_earnings)
+    #         with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
+    #             df.to_excel(writer, index=False, sheet_name='Earnings')
+        
+    #     elif export_format == "pdf":
+    #         doc = SimpleDocTemplate(buffer, pagesize=letter)
+    #         data = [["Date", "Role", "Gross", "Total Cut"]]
+    #         data += [[
+    #             entry['date'],
+    #             entry['role'],
+    #             f"${float(entry['gross_revenue']):.2f}",
+    #             f"${float(entry['total_cut']):.2f}"
+    #         ] for entry in user_earnings]
+                            
+    #         table = Table(data)
+    #         table.setStyle(TableStyle([
+    #             ('BACKGROUND', (0,0), (-1,0), colors.grey),
+    #             ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+    #             ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+    #             ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+    #             ('BOTTOMPADDING', (0,0), (-1,0), 12),
+    #             ('BACKGROUND', (0,1), (-1,-1), colors.beige),
+    #             ('GRID', (0,0), (-1,-1), 1, colors.black)
+    #         ]))
+    #         doc.build([table])
+        
+    #     elif export_format == "png":
+    #         plt.figure(figsize=(10, 6))
+    #         dates = [datetime.strptime(entry['date'], '%d/%m/%Y') for entry in user_earnings]
+    #         plt.plot(dates, [float(e['gross_revenue']) for e in user_earnings], label='Gross Revenue')
+    #         plt.plot(dates, [float(e['total_cut']) for e in user_earnings], label='Total Cut')
+    #         plt.legend()
+    #         plt.tight_layout()
+    #         plt.savefig(buffer, format='png')
+    #         plt.close()
+        
+    #     else:  # txt
+    #         text_content = f"Earnings Report for {user.display_name}\n\n"
+    #         text_content += "\n".join(
+    #             f"{entry['date']} | {entry['role']:9} | ${float(entry['gross_revenue']):8.2f} | ${float(entry['total_cut']):8.2f}"
+    #             for entry in user_earnings
+    #         )
+    #         buffer.write(text_content.encode('utf-8'))
+
+    #     buffer.seek(0)
+    #     return discord.File(buffer, filename=f"{base_name}.{export_format}")
+    
+    def add_footer(self, canvas, doc, username):
+        canvas.saveState()
+        styles = getSampleStyleSheet()
+        
+        # Footer text
+        footer = Paragraph(
+            f"Generated by YourAppName for {username} | {datetime.now().strftime('%Y-%m-%d %H:%M')}",
+            styles['Normal']
+        )
+        
+        # Draw footer at bottom of page
+        w, h = footer.wrap(doc.width, doc.bottomMargin)
+        footer.drawOn(canvas, doc.leftMargin, h)
+        
+        canvas.restoreState()
+
     async def generate_export_file(self, user_earnings, user, export_format):
-        """Generate export file based on format choice"""
+        """
+        Generate export file based on format choice with improved visualizations and additional formats.
+        
+        Args:
+            user_earnings: List of dictionaries containing earnings data
+            user: User object with display_name attribute
+            export_format: String indicating the desired export format
+            
+        Returns:
+            discord.File: File object ready for Discord attachment
+        """
         sanitized_name = Path(user.display_name).stem[:32].replace(" ", "_")
         base_name = f"{sanitized_name}_earnings_{datetime.now().strftime('%d_%m_%Y')}"
         
         buffer = io.BytesIO()
         
+        # Convert earnings to DataFrame for easier manipulation
+        df = pd.DataFrame(user_earnings)
+        
+        # Calculate additional metrics if needed
+        if 'hours_worked' in df.columns and 'total_cut' in df.columns:
+            df['hourly_rate'] = df['total_cut'] / df['hours_worked']
+        
+        if 'gross_revenue' in df.columns and 'total_cut' in df.columns:
+            df['commission_percent'] = (df['total_cut'] / df['gross_revenue']) * 100
+        
         if export_format == "zip":
             with zipfile.ZipFile(buffer, 'w') as zip_file:
-                formats = ['csv', 'json', 'xlsx', 'pdf', 'png', 'txt']
+                formats = ['csv', 'json', 'xlsx', 'pdf', 'png', 'txt', 'html', 'markdown', 'svg']
                 
-                fmt_buffer = None
                 for fmt in formats:
                     fmt_buffer = io.BytesIO()
                     
                     try:
                         if fmt == "csv":
-                            df = pd.DataFrame(user_earnings)
                             df.to_csv(fmt_buffer, index=False)
                         
                         elif fmt == "json":
-                            fmt_buffer.write(json.dumps(user_earnings, indent=2).encode('utf-8'))
+                            # Use records orient for better readability
+                            json_data = df.to_json(orient='records', date_format='iso', indent=2)
+                            fmt_buffer.write(json_data.encode('utf-8'))
                         
                         elif fmt == "xlsx":
-                            df = pd.DataFrame(user_earnings)
                             with pd.ExcelWriter(fmt_buffer, engine='openpyxl') as writer:
                                 df.to_excel(writer, index=False, sheet_name='Earnings')
+                                
+                                # Add a summary sheet
+                                summary = pd.DataFrame({
+                                    'Metric': ['Total Gross Revenue', 'Total Earnings', 'Total Hours Worked', 
+                                            'Average Hourly Rate', 'Average Commission %'],
+                                    'Value': [
+                                        f"${df['gross_revenue'].sum():.2f}", 
+                                        f"${df['total_cut'].sum():.2f}",
+                                        f"{df['hours_worked'].sum():.1f}",
+                                        f"${df['total_cut'].sum() / df['hours_worked'].sum():.2f}",
+                                        f"{(df['total_cut'].sum() / df['gross_revenue'].sum() * 100):.2f}%"
+                                    ]
+                                })
+                                summary.to_excel(writer, index=False, sheet_name='Summary')
+                                
+                                # Add a pivot table by role
+                                if 'role' in df.columns:
+                                    pivot = pd.pivot_table(df, 
+                                                        values=['gross_revenue', 'total_cut', 'hours_worked'],
+                                                        index=['role'],
+                                                        aggfunc='sum')
+                                    pivot.to_excel(writer, sheet_name='By Role')
+                                
+                                # Add chart sheet for visualizations
+                                workbook = writer.book
+                                chart_sheet = workbook.create_sheet(title="Charts")
+                                
+                                # Apply styling and formatting
+                                for worksheet in writer.sheets.values():
+                                    for col in worksheet.columns:
+                                        max_length = 0
+                                        column = col[0].column_letter
+                                        for cell in col:
+                                            if cell.value:
+                                                max_length = max(max_length, len(str(cell.value)))
+                                        worksheet.column_dimensions[column].width = max_length + 2
                         
                         elif fmt == "pdf":
-                            # FIX: Use fmt_buffer instead of main buffer
                             doc = SimpleDocTemplate(fmt_buffer, pagesize=letter)
-                            data = [["Date", "Role", "Gross", "Total Cut"]]
-                            data += [[
-                                entry['date'],
-                                entry['role'],
-                                f"${float(entry['gross_revenue']):.2f}",
-                                f"${float(entry['total_cut']):.2f}"
-                            ] for entry in user_earnings]
+                            elements = []
                             
-                            table = Table(data)
-                            table.setStyle(TableStyle([
+                            # Add title
+                            styles = getSampleStyleSheet()
+                            title_style = styles["Title"]
+                            elements.append(Paragraph(f"Earnings Report for {user.display_name}", title_style))
+                            elements.append(Spacer(1, 12))
+                            
+                            # Add summary section
+                            subtitle_style = styles["Heading2"]
+                            elements.append(Paragraph("Summary", subtitle_style))
+                            
+                            summary_data = [
+                                ["Metric", "Value"],
+                                ["Total Gross Revenue", f"${df['gross_revenue'].sum():.2f}"],
+                                ["Total Earnings", f"${df['total_cut'].sum():.2f}"],
+                                ["Total Hours Worked", f"{df['hours_worked'].sum():.1f}"],
+                                ["Average Hourly Rate", f"${df['total_cut'].sum() / df['hours_worked'].sum():.2f}"],
+                                ["Average Commission %", f"{(df['total_cut'].sum() / df['gross_revenue'].sum() * 100):.2f}%"],
+                            ]
+                            
+                            summary_table = Table(summary_data, colWidths=[250, 150])
+                            summary_table.setStyle(TableStyle([
+                                ('BACKGROUND', (0,0), (1,0), colors.grey),
+                                ('TEXTCOLOR', (0,0), (1,0), colors.whitesmoke),
+                                ('ALIGN', (0,0), (1,-1), 'LEFT'),
+                                ('FONTNAME', (0,0), (1,0), 'Helvetica-Bold'),
+                                ('BOTTOMPADDING', (0,0), (1,0), 12),
+                                ('BACKGROUND', (0,1), (1,-1), colors.beige),
+                                ('GRID', (0,0), (1,-1), 1, colors.black)
+                            ]))
+                            elements.append(summary_table)
+                            elements.append(Spacer(1, 24))
+                            
+                            # Add detailed table
+                            elements.append(Paragraph("Detailed Earnings", subtitle_style))
+                            
+                            # Format data for the table
+                            data = [["#", "Date", "Role", "Shift", "Hours", "Gross Revenue", "Earnings", "Hourly Rate"]]
+                            for i, entry in enumerate(user_earnings, 1):
+                                hourly = float(entry['total_cut']) / float(entry['hours_worked']) if float(entry['hours_worked']) > 0 else 0
+                                data.append([
+                                    i,
+                                    entry['date'],
+                                    entry['role'],
+                                    entry['shift'].capitalize(),
+                                    f"{float(entry['hours_worked']):.1f}",
+                                    f"${float(entry['gross_revenue']):.2f}",
+                                    f"${float(entry['total_cut']):.2f}",
+                                    f"${hourly:.2f}"
+                                ])
+                            
+                            # Create the table
+                            detail_table = Table(data)
+                            detail_table.setStyle(TableStyle([
                                 ('BACKGROUND', (0,0), (-1,0), colors.grey),
                                 ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
                                 ('ALIGN', (0,0), (-1,-1), 'CENTER'),
                                 ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
                                 ('BOTTOMPADDING', (0,0), (-1,0), 12),
                                 ('BACKGROUND', (0,1), (-1,-1), colors.beige),
-                                ('GRID', (0,0), (-1,-1), 1, colors.black)
+                                ('GRID', (0,0), (-1,-1), 1, colors.black),
+                                # Align numeric columns right
+                                ('ALIGN', (4,1), (7,-1), 'RIGHT'),
                             ]))
-                            doc.build([table])
+                            elements.append(detail_table)
+                            elements.append(Spacer(1, 24))
+                            
+                            # Add charts
+                            elements.append(Paragraph("Earnings Visualization", subtitle_style))
+                            elements.append(Spacer(1, 12))
+                            
+                            # Generate and add chart as Image
+                            chart_buffer = io.BytesIO()
+                            plt.figure(figsize=(7, 4))
+                            dates = [datetime.strptime(entry['date'], '%d/%m/%Y') for entry in user_earnings]
+                            plt.plot(dates, [float(e['gross_revenue']) for e in user_earnings], 'b-', label='Gross Revenue')
+                            plt.plot(dates, [float(e['total_cut']) for e in user_earnings], 'r-', label='Earnings')
+                            plt.legend()
+                            plt.grid(True, linestyle='--', alpha=0.7)
+                            plt.title("Revenue vs Earnings Over Time")
+                            plt.tight_layout()
+                            plt.savefig(chart_buffer, format='png', dpi=150)
+                            plt.close()
+                            
+                            chart_buffer.seek(0)
+                            elements.append(Image(chart_buffer, width=450, height=250))
+                            
+                            # Add pie chart showing earnings by role
+                            elements.append(Spacer(1, 24))
+                            
+                            role_buffer = io.BytesIO()
+                            role_data = df.groupby('role')['total_cut'].sum()
+                            plt.figure(figsize=(7, 4))
+                            plt.pie(role_data, labels=role_data.index, autopct='%1.1f%%', 
+                                    shadow=True, startangle=90, colors=plt.cm.Paired(np.arange(len(role_data))/len(role_data)))
+                            plt.axis('equal')
+                            plt.title("Earnings by Role")
+                            plt.tight_layout()
+                            plt.savefig(role_buffer, format='png', dpi=150)
+                            plt.close()
+                            
+                            role_buffer.seek(0)
+                            elements.append(Image(role_buffer, width=400, height=300))
+                            
+                            # Build the PDF document
+                            doc.build(elements)
                         
                         elif fmt == "png":
-                            # FIX: Use fmt_buffer instead of main buffer
-                            plt.figure(figsize=(10, 6))
+                            # Create a more sophisticated visualization with multiple charts
+                            fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+                            
+                            # Plot 1: Line chart of revenue and earnings
                             dates = [datetime.strptime(entry['date'], '%d/%m/%Y') for entry in user_earnings]
-                            plt.plot(dates, [float(e['gross_revenue']) for e in user_earnings], label='Gross Revenue')
-                            plt.plot(dates, [float(e['total_cut']) for e in user_earnings], label='Total Cut')
-                            plt.legend()
-                            plt.tight_layout()
-                            plt.savefig(fmt_buffer, format='png')
-                            plt.close()
+                            axes[0, 0].plot(dates, [float(e['gross_revenue']) for e in user_earnings], 'b-o', label='Gross Revenue')
+                            axes[0, 0].plot(dates, [float(e['total_cut']) for e in user_earnings], 'r-o', label='Earnings')
+                            axes[0, 0].set_title('Revenue & Earnings Over Time')
+                            axes[0, 0].legend()
+                            axes[0, 0].grid(True, linestyle='--', alpha=0.7)
+                            
+                            # Plot 2: Bar chart comparing revenue and earnings by date
+                            x = np.arange(len(dates))
+                            width = 0.35
+                            date_labels = [d.strftime('%d/%m') for d in dates]
+                            axes[0, 1].bar(x - width/2, [float(e['gross_revenue']) for e in user_earnings], width, label='Gross Revenue')
+                            axes[0, 1].bar(x + width/2, [float(e['total_cut']) for e in user_earnings], width, label='Earnings')
+                            axes[0, 1].set_xticks(x)
+                            axes[0, 1].set_xticklabels(date_labels, rotation=45)
+                            axes[0, 1].set_title('Revenue & Earnings Comparison')
+                            axes[0, 1].legend()
+                            
+                            # Plot 3: Pie chart of earnings by role
+                            role_data = df.groupby('role')['total_cut'].sum()
+                            axes[1, 0].pie(role_data, labels=role_data.index, autopct='%1.1f%%', 
+                                        shadow=True, startangle=90, colors=plt.cm.Paired(np.arange(len(role_data))/len(role_data)))
+                            axes[1, 0].axis('equal')
+                            axes[1, 0].set_title('Earnings by Role')
+                            
+                            # Plot 4: Horizontal bar chart of hours worked by shift
+                            if 'shift' in df.columns and 'hours_worked' in df.columns:
+                                shift_data = df.groupby('shift')['hours_worked'].sum().sort_values(ascending=True)
+                                axes[1, 1].barh(shift_data.index, shift_data.values, color=plt.cm.Set3(np.arange(len(shift_data))/len(shift_data)))
+                                axes[1, 1].set_title('Hours Worked by Shift')
+                                axes[1, 1].set_xlabel('Hours')
+                            
+                            # Add a title to the overall figure
+                            fig.suptitle(f'Earnings Report for {user.display_name}', fontsize=16)
+                            fig.tight_layout(rect=[0, 0, 1, 0.95])
+                            
+                            plt.savefig(fmt_buffer, format='png', dpi=150)
+                            plt.close(fig)
+                        
+                        elif fmt == "svg":
+                            # Create SVG visualization
+                            fig, axes = plt.subplots(1, 2, figsize=(12, 6))
+                            
+                            # Plot 1: Line chart
+                            dates = [datetime.strptime(entry['date'], '%d/%m/%Y') for entry in user_earnings]
+                            axes[0].plot(dates, [float(e['gross_revenue']) for e in user_earnings], 'b-o', label='Gross Revenue')
+                            axes[0].plot(dates, [float(e['total_cut']) for e in user_earnings], 'r-o', label='Earnings')
+                            axes[0].set_title('Revenue & Earnings Over Time')
+                            axes[0].legend()
+                            axes[0].grid(True, linestyle='--', alpha=0.7)
+                            
+                            # Plot 2: Stacked bar chart by role
+                            role_data = df.pivot_table(index='date', columns='role', values='total_cut', aggfunc='sum').fillna(0)
+                            role_data.plot(kind='bar', stacked=True, ax=axes[1], colormap='viridis')
+                            axes[1].set_title('Earnings by Role')
+                            axes[1].legend(title='Role')
+                            
+                            fig.tight_layout()
+                            plt.savefig(fmt_buffer, format='svg')
+                            plt.close(fig)
+                        
+                        elif fmt == "html":
+                            # Create an interactive HTML report with tables and charts
+                            html_content = f"""
+                            <!DOCTYPE html>
+                            <html>
+                            <head>
+                                <title>Earnings Report for {user.display_name}</title>
+                                <style>
+                                    body {{ font-family: Arial, sans-serif; margin: 20px; }}
+                                    h1, h2 {{ color: #333366; }}
+                                    table {{ border-collapse: collapse; width: 100%; margin: 15px 0; }}
+                                    th, td {{ border: 1px solid #ddd; padding: 8px; text-align: left; }}
+                                    th {{ background-color: #333366; color: white; }}
+                                    tr:nth-child(even) {{ background-color: #f2f2f2; }}
+                                    .summary {{ background-color: #f8f8f8; padding: 15px; border-radius: 5px; margin-bottom: 20px; }}
+                                    .summary-item {{ margin: 5px 0; }}
+                                    .header {{ background-color: #333366; color: white; padding: 10px; border-radius: 5px; }}
+                                </style>
+                            </head>
+                            <body>
+                                <div class="header">
+                                    <h1>Earnings Report for {user.display_name}</h1>
+                                    <p>Generated on {datetime.now().strftime('%d/%m/%Y %H:%M')}</p>
+                                </div>
+                                
+                                <h2>Summary</h2>
+                                <div class="summary">
+                                    <p class="summary-item"><strong>Total Gross Revenue:</strong> ${df['gross_revenue'].sum():.2f}</p>
+                                    <p class="summary-item"><strong>Total Earnings:</strong> ${df['total_cut'].sum():.2f}</p>
+                                    <p class="summary-item"><strong>Total Hours Worked:</strong> {df['hours_worked'].sum():.1f}</p>
+                                    <p class="summary-item"><strong>Average Hourly Rate:</strong> ${df['total_cut'].sum() / df['hours_worked'].sum():.2f}</p>
+                                    <p class="summary-item"><strong>Average Commission:</strong> {(df['total_cut'].sum() / df['gross_revenue'].sum() * 100):.2f}%</p>
+                                </div>
+                                
+                                <h2>Detailed Earnings</h2>
+                                <table>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Date</th>
+                                        <th>Role</th>
+                                        <th>Shift</th>
+                                        <th>Hours</th>
+                                        <th>Gross Revenue</th>
+                                        <th>Earnings</th>
+                                        <th>Hourly Rate</th>
+                                    </tr>
+                            """
+                            
+                            # Add table rows
+                            for i, entry in enumerate(user_earnings, 1):
+                                hourly = float(entry['total_cut']) / float(entry['hours_worked']) if float(entry['hours_worked']) > 0 else 0
+                                html_content += f"""
+                                    <tr>
+                                        <td>{i}</td>
+                                        <td>{entry['date']}</td>
+                                        <td>{entry['role']}</td>
+                                        <td>{entry['shift'].capitalize()}</td>
+                                        <td>{float(entry['hours_worked']):.1f}</td>
+                                        <td>${float(entry['gross_revenue']):.2f}</td>
+                                        <td>${float(entry['total_cut']):.2f}</td>
+                                        <td>${hourly:.2f}</td>
+                                    </tr>
+                                """
+                            
+                            html_content += """
+                                </table>
+                                
+                                <h2>Earnings by Role</h2>
+                                <table>
+                                    <tr>
+                                        <th>Role</th>
+                                        <th>Total Earnings</th>
+                                        <th>Hours Worked</th>
+                                        <th>Average Hourly Rate</th>
+                                        <th>Percentage of Total</th>
+                                    </tr>
+                            """
+                            
+                            # Add role summary rows
+                            role_summary = df.groupby('role').agg({
+                                'total_cut': 'sum',
+                                'hours_worked': 'sum'
+                            }).reset_index()
+                            
+                            total_earnings = df['total_cut'].sum()
+                            
+                            for _, row in role_summary.iterrows():
+                                hourly = row['total_cut'] / row['hours_worked'] if row['hours_worked'] > 0 else 0
+                                percentage = (row['total_cut'] / total_earnings) * 100
+                                
+                                html_content += f"""
+                                    <tr>
+                                        <td>{row['role']}</td>
+                                        <td>${row['total_cut']:.2f}</td>
+                                        <td>{row['hours_worked']:.1f}</td>
+                                        <td>${hourly:.2f}</td>
+                                        <td>{percentage:.1f}%</td>
+                                    </tr>
+                                """
+                            
+                            html_content += """
+                                </table>
+                            </body>
+                            </html>
+                            """
+                            
+                            fmt_buffer.write(html_content.encode('utf-8'))
+                        
+                        elif fmt == "markdown":
+                            # Create a markdown report
+                            md_content = f"""# Earnings Report for {user.display_name}
+
+    Generated on {datetime.now().strftime('%d/%m/%Y %H:%M')}
+
+    ## Summary
+
+    - **Total Gross Revenue:** ${df['gross_revenue'].sum():.2f}
+    - **Total Earnings:** ${df['total_cut'].sum():.2f}
+    - **Total Hours Worked:** {df['hours_worked'].sum():.1f}
+    - **Average Hourly Rate:** ${df['total_cut'].sum() / df['hours_worked'].sum():.2f}
+    - **Average Commission:** {(df['total_cut'].sum() / df['gross_revenue'].sum() * 100):.2f}%
+
+    ## Detailed Earnings
+
+    | # | Date | Role | Shift | Hours | Gross Revenue | Earnings | Hourly Rate |
+    |---|------|------|-------|-------|--------------|----------|-------------|
+    """
+                            
+                            # Add table rows
+                            for i, entry in enumerate(user_earnings, 1):
+                                hourly = float(entry['total_cut']) / float(entry['hours_worked']) if float(entry['hours_worked']) > 0 else 0
+                                md_content += f"| {i} | {entry['date']} | {entry['role']} | {entry['shift'].capitalize()} | {float(entry['hours_worked']):.1f} | ${float(entry['gross_revenue']):.2f} | ${float(entry['total_cut']):.2f} | ${hourly:.2f} |\n"
+                            
+                            md_content += "\n## Earnings by Role\n\n"
+                            md_content += "| Role | Total Earnings | Hours Worked | Average Hourly Rate | Percentage of Total |\n"
+                            md_content += "|------|---------------|--------------|---------------------|--------------------|\n"
+                            
+                            # Add role summary rows
+                            role_summary = df.groupby('role').agg({
+                                'total_cut': 'sum',
+                                'hours_worked': 'sum'
+                            }).reset_index()
+                            
+                            total_earnings = df['total_cut'].sum()
+                            
+                            for _, row in role_summary.iterrows():
+                                hourly = row['total_cut'] / row['hours_worked'] if row['hours_worked'] > 0 else 0
+                                percentage = (row['total_cut'] / total_earnings) * 100
+                                
+                                md_content += f"| {row['role']} | ${row['total_cut']:.2f} | {row['hours_worked']:.1f} | ${hourly:.2f} | {percentage:.1f}% |\n"
+                            
+                            fmt_buffer.write(md_content.encode('utf-8'))
                         
                         else:  # txt
-                            # FIX: Use fmt_buffer instead of main buffer
-                            text_content = f"Earnings Report for {user.display_name}\n\n"
-                            text_content += "\n".join(
-                                f"{entry['date']} | {entry['role']:9} | ${float(entry['gross_revenue']):8.2f} | ${float(entry['total_cut']):8.2f}"
-                                for entry in user_earnings
-                            )
+                            # Create an improved text report with ASCII art charts
+                            text_content = f"============================================\n"
+                            text_content += f"   EARNINGS REPORT FOR {user.display_name.upper()}\n"
+                            text_content += f"   Generated on {datetime.now().strftime('%d/%m/%Y %H:%M')}\n"
+                            text_content += f"============================================\n\n"
+                            
+                            # Summary section
+                            text_content += "SUMMARY\n"
+                            text_content += "-------\n"
+                            text_content += f"Total Gross Revenue: ${df['gross_revenue'].sum():.2f}\n"
+                            text_content += f"Total Earnings:      ${df['total_cut'].sum():.2f}\n"
+                            text_content += f"Total Hours Worked:  {df['hours_worked'].sum():.1f}\n"
+                            text_content += f"Average Hourly Rate: ${df['total_cut'].sum() / df['hours_worked'].sum():.2f}\n"
+                            text_content += f"Average Commission:  {(df['total_cut'].sum() / df['gross_revenue'].sum() * 100):.2f}%\n\n"
+                            
+                            # Detailed section
+                            text_content += "DETAILED EARNINGS\n"
+                            text_content += "----------------\n"
+                            text_content += f"{'#':3} | {'DATE':10} | {'ROLE':12} | {'SHIFT':8} | {'HOURS':6} | {'GROSS ($)':10} | {'EARNINGS ($)':12} | {'HOURLY ($)':10}\n"
+                            text_content += "-" * 80 + "\n"
+                            
+                            for i, entry in enumerate(user_earnings, 1):
+                                hourly = float(entry['total_cut']) / float(entry['hours_worked']) if float(entry['hours_worked']) > 0 else 0
+                                text_content += f"{i:3} | {entry['date']:10} | {entry['role']:12} | {entry['shift'].capitalize():8} | {float(entry['hours_worked']):6.1f} | {float(entry['gross_revenue']):10.2f} | {float(entry['total_cut']):12.2f} | {hourly:10.2f}\n"
+                            
+                            text_content += "\n"
+                            
+                            # Role summary
+                            role_summary = df.groupby('role').agg({
+                                'total_cut': 'sum',
+                                'hours_worked': 'sum'
+                            }).reset_index()
+                            
+                            text_content += "EARNINGS BY ROLE\n"
+                            text_content += "---------------\n"
+                            text_content += f"{'ROLE':12} | {'EARNINGS ($)':12} | {'HOURS':6} | {'HOURLY ($)':10} | {'PERCENT':8}\n"
+                            text_content += "-" * 60 + "\n"
+                            
+                            total_earnings = df['total_cut'].sum()
+                            
+                            for _, row in role_summary.iterrows():
+                                hourly = row['total_cut'] / row['hours_worked'] if row['hours_worked'] > 0 else 0
+                                percentage = (row['total_cut'] / total_earnings) * 100
+                                
+                                text_content += f"{row['role']:12} | {row['total_cut']:12.2f} | {row['hours_worked']:6.1f} | {hourly:10.2f} | {percentage:7.1f}%\n"
+                            
                             fmt_buffer.write(text_content.encode('utf-8'))
                     
                     finally:
@@ -173,41 +716,120 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             buffer.seek(0)
             return discord.File(buffer, filename=f"{base_name}.zip")
         
-        # Handle non-zip formats (original code remains unchanged)
+        # Handle non-zip formats
         elif export_format == "csv":
-            df = pd.DataFrame(user_earnings)
             df.to_csv(buffer, index=False)
         
         elif export_format == "json":
-            buffer.write(json.dumps(user_earnings, indent=2).encode('utf-8'))
+            # Use records orient for better readability
+            json_data = df.to_json(orient='records', date_format='iso', indent=2)
+            buffer.write(json_data.encode('utf-8'))
         
         elif export_format == "xlsx":
-            df = pd.DataFrame(user_earnings)
             with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
                 df.to_excel(writer, index=False, sheet_name='Earnings')
-        
+                
+                # Add a summary sheet
+                summary = pd.DataFrame({
+                    'Metric': ['Total Gross Revenue', 'Total Earnings', 'Total Hours Worked', 
+                            'Average Hourly Rate', 'Average Commission %'],
+                    'Value': [
+                        f"${df['gross_revenue'].sum():.2f}", 
+                        f"${df['total_cut'].sum():.2f}",
+                        f"{df['hours_worked'].sum():.1f}",
+                        f"${df['total_cut'].sum() / df['hours_worked'].sum():.2f}",
+                        f"{(df['total_cut'].sum() / df['gross_revenue'].sum() * 100):.2f}%"
+                    ]
+                })
+                summary.to_excel(writer, index=False, sheet_name='Summary')
+                
+                # Add a pivot table by role
+                if 'role' in df.columns:
+                    pivot = pd.pivot_table(df, 
+                                        values=['gross_revenue', 'total_cut', 'hours_worked'],
+                                        index=['role'],
+                                        aggfunc='sum')
+                    pivot.to_excel(writer, sheet_name='By Role')
+                
+                # Add chart sheet for Excel charts
+                workbook = writer.book
+                chart_sheet = workbook.create_sheet(title="Charts")
+                
+                # Apply styling and formatting
+                for worksheet in writer.sheets.values():
+                    for col in worksheet.columns:
+                        max_length = 0
+                        column = col[0].column_letter
+                        for cell in col:
+                            if cell.value:
+                                max_length = max(max_length, len(str(cell.value)))
+                        worksheet.column_dimensions[column].width = max_length + 2
+
         elif export_format == "pdf":
             doc = SimpleDocTemplate(buffer, pagesize=letter)
-            data = [["Date", "Role", "Gross", "Total Cut"]]
-            data += [[
-                entry['date'],
-                entry['role'],
-                f"${float(entry['gross_revenue']):.2f}",
-                f"${float(entry['total_cut']):.2f}"
-            ] for entry in user_earnings]
-                            
-            table = Table(data)
-            table.setStyle(TableStyle([
-                ('BACKGROUND', (0,0), (-1,0), colors.grey),
-                ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
-                ('ALIGN', (0,0), (-1,-1), 'CENTER'),
-                ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
-                ('BOTTOMPADDING', (0,0), (-1,0), 12),
-                ('BACKGROUND', (0,1), (-1,-1), colors.beige),
-                ('GRID', (0,0), (-1,-1), 1, colors.black)
+            elements = []
+            
+            # Add title
+            styles = getSampleStyleSheet()
+            title_style = styles["Title"]
+            elements.append(Paragraph(f"Earnings Report for {user.display_name}", title_style))
+            elements.append(Spacer(1, 12))
+            
+            # Add summary section
+            subtitle_style = styles["Heading2"]
+            elements.append(Paragraph("Summary", subtitle_style))
+            
+            summary_data = [
+                ["Metric", "Value"],
+                ["Total Gross Revenue", f"${df['gross_revenue'].sum():.2f}"],
+                ["Total Earnings", f"${df['total_cut'].sum():.2f}"],
+                ["Total Hours Worked", f"{df['hours_worked'].sum():.1f}"],
+                ["Average Hourly Rate", f"${df['total_cut'].sum() / df['hours_worked'].sum():.2f}"],
+                ["Average Commission %", f"{(df['total_cut'].sum() / df['gross_revenue'].sum() * 100):.2f}%"],
+            ]
+            
+            summary_table = Table(summary_data, colWidths=[250, 150])
+            summary_table.setStyle(TableStyle([
+                ('BACKGROUND', (0,0), (1,0), colors.grey),
+                ('TEXTCOLOR', (0,0), (1,0), colors.whitesmoke),
+                ('ALIGN', (0,0), (1,-1), 'LEFT'),
+                ('FONTNAME', (0,0), (1,0), 'Helvetica-Bold'),
+                ('BOTTOMPADDING', (0,0), (1,0), 12),
+                ('BACKGROUND', (0,1), (1,-1), colors.beige),
+                ('GRID', (0,0), (1,-1), 1, colors.black)
             ]))
-            doc.build([table])
-        
+            elements.append(summary_table)
+            elements.append(Spacer(1, 12))
+            
+            # Add earnings data section
+            elements.append(Paragraph("Earnings Data", subtitle_style))
+            earnings_data = df[['date', 'gross_revenue', 'total_cut', 'hours_worked', 'period', 'shift', 'role', 'models']].copy()
+            earnings_data['date'] = pd.to_datetime(earnings_data['date']).dt.strftime("%Y-%m-%d")
+            earnings_data = earnings_data.rename(columns={
+                'date': 'Date',
+                'gross_revenue': 'Gross Revenue',
+                'total_cut': 'Total Cut',
+                'hours_worked': 'Hours Worked',
+                'period': 'Period',
+                'shift': 'Shift',
+                'role': 'Role',
+                'models': 'Models'
+            })
+            earnings_table = Table(earnings_data.values.tolist(), colWidths=[100, 150, 150, 100, 100, 100, 100, 200])
+            earnings_table.setStyle(TableStyle([
+                ('BACKGROUND', (0,0), (7,0), colors.grey),
+                ('TEXTCOLOR', (0,0), (7,0), colors.whitesmoke),
+                ('ALIGN', (0,0), (7,-1), 'LEFT'),
+                ('FONTNAME', (0,0), (7,0), 'Helvetica-Bold'),
+                ('BOTTOMPADDING', (0,0), (7,0), 12),
+                ('BACKGROUND', (0,1), (7,-1), colors.beige),
+                ('GRID', (0,0), (7,-1), 1, colors.black)
+            ]))
+            elements.append(earnings_table)
+            
+            # Build the PDF with footer
+            doc.build(elements, onFirstPage=lambda c, d: self.add_footer(c, d, user.display_name))
+
         elif export_format == "png":
             plt.figure(figsize=(10, 6))
             dates = [datetime.strptime(entry['date'], '%d/%m/%Y') for entry in user_earnings]
@@ -217,7 +839,24 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             plt.tight_layout()
             plt.savefig(buffer, format='png')
             plt.close()
-        
+
+        elif export_format == "svg":
+            fig, ax = plt.subplots()
+            dates = [datetime.strptime(entry['date'], '%d/%m/%Y') for entry in user_earnings]
+            ax.plot(dates, [float(e['gross_revenue']) for e in user_earnings], label='Gross Revenue')
+            ax.plot(dates, [float(e['total_cut']) for e in user_earnings], label='Total Cut')
+            ax.legend()
+            plt.savefig(buffer, format='svg')
+            plt.close(fig)
+
+        elif export_format == "html":
+            html_content = df.to_html(index=False)
+            buffer.write(html_content.encode('utf-8'))
+
+        elif export_format == "markdown":
+            markdown_content = df.to_markdown(index=False)
+            buffer.write(markdown_content.encode('utf-8'))
+
         else:  # txt
             text_content = f"Earnings Report for {user.display_name}\n\n"
             text_content += "\n".join(
@@ -228,7 +867,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
 
         buffer.seek(0)
         return discord.File(buffer, filename=f"{base_name}.{export_format}")
-    
+
     # New interactive slash command
     @app_commands.command(
         name="workflow",
