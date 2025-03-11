@@ -991,6 +991,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                 # Send attempts
                 success_count = 0
                 failures = []
+                report__message_embed = None
                 for recipient in recipients:
                     #     try: # todo: remove
                 #         await send_to.send(f"{send_to.mention}")
@@ -1016,13 +1017,12 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                         if file:
                             await recipient.send(file=file)
                         if send_to_message:
-                            report_embed = discord.Embed(
+                            report__message_embed = discord.Embed(
                                 title="Report message",
                                 description=f"{send_to_message}"
                             )
-                            report_embed.add_field(name="Sent by", value=interaction.user.mention, inline=False)
-                            await recipient.send(embed=report_embed)
-                            await interaction.followup.send(f"✅ Report message sent with content: ", embed=report_embed, ephemeral=ephemeral)
+                            report__message_embed.add_field(name="Sent by", value=interaction.user.mention, inline=False)
+                            await recipient.send(embed=report__message_embed)
                         # await interaction.followup.send(f"✅ Report sent to {recipient.mention}", ephemeral=ephemeral) # todo: remove
                         # note: sent success logic
                         success_count += 1
@@ -1060,10 +1060,13 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                     file=file
                 )
                 
+                if report__message_embed:
+                    await interaction.followup.send(f"✅ Report message sent with content: ", embed=report__message_embed, ephemeral=ephemeral)
                 await interaction.followup.send(embed=report_embed, ephemeral=ephemeral)
             else:
                 # Send to command user if no recipients specified
-                await interaction.followup.send(embed=embed, ephemeral=ephemeral)
+                # await interaction.followup.send(embed=embed, ephemeral=ephemeral) # todo: remove
+                pass
 
         except Exception as e:
             logger.error(f"Earnings command error: {str(e)}")
