@@ -1,4 +1,5 @@
 import os
+import re
 import io
 import json
 import logging
@@ -705,50 +706,29 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
 
         return embed
 
-    async def send_to_users_and_roles(
-        self,
-        interaction: discord.Interaction,
-        send_to: Optional[Union[discord.User, discord.Role, List[Union[discord.User, discord.Role]]]],
-        send_to_message: Optional[str] = None,
-        file: Optional[discord.File] = None,
-        embed: Optional[discord.Embed] = None
-    ):
-        """Send a message to specified users and roles, prioritizing users and avoiding duplicates."""
-        if not send_to:
-            return
-
-        # Ensure send_to is a list for uniform processing
-        if not isinstance(send_to, list):
-            send_to = [send_to]
-
-        # Collect unique users, prioritizing direct mentions
-        unique_users = set()
-        for target in send_to:
-            if isinstance(target, (discord.User, discord.Member)):
-                unique_users.add(target.id)
-            elif isinstance(target, discord.Role):
-                for member in target.members:
-                    unique_users.add(member.id)
-
-        # Send messages to each unique user
-        for user_id in unique_users:
-            user = interaction.guild.get_member(user_id)
-            if user:
-                try:
-                    await user.send(send_to_message or "Here is your earnings report.")
-                    if file:
-                        await user.send(file=file)
-                    if embed:
-                        await user.send(embed=embed)
-                except discord.Forbidden:
-                    await interaction.followup.send(f"❌ Could not send a message to {user.mention}. They may have DMs disabled.", ephemeral=True)
-                except Exception as e:
-                    await interaction.followup.send(f"❌ Failed to send a message to {user.mention}: {str(e)}", ephemeral=True)
-
-        await interaction.followup.send("✅ Messages sent successfully.", ephemeral=True)
+    # Added helper method to parse mentions
+    def parse_mentions(self, send_to_str: str, guild: discord.Guild) -> tuple[list[discord.Member], list[discord.Role]]:
+        """Parse user and role mentions from a string"""
+        user_mentions = []
+        role_mentions = []
+        
+        # Find user mentions
+        user_ids = re.findall(r'<@!?(\d+)>', send_to_str)
+        for user_id in user_ids:
+            member = guild.get_member(int(user_id))
+            if member:
+                user_mentions.append(member)
+        
+        # Find role mentions
+        role_ids = re.findall(r'<@&(\d+)>', send_to_str)
+        for role_id in role_ids:
+            role = guild.get_role(int(role_id))
+            if role:
+                role_mentions.append(role)
+        
+        return user_mentions, role_mentions
 
     # Command implementation
-      # Command implementation
     @app_commands.command(
         name="view-earnings",
         description="View your earnings"
@@ -759,7 +739,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         export="Export format",
         display_entries="Whether entries will be displayed or not",
         as_table="Display earnings in a table format",
-        send_to="User to send the report to",
+        send_to="Users/Roles to send report to (mention them)",
         range_from="Starting date (dd/mm/yyyy)",
         range_to="Ending date (dd/mm/yyyy)",
         send_to_message="Message to send to the selected users or roles"
@@ -784,7 +764,8 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         export: Optional[str] = "none",
         display_entries: Optional[bool] = False,
         as_table: Optional[bool] = False,
-        send_to: Optional[Union[discord.User, discord.Role, List[Union[discord.User, discord.Role]]]] = None,
+        # send_to: Optional[discord.User] = None,
+        send_to: Optional[str] = None,
         range_from: Optional[str] = None,
         range_to: Optional[str] = None,
         send_to_message: Optional[str] = None
@@ -882,28 +863,122 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                 except Exception as e:
                     return await interaction.followup.send(f"❌ Export failed: {str(e)}", ephemeral=ephemeral)
 
-            # Send to recipients
-            if send_to:
-                await self.send_to_users_and_roles(interaction, send_to, send_to_message, file, embed)
+            if file:
+                await interaction.followup.send(file=file, ephemeral=ephemeral)
 
-                    if file:
-                        await send_to.send(file=file)
-                    await send_to.send(embed=embed)
-                    if send_to_message:
-                        report_embed = discord.Embed(
-                            title="Report message",
-                            description=f"{send_to_message}"
-                        )
-                        report_embed.add_field(name="Sent by", value=interaction.user.mention, inline=False)
-                        await send_to.send(embed=report_embed)
-                        await interaction.followup.send(f"✅ Report message sent with content: ", embed=report_embed, ephemeral=ephemeral)
-                    await interaction.followup.send(f"✅ Report sent to {send_to.mention}", ephemeral=ephemeral)
+            file = None
+            if export != "none":
+                try:
+                    file = await self.generate_export_file(user_earnings, interaction.user, export)
                 except Exception as e:
-                    await interaction.followup.send(f"❌ Failed to send to {send_to.mention}: {str(e)}", ephemeral=ephemeral)
-            else:
-                if file:
-                    await interaction.followup.send(file=file, ephemeral=ephemeral)
+                    return await interaction.followup.send(f"❌ Export failed: {str(e)}", ephemeral=ephemeral)
+
+            # # Send to recipients # todo remove
+            # if send_to:
+            #     try:
+            #         await send_to.send(f"{send_to.mention}")
+
+            #         if file:
+            #             await send_to.send(file=file)
+            #         await send_to.send(embed=embed)
+            #         if send_to_message:
+            #             report_embed = discord.Embed(
+            #                 title="Report message",
+            #                 description=f"{send_to_message}"
+            #             )
+            #             report_embed.add_field(name="Sent by", value=interaction.user.mention, inline=False)
+            #             await send_to.send(embed=report_embed)
+            #             await interaction.followup.send(f"✅ Report message sent with content: ", embed=report_embed, ephemeral=ephemeral)
+            #         await interaction.followup.send(f"✅ Report sent to {send_to.mention}", ephemeral=ephemeral)
+            #     except Exception as e:
+            #         await interaction.followup.send(f"❌ Failed to send to {send_to.mention}: {str(e)}", ephemeral=ephemeral)
+            # else:
+            #     if file:
+            #         await interaction.followup.send(file=file, ephemeral=ephemeral)
                 # await interaction.followup.send(embed=embed, ephemeral=ephemeral) # todo check if this is needed if not remove
+
+            # Modified send_to handling
+            if send_to:
+                try:
+                    mentioned_users, mentioned_roles = self.parse_mentions(send_to, interaction.guild)
+                    
+                    # Collect unique recipients
+                    recipients = []
+                    seen = set()
+                    
+                    # Add directly mentioned users first
+                    for user in mentioned_users:
+                        if user.id not in seen:
+                            recipients.append(user)
+                            seen.add(user.id)
+                    
+                    # Add role members excluding already mentioned users
+                    for role in mentioned_roles:
+                        for member in role.members:
+                            if member.id not in seen:
+                                recipients.append(member)
+                                seen.add(member.id)
+                    
+                    success_count = 0
+                    failures = []
+                    
+                    # Send to all recipients
+                    for recipient in recipients:
+                        try:
+                            # Send base message
+                            await recipient.send(f"📊 Earnings report from {interaction.user.mention}:")
+                            
+                            # Send embed
+                            await recipient.send(embed=embed)
+                            
+                            # Send file if exists
+                            if file:
+                                await recipient.send(file=file)
+                            
+                            # Send additional message
+                            if send_to_message:
+                                report_embed = discord.Embed(
+                                    title="Message from Sender",
+                                    description=send_to_message,
+                                    color=discord.Color.blue()
+                                )
+                                report_embed.set_author(
+                                    name=interaction.user.display_name,
+                                    icon_url=interaction.user.display_avatar.url
+                                )
+                                await recipient.send(embed=report_embed)
+                            
+                            success_count += 1
+                        except discord.Forbidden:
+                            failures.append(f"{recipient.mention} (Blocked DMs)")
+                        except Exception as e:
+                            failures.append(f"{recipient.mention} ({str(e)})")
+                    
+                    # Build confirmation message
+                    confirmation_parts = []
+                    if mentioned_users:
+                        confirmation_parts.append(f"users: {', '.join(u.mention for u in mentioned_users)}")
+                    if mentioned_roles:
+                        confirmation_parts.append(f"roles: {', '.join(r.mention for r in mentioned_roles)}")
+                    
+                    confirmation_msg = "✅ Report sent to "
+                    if confirmation_parts:
+                        confirmation_msg += " ".join(confirmation_parts) + f" - Reached {success_count} recipients"
+                    else:
+                        confirmation_msg += "0 recipients"
+                    
+                    if failures:
+                        confirmation_msg += f"\n❌ Failed to send to {len(failures)}: {', '.join(failures[:5])}" + \
+                                        ("..." if len(failures) > 5 else "")
+                    
+                    await interaction.followup.send(confirmation_msg, ephemeral=ephemeral)
+
+                except Exception as e:
+                    await interaction.followup.send(
+                        f"❌ Failed to process recipients: {str(e)}", 
+                        ephemeral=ephemeral
+                    )
+
         except Exception as e:
             logger.error(f"view_earnings error: {str(e)}")
             await interaction.followup.send(f"❌ An error occurred: {str(e)}", ephemeral=ephemeral)

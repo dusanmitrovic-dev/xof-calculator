@@ -324,6 +324,7 @@
         - `view-earnings-table`
         - `view-earnings-table-admin`
         - `view-earnings-admin`
+- [x] (v0.115.0) `send_to` argument of `view-earnings` command that sends to multiple users and roles
 - [ ] Add who sent the `send_to_message`
 - [ ] Display hourly cut in employee cut?
 - [ ] Add functionality to select column names to display in `view-earnings`

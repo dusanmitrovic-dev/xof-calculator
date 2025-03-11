@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.115.0] - 2025-03-11
+### Added
+- `send_to` argument of `view-earnings` command now sends to multiple users and roles
+
 ## [0.114.0] - 2025-03-10
 ### Rollback
 - Reverting project to `v0.113.0` state
