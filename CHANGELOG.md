@@ -8,7 +8,7 @@
 
 ## [0.122.0] - 2025-03-11
 ### Changed
-- Now displaying successfully sent to user list
+- Now displaying successfully sent to user list.
 
 ## [0.121.0] - 2025-03-11
 ### Changed
