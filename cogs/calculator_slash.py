@@ -1012,9 +1012,9 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                     try:
                         await recipient.send(f"{recipient.mention}")
 
+                        await recipient.send(embed=embed)
                         if file:
                             await recipient.send(file=file)
-                        await recipient.send(embed=embed)
                         if send_to_message:
                             report_embed = discord.Embed(
                                 title="Report message",

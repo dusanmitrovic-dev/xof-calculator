@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.116.0] - 2025-03-11
+### Changed
+- DM-ed users first receive table then file
+
 ## [0.115.0] - 2025-03-11
 ### Added
 - `send_to` argument of `view-earnings` command now sends to multiple users and roles
