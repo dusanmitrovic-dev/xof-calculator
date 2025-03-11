@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.121.0] - 2025-03-11
+### Changed
+- Direct mentions now include username
+
 ## [0.120.0] - 2025-03-11
 ### Changed
 - Changed footer for earnings report delivery summary

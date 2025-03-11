@@ -747,7 +747,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         # Targets Section
         targets = []
         if mentioned_users:
-            users_display = "\n".join(f"- {user.mention}" for user in mentioned_users[:3])
+            users_display = "\n".join(f"- {user.mention} ({user.name})" for user in mentioned_users[:3])
             if len(mentioned_users) > 3:
                 users_display += f"\n*(+ {len(mentioned_users)-3} more users)*"
             targets.append(f"**Direct Mentions**\n{users_display}")
