@@ -331,6 +331,7 @@
 - [x] (v0.119.0) Fix sending files to each send_to included user
 - [x] (v0.120.0) Change footer for earnings report delivery summary
 - [x] (v0.121.0) Include username in direct mentions
+- [x] (v0.122.0) Display successfully sent to user list
 - [ ] Earnings Report Delivery Summary
     - [ ] Add Successfully delivered to: @User (username)
 - [ ] Add who sent the `send_to_message`

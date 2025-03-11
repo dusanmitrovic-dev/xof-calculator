@@ -735,7 +735,8 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         recipients: List[discord.User],
         success_count: int,
         failures: List[str],
-        file: Optional[discord.File]
+        file: Optional[discord.File],
+        successfully_sent_to_content: Optional[str] = None
     ) -> discord.Embed:
         """Generate a rich embed for delivery reports."""
         embed = discord.Embed(
@@ -769,6 +770,14 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             value="\n\n".join(targets) if targets else "No valid targets specified",
             inline=False
         )
+
+        # Successfully Sent To
+        if successfully_sent_to_content:
+            embed.add_field(
+                name="📨 Successfully Sent To",
+                value=successfully_sent_to_content,
+                inline=False
+            )
         
         # Statistics
         stats = [
@@ -989,6 +998,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                 success_count = 0
                 failures = []
                 report__message_embed = None
+                successfully_sent_to_content = f"\n"
                 for recipient in recipients:
                     #     try: # todo: remove
                 #         await send_to.send(f"{send_to.mention}")
@@ -1031,6 +1041,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                             await recipient.send(embed=report__message_embed)
                         # await interaction.followup.send(f"✅ Report sent to {recipient.mention}", ephemeral=ephemeral) # todo: remove
                         # note: sent success logic
+                        successfully_sent_to_content += f"- {recipient.mention} ({recipient.name})\n"
                         success_count += 1
                     except discord.Forbidden:
                         failures.append(f"{recipient.mention} (Blocked DMs)")
@@ -1063,7 +1074,8 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                     recipients=recipients,
                     success_count=success_count,
                     failures=failures,
-                    file=file
+                    file=file,
+                    successfully_sent_to_content=successfully_sent_to_content
                 )
                 
                 if report__message_embed:
