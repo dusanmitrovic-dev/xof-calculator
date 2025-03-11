@@ -347,7 +347,7 @@
 - [ ] `Error`: 'NoneType' object has no attribute 'to_dict' in `view-earnings`
 - [ ] ONE ADMIN COMMAND TO RULE THEM ALL ! (LOL)
 
-# Commission Settings Implementation TODO
+# Commission Settings Implementation
 
 ## Configuration Commands
 - [x] (v0.57.0) Implement `/set-role-commission` command
