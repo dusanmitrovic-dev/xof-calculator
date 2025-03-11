@@ -629,7 +629,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         # Remaining fields
         fields.extend([
             ("🎁 Bonus", results.get("bonus", "N/A"), True),
-            ("💼 Employee Cut", results.get("employee_cut", "N/A"), True), # todo maybe add hourly cut display
+            ("💼 Employee Cut", results.get("employee_cut", "N/A"), True), # todo: maybe add hourly cut display
             ("💰 Total Cut", results.get("total_cut", "N/A"), True),
             (" ", "" if results.get("compensation_type") == "hourly" else "", True),
             ("🎭 Models", results.get("models", "N/A"), False)
@@ -668,7 +668,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                 # Add current chunk if it has content beyond header
                 if current_chunk != table_header:
                     embed.add_field(name="", value=current_chunk + "```", inline=False)
-                # current_chunk = table_header  # Start new chunk # todo remove
+                # current_chunk = table_header  # Start new chunk # todo: remove
                 current_chunk = "```\n"  # Start new chunk without table header 
                 
             current_chunk += row
@@ -706,7 +706,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
 
         return embed
 
-    @staticmethod
     def parse_mentions(self, send_to_str: str, guild: discord.Guild) -> tuple[list[discord.Member], list[discord.Role]]:
         """Parse user and role mentions from a string"""
         user_mentions = []
@@ -728,7 +727,78 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         
         return user_mentions, role_mentions
 
-    # Command implementation
+    async def generate_report_embed(
+        self,
+        interaction: discord.Interaction,
+        mentioned_users: List[discord.User],
+        mentioned_roles: List[discord.Role],
+        recipients: List[discord.User],
+        success_count: int,
+        failures: List[str],
+        file: Optional[discord.File]
+    ) -> discord.Embed:
+        """Generate a rich embed for delivery reports."""
+        embed = discord.Embed(
+            title="📬 Earnings Report Delivery Summary",
+            color=discord.Color.green() if success_count > 0 else discord.Color.red(),
+            timestamp=interaction.created_at
+        )
+        
+        # Targets Section
+        targets = []
+        if mentioned_users:
+            users_display = "\n".join(f"- {user.mention}" for user in mentioned_users[:3])
+            if len(mentioned_users) > 3:
+                users_display += f"\n*(+ {len(mentioned_users)-3} more users)*"
+            targets.append(f"**Direct Mentions**\n{users_display}")
+        
+        if mentioned_roles:
+            roles_info = []
+            for role in mentioned_roles[:2]:
+                reached = sum(1 for m in role.members if m in recipients)
+                roles_info.append(
+                    f"- {role.mention} ({reached}/{len(role.members)} members "
+                    f"{'🟢' if reached > 0 else '🔴'})"
+                )
+            if len(mentioned_roles) > 2:
+                roles_info.append(f"*(+ {len(mentioned_roles)-2} more roles)*")
+            targets.append("**Role Targets**\n" + "\n".join(roles_info))
+        
+        embed.add_field(
+            name="🎯 Targeted Recipients",
+            value="\n\n".join(targets) if targets else "No valid targets specified",
+            inline=False
+        )
+        
+        # Statistics
+        stats = [
+            f"• **Total Attempted:** {len(recipients)}",
+            f"• **Successful Deliveries:** {success_count} 🟢",
+            f"• **Failed Attempts:** {len(failures)} 🔴",
+            f"• **File Attached:** {'✅' if file else '❌'}"
+        ]
+        embed.add_field(name="📊 Statistics", value="\n".join(stats), inline=False)
+        
+        # Failure Details
+        if failures:
+            failure_list = "\n".join(
+                f"{i}. {failure.split(' (')[0]} `({failure.split(' (')[1][:-1]})`"
+                for i, failure in enumerate(failures[:3], 1)
+            )
+            if len(failures) > 3:
+                failure_list += f"\n... *(+{len(failures)-3} more)*"
+            
+            embed.add_field(name="❌ Top Failures", value=failure_list, inline=False)
+        
+        # Footer with context
+        embed.set_footer(
+            text=f"Requested by {interaction.user.display_name} | " +
+                 "Note: Only members with visible roles will receive messages",
+            icon_url=interaction.user.display_avatar.url
+        )
+        
+        return embed
+
     @app_commands.command(
         name="view-earnings",
         description="View your earnings"
@@ -764,18 +834,21 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         export: Optional[str] = "none",
         display_entries: Optional[bool] = False,
         as_table: Optional[bool] = False,
-        # send_to: Optional[discord.User] = None,
         send_to: Optional[str] = None,
         range_from: Optional[str] = None,
         range_to: Optional[str] = None,
         send_to_message: Optional[str] = None
     ):
-        """Command for users to view their own earnings"""
+        """Command for users to view their earnings with enhanced reporting."""
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
         
         try:
+            # Permission check
             if not interaction.user.guild_permissions.administrator and user:
-                await interaction.response.send_message("❌ You need administrator permissions to see other user's earnings.", ephemeral=ephemeral)
+                await interaction.response.send_message(
+                    "❌ You need administrator permissions to view other users' earnings.",
+                    ephemeral=ephemeral
+                )
                 return
 
             await interaction.response.defer(ephemeral=ephemeral)
@@ -806,7 +879,10 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                         if from_date <= datetime.strptime(entry['date'], "%d/%m/%Y") <= to_date
                     ]
                 except ValueError:
-                    return await interaction.followup.send("❌ Invalid date format. Use dd/mm/yyyy.", ephemeral=ephemeral)
+                    return await interaction.followup.send(
+                        "❌ Invalid date format. Use dd/mm/yyyy.",
+                        ephemeral=ephemeral
+                    )
 
             # Sort and truncate entries
             user_earnings = sorted(
@@ -816,7 +892,30 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             )[:entries]
 
             if not user_earnings:
-                return await interaction.followup.send("❌ No earnings data found.", ephemeral=ephemeral)
+                return await interaction.followup.send(
+                    "❌ No earnings data found.",
+                    ephemeral=ephemeral
+                )
+
+            # # Create earnings summary embed
+            # total_gross = sum(float(entry['gross_revenue']) for entry in user_earnings)
+            # total_cut = sum(float(entry['total_cut']) for entry in user_earnings)
+
+            # embed = discord.Embed( # todo: remove
+            #     title=f"📊 Earnings Summary - {interaction.user.display_name}",
+            #     color=0x2ECC71,
+            #     timestamp=interaction.created_at
+            # )
+            # embed.add_field(name="Total Gross", value=f"```\n{total_gross:.2f}\n```", inline=True)
+            # embed.add_field(name="Total Cut", value=f"```\n{total_cut:.2f}\n```", inline=True)
+
+            # # Send to recipients # todo: remove
+            # if send_to:
+            # note: send to logic
+            # else:
+            #     if file:
+            #         await interaction.followup.send(file=file, ephemeral=ephemeral)
+                # await interaction.followup.send(embed=embed, ephemeral=ephemeral) # todo: check if this is needed if not remove
 
             # Create embed
             embed = discord.Embed(
@@ -873,107 +972,104 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                 except Exception as e:
                     return await interaction.followup.send(f"❌ Export failed: {str(e)}", ephemeral=ephemeral)
 
-            success_count = 0
-
-            # Modified send_to handling
             if send_to:
-                try:
-                    # [Keep the existing recipient collection logic...]
+                mentioned_users, mentioned_roles = self.parse_mentions(send_to, interaction.guild)
+                
+                # Collect unique recipients
+                recipients = []
+                seen = set()
+                for user in mentioned_users:
+                    if user.id not in seen:
+                        recipients.append(user)
+                        seen.add(user.id)
+                for role in mentioned_roles:
+                    for member in role.members:
+                        if member.id not in seen:
+                            recipients.append(member)
+                            seen.add(member.id)
+                
+                # Send attempts
+                success_count = 0
+                failures = []
+                for recipient in recipients:
+                    #     try: # todo: remove
+                #         await send_to.send(f"{send_to.mention}")
 
-                    # After sending attempts, build an embed report
-                    report_embed = discord.Embed(
-                        title="📬 Earnings Report Delivery Summary",
-                        color=0x2ECC71 if success_count > 0 else 0xE74C3C,
-                        timestamp=interaction.created_at
-                    )
-                    
-                    # Targets Section
-                    targets_description = []
-                    if mentioned_users:
-                        targets_description.append("**👤 Direct Mentions:**\n" + "\n".join(
-                            f"- {user.mention}" for user in mentioned_users[:5]
-                        ))
-                        if len(mentioned_users) > 5:
-                            targets_description.append(f"*(+ {len(mentioned_users)-5} more users)*")
-                    
-                    if mentioned_roles:
-                        targets_description.append("\n**🎯 Role Targets:**")
-                        for role in mentioned_roles[:3]:
-                            members = [m for m in role.members if m.id in seen]
-                            targets_description.append(
-                                f"- {role.mention} ({len(members)}/{len(role.members)} members reached)"
-                            f" - {'🟢' if len(members) > 0 else '🔴'}"
+                #         if file:
+                #             await send_to.send(file=file)
+                #         await send_to.send(embed=embed)
+                #         if send_to_message:
+                #             report_embed = discord.Embed(
+                #                 title="Report message",
+                #                 description=f"{send_to_message}"
+                #             )
+                #             report_embed.add_field(name="Sent by", value=interaction.user.mention, inline=False)
+                #             await send_to.send(embed=report_embed)
+                #             await interaction.followup.send(f"✅ Report message sent with content: ", embed=report_embed, ephemeral=ephemeral)
+                #         await interaction.followup.send(f"✅ Report sent to {send_to.mention}", ephemeral=ephemeral)
+                #     except Exception as e:
+                #         await interaction.followup.send(f"❌ Failed to send to {send_to.mention}: {str(e)}", ephemeral=ephemeral)
+                    try:
+                        await recipient.send(f"{recipient.mention}")
+
+                        if file:
+                            await recipient.send(file=file)
+                        await recipient.send(embed=embed)
+                        if send_to_message:
+                            report_embed = discord.Embed(
+                                title="Report message",
+                                description=f"{send_to_message}"
                             )
-                        if len(mentioned_roles) > 3:
-                            targets_description.append(f"*(+ {len(mentioned_roles)-3} more roles)*")
-                    
-                    report_embed.add_field(
-                        name="Targets",
-                        value="\n".join(targets_description) if targets_description else "No valid targets found",
-                        inline=False
-                    )
+                            report_embed.add_field(name="Sent by", value=interaction.user.mention, inline=False)
+                            await recipient.send(embed=report_embed)
+                            await interaction.followup.send(f"✅ Report message sent with content: ", embed=report_embed, ephemeral=ephemeral)
+                        # await interaction.followup.send(f"✅ Report sent to {recipient.mention}", ephemeral=ephemeral) # todo: remove
+                        # note: sent success logic
+                    except discord.Forbidden:
+                        failures.append(f"{recipient.mention} (Blocked DMs)")
+                    except Exception as e:
+                        # await interaction.followup.send(f"❌ Failed to send to {recipient.mention}: {str(e)}", ephemeral=ephemeral) # todo: remove
+                        # note: sent failure logic
+                        failures.append(f"{recipient.mention} ({str(e)})")
 
-                    # Statistics Section
-                    stats = [
-                        f"• Total Attempted: **{len(recipients)}**",
-                        f"• Successful Deliveries: **{success_count}** 🟢",
-                        f"• Failed Attempts: **{len(failures)}** 🔴",
-                        f"• File Attached: {'✅' if file else '❌'}"
-                    ]
-                    report_embed.add_field(
-                        name="Delivery Statistics",
-                        value="\n".join(stats),
-                        inline=False
-                    )
-
-                    # Failure Details (if any)
-                    if failures:
-                        failure_list = []
-                        for i, failure in enumerate(failures[:5], 1):
-                            parts = failure.split(" (")
-                            failure_list.append(
-                                f"{i}. {parts[0]} `({parts[1].rstrip(')')})`"
-                            )
+                    #     content = f"📊 Earnings report from {interaction.user.mention}:" # todo: remove
+                    #     if send_to_message:
+                    #         content += f"\n\n{send_to_message}"
                         
-                        report_embed.add_field(
-                            name="Top Failures",
-                            value="\n".join(failure_list) + 
-                            (f"\n... *(+{len(failures)-5} more)*" if len(failures) > 5 else ""),
-                            inline=False
-                        )
-
-                    # Footer with contextual info
-                    report_embed.set_footer(
-                        text=f"Requested by {interaction.user.display_name} | " +
-                             "Note: Role targets include all members, even those offline",
-                        icon_url=interaction.user.display_avatar.url
-                    )
-
-                    # Create components for follow-up
-                    view = discord.ui.View()
-                    if failures:
-                        view.add_item(discord.ui.Button(
-                            style=discord.ButtonStyle.danger,
-                            label="Download Failure List",
-                            custom_id="failure_list",
-                            disabled=True  # You'd implement actual export logic
-                        ))
-
-                    await interaction.followup.send(
-                        embed=report_embed,
-                        view=view,
-                        ephemeral=ephemeral
-                    )
-
-                except Exception as e:
-                    await interaction.followup.send(
-                        f"❌ Failed to process recipients: {str(e)}", 
-                        ephemeral=ephemeral
-                    )
+                    #     await recipient.send(content)
+                    #     await recipient.send(embed=embed)
+                        
+                    #     if file:
+                    #         await recipient.send(file=file)
+                        
+                    #     success_count += 1
+                    # except discord.Forbidden:
+                    #     failures.append(f"{recipient.mention} (Blocked DMs)")
+                    # except Exception as e:
+                    #     failures.append(f"{recipient.mention} ({str(e)})")
+                
+                # Generate and send report
+                report_embed = await self.generate_report_embed(
+                    interaction=interaction,
+                    mentioned_users=mentioned_users,
+                    mentioned_roles=mentioned_roles,
+                    recipients=recipients,
+                    success_count=success_count,
+                    failures=failures,
+                    file=file
+                )
+                
+                await interaction.followup.send(embed=report_embed, ephemeral=ephemeral)
+            else:
+                # Send to command user if no recipients specified
+                await interaction.followup.send(embed=embed, ephemeral=ephemeral)
 
         except Exception as e:
-            logger.error(f"view_earnings error: {str(e)}")
-            await interaction.followup.send(f"❌ An error occurred: {str(e)}", ephemeral=ephemeral)
+            logger.error(f"Earnings command error: {str(e)}")
+            await interaction.followup.send(
+                f"❌ Command failed: {str(e)}", 
+                ephemeral=ephemeral
+            )
 
 # View classes remain unchanged
 class PeriodSelectionView(ui.View):
