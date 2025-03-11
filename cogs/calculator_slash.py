@@ -536,9 +536,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                                     <p class="summary-item"><strong>Total Gross Revenue:</strong> ${df['gross_revenue'].sum():.2f}</p>
                                     <p class="summary-item"><strong>Total Earnings:</strong> ${df['total_cut'].sum():.2f}</p>
                                     <p class="summary-item"><strong>Total Hours Worked:</strong> {df['hours_worked'].sum():.1f}</p>
-                                    <p class="summary-item"><strong>Average Hourly:</strong> ${df['total_cut'].sum() / df['hours_worked'].sum():.2f}</p>
-                                    <p class="summary-item"><strong>Total Hourly:</strong> ${df['total_cut'].sum():.2f}</p>
-                                    <p class="summary-item"><strong>Average Commission:</strong> {(df['total_cut'].sum() / df['gross_revenue'].sum() * 100):.2f}%</p>
                                 </div>
                                 
                                 <h2>Detailed Earnings</h2>
@@ -551,7 +548,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                                         <th>Hours</th>
                                         <th>Gross Revenue</th>
                                         <th>Earnings</th>
-                                        <th>Hourly</th>
                                     </tr>
                             """
                             
@@ -567,7 +563,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                                         <td>{float(entry['hours_worked']):.1f}</td>
                                         <td>${float(entry['gross_revenue']):.2f}</td>
                                         <td>${float(entry['total_cut']):.2f}</td>
-                                        <td>${hourly:.2f}</td>
                                     </tr>
                                 """
                             
@@ -580,7 +575,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                                         <th>Role</th>
                                         <th>Total Earnings</th>
                                         <th>Hours Worked</th>
-                                        <th>Average Hourly</th>
                                         <th>Percentage of Total</th>
                                     </tr>
                             """
@@ -594,7 +588,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                             total_earnings = df['total_cut'].sum()
                             
                             for _, row in role_summary.iterrows():
-                                hourly = row['total_cut'] / row['hours_worked'] if row['hours_worked'] > 0 else 0
                                 percentage = (row['total_cut'] / total_earnings) * 100
                                 
                                 html_content += f"""
@@ -602,7 +595,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                                         <td>{row['role']}</td>
                                         <td>${row['total_cut']:.2f}</td>
                                         <td>{row['hours_worked']:.1f}</td>
-                                        <td>${hourly:.2f}</td>
                                         <td>{percentage:.1f}%</td>
                                     </tr>
                                 """
@@ -805,7 +797,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             # Add earnings data section
             elements.append(Paragraph("Earnings Data", subtitle_style))
             earnings_data = df[['date', 'gross_revenue', 'total_cut', 'hours_worked', 'period', 'shift', 'role', 'models']].copy()
-            earnings_data['date'] = pd.to_datetime(earnings_data['date']).dt.strftime("%Y-%m-%d")
+            earnings_data['date'] = pd.to_datetime(earnings_data['date'], dayfirst=True).dt.strftime("%Y-%m-%d")
             earnings_data = earnings_data.rename(columns={
                 'date': 'Date',
                 'gross_revenue': 'Gross Revenue',
@@ -1471,6 +1463,8 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             app_commands.Choice(name="Excel", value="xlsx"),
             app_commands.Choice(name="PDF", value="pdf"),
             app_commands.Choice(name="PNG Chart", value="png"),
+            app_commands.Choice(name="Markdown", value="markdown"),
+            app_commands.Choice(name="HTML", value="html"),
             app_commands.Choice(name="ZIP Archive", value="zip")
         ]
     )
