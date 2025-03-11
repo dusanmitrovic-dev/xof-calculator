@@ -515,7 +515,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                                 <title>Earnings Report for {user.display_name}</title>
                                 <style>
                                     body {{ font-family: Arial, sans-serif; margin: 20px; }}
-                                    h1, h2 {{ color: #333366; }}
+                                    h1, h2 {{ color: #ffffff; }}
                                     table {{ border-collapse: collapse; width: 100%; margin: 15px 0; }}
                                     th, td {{ border: 1px solid #ddd; padding: 8px; text-align: left; }}
                                     th {{ background-color: #333366; color: white; }}
