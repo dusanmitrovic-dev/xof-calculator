@@ -338,6 +338,7 @@
     - [x] (v0.122.0) Add Successfully delivered to: @User (username)
 - [x] Add who sent the `send_to_message`
 - [x] (v0.125.0) Display warning if `zip_formats` are set but `export` is not `zip`
+- [ ] Option to set default zip exports in settings
 - [ ] Display hourly cut in employee cut?
 - [ ] Add functionality to select column names to display in `view-earnings`
 - [ ] Pip freeze > requirements.txt

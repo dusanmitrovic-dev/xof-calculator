@@ -27,7 +27,7 @@ from pathlib import Path
 
 SUPPORTED_EXPORTS = ["none", "txt", "csv", "json", "xlsx", "pdf", "png", "zip"]
 # All available formats
-ALL_ZIP_FORMATS = ['csv', 'json', 'xlsx', 'pdf', 'png', 'txt', 'html', 'markdown', 'svg']
+ALL_ZIP_FORMATS = ['csv', 'json', 'xlsx', 'pdf', 'png', 'txt', 'html', 'markdown', 'svg'] # todo: Option to set default zip exports in settings
 MAX_ENTRIES = 50
 
 logger = logging.getLogger("xof_calculator.calculator")
