@@ -528,40 +528,15 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
     def _generate_png(self, df, user, buffer, user_earnings):
         """Generate PNG format export"""
         # Create a more sophisticated visualization with multiple charts
-        fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+        fig, axes = plt.subplots(figsize=(12, 6))
         
         # Plot 1: Line chart of revenue and earnings
         dates = [datetime.strptime(entry['date'], '%d/%m/%Y') for entry in user_earnings]
-        axes[0, 0].plot(dates, [float(e['gross_revenue']) for e in user_earnings], 'b-o', label='Gross Revenue')
-        axes[0, 0].plot(dates, [float(e['total_cut']) for e in user_earnings], 'r-o', label='Earnings')
-        axes[0, 0].set_title('Revenue & Earnings Over Time')
-        axes[0, 0].legend()
-        axes[0, 0].grid(True, linestyle='--', alpha=0.7)
-        
-        # Plot 2: Bar chart comparing revenue and earnings by date
-        x = np.arange(len(dates))
-        width = 0.35
-        date_labels = [d.strftime('%d/%m') for d in dates]
-        axes[0, 1].bar(x - width/2, [float(e['gross_revenue']) for e in user_earnings], width, label='Gross Revenue')
-        axes[0, 1].bar(x + width/2, [float(e['total_cut']) for e in user_earnings], width, label='Earnings')
-        axes[0, 1].set_xticks(x)
-        axes[0, 1].set_xticklabels(date_labels, rotation=45)
-        axes[0, 1].set_title('Revenue & Earnings Comparison')
-        axes[0, 1].legend()
-        
-        # Plot 3: Pie chart of earnings by role
-        role_data = df.groupby('role')['total_cut'].sum()
-        axes[1, 0].pie(role_data, labels=role_data.index, autopct='%1.1f%%', 
-                    shadow=True, startangle=90, colors=plt.cm.Paired(np.arange(len(role_data))/len(role_data)))
-        axes[1, 0].axis('equal')
-        axes[1, 0].set_title('Earnings by Role')
-        
-        # Plot 4: Horizontal bar chart of hours worked by shift
-        if 'shift' in df.columns and 'hours_worked' in df.columns:
-            shift_data = df.groupby('shift')['hours_worked'].sum().sort_values(ascending=True)
-            axes[1, 1].barh(shift_data.index, shift_data.values, color=plt.cm.Set3(np.arange(len(shift_data))/len(shift_data)))
-            axes[1, 1].set_title('Hours Worked by Shift')
-            axes[1, 1].set_xlabel('Hours')
+        axes.plot(dates, [float(e['gross_revenue']) for e in user_earnings], 'b-o', label='Gross Revenue')
+        axes.plot(dates, [float(e['total_cut']) for e in user_earnings], 'r-o', label='Earnings')
+        axes.set_title('Revenue & Earnings Over Time')
+        axes.legend()
+        axes.grid(True, linestyle='--', alpha=0.7)
         
         # Add a title to the overall figure
         fig.suptitle(f'Earnings Report for {user.display_name}', fontsize=16)
@@ -573,7 +548,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
     def _generate_svg(self, df, user, buffer, user_earnings):
         """Generate SVG format export"""
         # Create SVG visualization
-        fig, axes = plt.subplots(1, 2, figsize=(24, 12))
+        fig, axes = plt.subplots(figsize=(12, 6))
         
         # Plot 1: Line chart
         dates = [datetime.strptime(entry['date'], '%d/%m/%Y') for entry in user_earnings]

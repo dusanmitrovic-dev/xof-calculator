@@ -4,6 +4,10 @@
 
 ## [0.128.0] - 2025-03-12
 ### Removed
+- Final version for png export
+
+## [0.128.0] - 2025-03-12
+### Removed
 - Removed charts from excel generation since they did not work
 
 ## [0.127.0] - 2025-03-12
