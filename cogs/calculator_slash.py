@@ -1363,6 +1363,7 @@ Generated on {datetime.now().strftime('%d/%m/%Y %H:%M')}
         display_entries="Whether entries will be displayed or not",
         as_table="Display earnings in a table format",
         send_to="Users/Roles to send report to (mention them)",
+        period="Period to view (weekly, monthly, etc)",
         range_from="Starting date (dd/mm/yyyy)",
         range_to="Ending date (dd/mm/yyyy)",
         send_to_message="Message to send to the selected users or roles",
@@ -1391,6 +1392,7 @@ Generated on {datetime.now().strftime('%d/%m/%Y %H:%M')}
         export: Optional[str] = "none",
         display_entries: Optional[bool] = False,
         as_table: Optional[bool] = False,
+        period: Optional[str] = None,
         send_to: Optional[str] = None,
         range_from: Optional[str] = None,
         range_to: Optional[str] = None,
@@ -1456,6 +1458,18 @@ Generated on {datetime.now().strftime('%d/%m/%Y %H:%M')}
                     ephemeral=ephemeral
                 )
 
+            if period:
+                user_earnings = [
+                    entry for entry in user_earnings
+                    if entry['period'].lower() == period.lower()
+                ]
+
+            if not user_earnings:
+                return await interaction.followup.send(
+                    "❌ No earnings data found for the period: " + period,
+                    ephemeral=ephemeral
+                )
+
             # # Create earnings summary embed
             # total_gross = sum(float(entry['gross_revenue']) for entry in user_earnings)
             # total_cut = sum(float(entry['total_cut']) for entry in user_earnings)
@@ -1503,7 +1517,7 @@ Generated on {datetime.now().strftime('%d/%m/%Y %H:%M')}
 
             if display_entries:
                 embed = discord.Embed(
-                    title=f"📊 Earnings {('Table' if display_entries and as_table else 'List')}",
+                    title=f"📊 Earnings {('Table' if display_entries and as_table else 'List')} {(' - ' + period.upper() if display_entries and period else '')}",
                     color=0x2ECC71,
                     timestamp=interaction.created_at
                 )

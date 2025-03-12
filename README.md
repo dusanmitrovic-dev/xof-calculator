@@ -340,6 +340,7 @@
 - [x] (v0.125.0) Display warning if `zip_formats` are set but `export` is not `zip`
 - [x] (v0.126.0) Remove `hourly_rate` and `commission_percent` from export
 - [x] (v0.127.0) Remove charts from excel generation since they did not work
+- [x] (v0.131.0) Selection by `period` command parameter
 - [ ] Option to set default zip exports in settings
 - [ ] Display hourly cut in employee cut?
 - [ ] Add functionality to select column names to display in `view-earnings`
