@@ -669,30 +669,29 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         # Create a markdown report
         md_content = f"""# Earnings Report for {user.display_name}
 
-    Generated on {datetime.now().strftime('%d/%m/%Y %H:%M')}
+Generated on {datetime.now().strftime('%d/%m/%Y %H:%M')}
 
-    ## Summary
+## Summary
 
-    - **Total Gross Revenue:** ${df['gross_revenue'].sum():.2f}
-    - **Total Earnings:** ${df['total_cut'].sum():.2f}
-    - **Total Hours Worked:** {df['hours_worked'].sum():.1f}
-    - **Average Hourly:** ${df['total_cut'].sum() / df['hours_worked'].sum():.2f}
-    - **Average Commission:** {(df['total_cut'].sum() / df['gross_revenue'].sum() * 100):.2f}%
 
-    ## Detailed Earnings
+* **Total Gross Revenue:** ${df['gross_revenue'].sum():.2f}
+* **Total Earnings:** ${df['total_cut'].sum():.2f}
+* **Total Hours Worked:** {df['hours_worked'].sum():.1f}
 
-    | # | Date | Role | Shift | Hours | Gross Revenue | Earnings | Hourly |
-    |---|------|------|-------|-------|--------------|----------|--------|
-    """
+## Detailed Earnings
+
+
+| # | Date       | Role       | Shift | Hours | Gross Revenue | Earnings |
+|---|------------|------------|-------|-------|--------------|----------|
+"""
         
         # Add table rows
         for i, entry in enumerate(user_earnings, 1):
-            hourly = float(entry['total_cut']) / float(entry['hours_worked']) if float(entry['hours_worked']) > 0 else 0
-            md_content += f"| {i} | {entry['date']} | {entry['role']} | {entry['shift'].capitalize()} | {float(entry['hours_worked']):.1f} | ${float(entry['gross_revenue']):.2f} | ${float(entry['total_cut']):.2f} | ${hourly:.2f} |\n"
+            md_content += f"| {i} | {entry['date']} | {entry['role']} | {entry['shift'].capitalize()} | {float(entry['hours_worked']):.1f} | ${float(entry['gross_revenue']):.2f} | ${float(entry['total_cut']):.2f} |\n"
         
         md_content += "\n## Earnings by Role\n\n"
-        md_content += "| Role | Total Earnings | Hours Worked | Average Hourly | Percentage of Total |\n"
-        md_content += "|------|---------------|--------------|----------------|--------------------|\n"
+        md_content += "| Role       | Total Earnings | Hours Worked | Percentage of Total |\n"
+        md_content += "|------------|---------------|--------------|--------------------|\n"
         
         # Add role summary rows
         role_summary = df.groupby('role').agg({
@@ -703,10 +702,9 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         total_earnings = df['total_cut'].sum()
         
         for _, row in role_summary.iterrows():
-            hourly = row['total_cut'] / row['hours_worked'] if row['hours_worked'] > 0 else 0
             percentage = (row['total_cut'] / total_earnings) * 100
             
-            md_content += f"| {row['role']} | ${row['total_cut']:.2f} | {row['hours_worked']:.1f} | ${hourly:.2f} | {percentage:.1f}% |\n"
+            md_content += f"| {row['role']} | ${row['total_cut']:.2f} | {row['hours_worked']:.1f} | {percentage:.1f}% |\n"
         
         buffer.write(md_content.encode('utf-8'))
 
@@ -1364,7 +1362,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         range_from="Starting date (dd/mm/yyyy)",
         range_to="Ending date (dd/mm/yyyy)",
         send_to_message="Message to send to the selected users or roles",
-        zip_formats="Select formats to include in ZIP export (multiple choices allowed)"
+        zip_formats="Available formats: txt, csv, json, xlsx, pdf, png, markdown, html, svg"
     )
     @app_commands.choices(
         export=[
@@ -1481,8 +1479,11 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                 timestamp=interaction.created_at
             )
 
-            if interaction.user.avatar:
+            if user and user.avatar:
+                embed.set_thumbnail(url=user.avatar.url)
+            elif interaction.user.avatar:
                     embed.set_thumbnail(url=interaction.user.avatar.url)
+
 
             total_gross = 0
             total_cut_sum = 0
