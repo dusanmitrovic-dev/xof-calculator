@@ -1445,7 +1445,8 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         range_from: Optional[str] = None,
         range_to: Optional[str] = None,
         send_to_message: Optional[str] = None,
-        zip_formats: Optional[str] = None
+        # zip_formats: Optional[str] = None
+        zip_formats: Optional[List[str]] = None
     ):
         """Command for users to view their earnings with enhanced reporting."""
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
@@ -1564,30 +1565,46 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
 
             # Process zip_formats selection
             zip_formats_list = []
-            
-            # Handle zip_formats input
-            if zip_formats:
-                # Split the input string by common separators
-                formats = re.split(r'[ ,\.\-_\s]+', zip_formats)
-                for fmt in formats:
-                    fmt = fmt.lower().strip()
-                    if fmt and fmt in ALL_ZIP_FORMATS:
-                        zip_formats_list.append(fmt)
-                    elif fmt == "all":
+
+            zip_formats_list = []
+            if export == "zip":
+                # Default to all formats if none selected
+                if not zip_formats:
+                    zip_formats_list = ALL_ZIP_FORMATS.copy()
+                else:
+                    # Check if "all" was explicitly chosen
+                    if "all" in zip_formats:
                         zip_formats_list = ALL_ZIP_FORMATS.copy()
-                        break
+                    else:
+                        # Filter valid formats (choices enforce validity, but double-check)
+                        zip_formats_list = [fmt for fmt in zip_formats if fmt in ALL_ZIP_FORMATS]
+            
+            # Handle zip_formats input # note: might need to rollback to this
+            # if zip_formats: 
+            #     # Split the input string by common separators
+            #     formats = re.split(r'[ ,\.\-_\s]+', zip_formats)
+            #     for fmt in formats:
+            #         fmt = fmt.lower().strip()
+            #         if fmt and fmt in ALL_ZIP_FORMATS:
+            #             zip_formats_list.append(fmt)
+            #         elif fmt == "all":
+            #             zip_formats_list = ALL_ZIP_FORMATS.copy()
+            #             break
             
             # If export is zip but no formats specified, use all formats
-            if export == "zip" and not zip_formats_list:
-                zip_formats_list = ALL_ZIP_FORMATS.copy()
+            # if export == "zip" and not zip_formats_list:
+            #     zip_formats_list = ALL_ZIP_FORMATS.copy()
             
-            # Validate formats
-            if export == "zip" and not zip_formats_list:
-                await interaction.followup.send(
-                    "❌ No valid export formats specified for ZIP archive.",
-                    ephemeral=ephemeral
-                )
-                return
+            # # Validate formats
+            # if export == "zip" and not zip_formats_list:
+            #     await interaction.followup.send(
+            #         "❌ No valid export formats specified for ZIP archive.",
+            #         ephemeral=ephemeral
+            #     )
+            #     return
+
+            if "all" in zip_formats:
+                zip_formats_list = ALL_ZIP_FORMATS.copy()
 
             file = None
             if export != "none":
