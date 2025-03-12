@@ -10,7 +10,7 @@ import io
 import re
 import os
 
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
+from reportlab.platypus import PageBreak, SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
 from openpyxl.chart import LineChart, BarChart, PieChart, Reference
 from utils import file_handlers, validators, calculations
 from reportlab.lib.styles import getSampleStyleSheet
@@ -454,8 +454,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             ["Total Gross Revenue", f"${df['gross_revenue'].sum():.2f}"],
             ["Total Earnings", f"${df['total_cut'].sum():.2f}"],
             ["Total Hours Worked", f"{df['hours_worked'].sum():.1f}"],
-            ["Average Hourly", f"${df['total_cut'].sum() / df['hours_worked'].sum():.2f}"],
-            ["Average Commission %", f"{(df['total_cut'].sum() / df['gross_revenue'].sum() * 100):.2f}%"],
         ]
         
         summary_table = Table(summary_data, colWidths=[250, 150])
@@ -475,7 +473,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         elements.append(Paragraph("Detailed Earnings", subtitle_style))
         
         # Format data for the table
-        data = [["#", "Date", "Role", "Shift", "Hours", "Gross Revenue", "Earnings", "Hourly"]]
+        data = [["#", "Date", "Role", "Shift", "Hours", "Gross Revenue", "Earnings"]]
         for i, entry in enumerate(user_earnings, 1):
             hourly = float(entry['total_cut']) / float(entry['hours_worked']) if float(entry['hours_worked']) > 0 else 0
             data.append([
@@ -485,8 +483,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                 entry['shift'].capitalize(),
                 f"{float(entry['hours_worked']):.1f}",
                 f"${float(entry['gross_revenue']):.2f}",
-                f"${float(entry['total_cut']):.2f}",
-                f"${hourly:.2f}"
+                f"${float(entry['total_cut']):.2f}"
             ])
         
         # Create the table
@@ -505,10 +502,10 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         elements.append(detail_table)
         elements.append(Spacer(1, 24))
         
-        # Add charts
+        # Add charts on a new page
+        elements.append(PageBreak())
         elements.append(Paragraph("Earnings Visualization", subtitle_style))
         elements.append(Spacer(1, 12))
-        
         # Generate and add chart as Image
         chart_buffer = io.BytesIO()
         plt.figure(figsize=(7, 4))
@@ -524,23 +521,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         
         chart_buffer.seek(0)
         elements.append(Image(chart_buffer, width=450, height=250))
-        
-        # Add pie chart showing earnings by role
-        elements.append(Spacer(1, 24))
-        
-        role_buffer = io.BytesIO()
-        role_data = df.groupby('role')['total_cut'].sum()
-        plt.figure(figsize=(7, 4))
-        plt.pie(role_data, labels=role_data.index, autopct='%1.1f%%', 
-                shadow=True, startangle=90, colors=plt.cm.Paired(np.arange(len(role_data))/len(role_data)))
-        plt.axis('equal')
-        plt.title("Earnings by Role")
-        plt.tight_layout()
-        plt.savefig(role_buffer, format='png', dpi=150)
-        plt.close()
-        
-        role_buffer.seek(0)
-        elements.append(Image(role_buffer, width=400, height=300))
         
         # Build the PDF document
         doc.build(elements)
