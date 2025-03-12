@@ -336,7 +336,7 @@
 - [x] (v0.124.0) Add zip formats selection
 - [x] (v0.122.0) Earnings Report Delivery Summary
     - [x] (v0.122.0) Add Successfully delivered to: @User (username)
-- [ ] Add who sent the `send_to_message`
+- [x] Add who sent the `send_to_message`
 - [ ] Display hourly cut in employee cut?
 - [ ] Add functionality to select column names to display in `view-earnings`
 - [ ] Pip freeze > requirements.txt
