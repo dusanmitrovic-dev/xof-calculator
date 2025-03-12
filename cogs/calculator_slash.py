@@ -1230,11 +1230,15 @@ Generated on {datetime.now().strftime('%d/%m/%Y %H:%M')}
             gross_revenue = float(entry['gross_revenue'])
             total_cut_percent = (float(entry['total_cut']) / gross_revenue * 100 if gross_revenue != 0 else 0.0)
             entry_text = (
-                f"**Date:** {entry['date']}\n"
-                f"**Role:** {entry['role'].capitalize()}\n"
-                f"**Gross Revenue:** ${gross_revenue:.2f}\n"
-                f"**Total Cut:** ${float(entry['total_cut']):.2f} ({total_cut_percent:.1f}%)\n"
-            )
+                    f"```diff\n"
+                    f"+ Entry #{idx}\n"
+                    f"📅 Date:    {entry.get('date', 'N/A')}\n"
+                    f"🎯 Role:    {entry.get('role', 'N/A').capitalize()}\n"
+                    f"💰 Gross:   ${float(entry.get('gross_revenue', 0)):.2f}\n"
+                    f"💸 Cut:     ${float(entry.get('total_cut', 0)):.2f} "
+                    f"({float(entry.get('total_cut', 0))/float(entry.get('gross_revenue', 1))*100:.1f}%)\n"
+                    f"```\n"
+                )
 
             if len("\n".join(current_chunk + [entry_text])) > 1024:
                 embed.add_field(name="", value="\n".join(current_chunk), inline=False)

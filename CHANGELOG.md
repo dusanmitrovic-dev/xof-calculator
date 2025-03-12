@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.130.0] - 2025-03-12
+### Changed
+- Upgraded `create_list_embed` method
+
 ## [0.129.0] - 2025-03-12
 ### Removed
 - Final version for `svg` export.
