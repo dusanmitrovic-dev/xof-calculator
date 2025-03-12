@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.124.0] - 2025-03-11
+### Added
+- Added zip formats selection
+
 ## [0.123.0] - 2025-03-11
 ### Changed
 - New export types and updated existing ones.

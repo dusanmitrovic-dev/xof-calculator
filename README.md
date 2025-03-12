@@ -333,6 +333,7 @@
 - [x] (v0.121.0) Include username in direct mentions
 - [x] (v0.122.0) Display successfully sent to user list
 - [x] (v0.123.0) Add new export types and update existing ones
+- [x] (v0.124.0) Add zip formats selection
 - [ ] Earnings Report Delivery Summary
     - [ ] Add Successfully delivered to: @User (username)
 - [ ] Add who sent the `send_to_message`
