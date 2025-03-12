@@ -2,9 +2,13 @@
 
 ## [Unreleased]
 
+## [0.129.0] - 2025-03-12
+### Removed
+- Final version for `svg` export
+
 ## [0.128.0] - 2025-03-12
 ### Removed
-- Final version for png export
+- Final version for `png` export
 
 ## [0.128.0] - 2025-03-12
 ### Removed

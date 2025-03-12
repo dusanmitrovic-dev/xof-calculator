@@ -548,21 +548,15 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
     def _generate_svg(self, df, user, buffer, user_earnings):
         """Generate SVG format export"""
         # Create SVG visualization
-        fig, axes = plt.subplots(figsize=(12, 6))
+        fig, ax1 = plt.subplots(figsize=(16, 9))
         
         # Plot 1: Line chart
         dates = [datetime.strptime(entry['date'], '%d/%m/%Y') for entry in user_earnings]
-        axes[0].plot(dates, [float(e['gross_revenue']) for e in user_earnings], 'b-o', label='Gross Revenue')
-        axes[0].plot(dates, [float(e['total_cut']) for e in user_earnings], 'r-o', label='Earnings')
-        axes[0].set_title('Revenue & Earnings Over Time')
-        axes[0].legend()
-        axes[0].grid(True, linestyle='--', alpha=0.7)
-        
-        # Plot 2: Stacked bar chart by role
-        role_data = df.pivot_table(index='date', columns='role', values='total_cut', aggfunc='sum').fillna(0)
-        role_data.plot(kind='bar', stacked=True, ax=axes[1], colormap='viridis')
-        axes[1].set_title('Earnings by Role')
-        axes[1].legend(title='Role')
+        ax1.plot_date(dates, [float(e['gross_revenue']) for e in user_earnings], 'b-o', label='Gross Revenue')
+        ax1.plot_date(dates, [float(e['total_cut']) for e in user_earnings], 'r-o', label='Earnings')
+        ax1.set_title('Revenue & Earnings Over Time')
+        ax1.legend()
+        ax1.grid(True, linestyle='--', alpha=0.7)
         
         fig.tight_layout()
         plt.savefig(buffer, format='svg')
