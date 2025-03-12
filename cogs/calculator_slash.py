@@ -31,6 +31,55 @@ MAX_ENTRIES = 50
 
 logger = logging.getLogger("xof_calculator.calculator")
 
+class ZipFormatSelector(Select):
+    def __init__(self, formats: List[str]):
+        options = [
+            discord.SelectOption(label="All Formats", value="all", description="Select all available formats"),
+        ]
+        
+        for fmt in formats:
+            options.append(
+                discord.SelectOption(label=fmt.upper(), value=fmt, description=f"Include {fmt.upper()} format")
+            )
+        
+        super().__init__(
+            placeholder="Select formats to include in ZIP...",
+            min_values=1,
+            max_values=len(formats) + 1,  # +1 for "All" option
+            options=options
+        )
+        
+        self.selected_formats = []
+    
+    async def callback(self, interaction: discord.Interaction):
+        self.selected_formats = self.values
+        
+        # If "all" is selected, use all formats
+        if "all" in self.selected_formats:
+            self.selected_formats = ALL_ZIP_FORMATS.copy()
+        
+        formats_str = ", ".join(self.selected_formats)
+        await interaction.response.send_message(
+            f"Selected formats: {formats_str}",
+            ephemeral=True
+        )
+
+class FormatSelectorView(View):
+    def __init__(self, timeout: float = 180):
+        super().__init__(timeout=timeout)
+        self.selector = ZipFormatSelector(ALL_ZIP_FORMATS)
+        self.add_item(self.selector)
+        self.confirmed = False
+
+    @discord.ui.button(label="Confirm", style=discord.ButtonStyle.green)
+    async def confirm(self, interaction: discord.Interaction, button: Button):
+        self.confirmed = True
+        self.stop()
+        await interaction.response.send_message(
+            f"Formats confirmed: {', '.join(self.selector.selected_formats)}",
+            ephemeral=True
+        )
+
 class HoursWorkedModal(ui.Modal, title="Enter Hours Worked"):
     def __init__(self, cog, period, shift, role, gross_revenue, compensation_type):
         super().__init__()
@@ -1367,7 +1416,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         range_from="Starting date (dd/mm/yyyy)",
         range_to="Ending date (dd/mm/yyyy)",
         send_to_message="Message to send to the selected users or roles",
-        zip_formats="List of formats to include when export_format is 'zip' (default: all available formats)"
+        zip_formats="Select formats to include in ZIP export (multiple choices allowed)"
     )
     @app_commands.choices(
         export=[
@@ -1382,18 +1431,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             app_commands.Choice(name="HTML", value="html"),
             app_commands.Choice(name="SVG", value="svg"),
             app_commands.Choice(name="ZIP Archive", value="zip")
-        ],
-        zip_formats=[
-            app_commands.Choice(name="All", value="all"),
-            app_commands.Choice(name="CSV", value="csv"),
-            app_commands.Choice(name="JSON", value="json"),
-            app_commands.Choice(name="Excel", value="xlsx"),
-            app_commands.Choice(name="PDF", value="pdf"),
-            app_commands.Choice(name="PNG Chart", value="png"),
-            app_commands.Choice(name="Text File", value="txt"),
-            app_commands.Choice(name="HTML", value="html"),
-            app_commands.Choice(name="Markdown", value="markdown"),
-            app_commands.Choice(name="SVG", value="svg")
         ]
     )
     async def view_earnings(
@@ -1525,41 +1562,37 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             else:
                 pass
 
-            await interaction.followup.send(f"Zip format options: ({zip_formats})", ephemeral=ephemeral)
-
-            # Parse zip_formats string
+            # Process zip_formats selection
             zip_formats_list = []
+            
+            # Handle zip_formats input
             if zip_formats:
-                temp_list = re.split(r'[ ,\.\-_\s]+', zip_formats)
-                for fmt in temp_list:
-                    if fmt in ALL_ZIP_FORMATS:
+                # Split the input string by common separators
+                formats = re.split(r'[ ,\.\-_\s]+', zip_formats)
+                for fmt in formats:
+                    fmt = fmt.lower().strip()
+                    if fmt and fmt in ALL_ZIP_FORMATS:
                         zip_formats_list.append(fmt)
-
-            # Manage zip_formats
-            if export == "zip":
-                if not zip_formats:
-                    zip_formats = ALL_ZIP_FORMATS
-                else:
-                    temp_list = re.split(r'[ ,\.\-_\s]+', zip_formats)
-                    for fmt in temp_list:
-                        if fmt in ALL_ZIP_FORMATS:
-                            zip_formats_list.append(fmt)
-
-            # Ensure all specified formats are valid and part of ALL_ZIP_FORMATS
-            invalid_formats = [fmt for fmt in zip_formats_list if fmt not in ALL_ZIP_FORMATS]
-            if invalid_formats:
+                    elif fmt == "all":
+                        zip_formats_list = ALL_ZIP_FORMATS.copy()
+                        break
+            
+            # If export is zip but no formats specified, use all formats
+            if export == "zip" and not zip_formats_list:
+                zip_formats_list = ALL_ZIP_FORMATS.copy()
+            
+            # Validate formats
+            if export == "zip" and not zip_formats_list:
                 await interaction.followup.send(
-                    f"❌ Invalid formats specified: {', '.join(invalid_formats)}",
+                    "❌ No valid export formats specified for ZIP archive.",
                     ephemeral=ephemeral
                 )
                 return
 
-            zip_formats_argument = zip_formats_list if export == "zip" else None
-
             file = None
             if export != "none":
                 try:
-                    file = await self.generate_export_file(user_earnings, interaction.user, export, zip_formats_argument)
+                    file = await self.generate_export_file(user_earnings, interaction.user, export, zip_formats_list if export == "zip" else None)
                 except Exception as e:
                     return await interaction.followup.send(f" Export failed: {str(e)}", ephemeral=ephemeral)
 
@@ -1611,7 +1644,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                         file = None
                         if export != "none":
                             try:
-                                file = await self.generate_export_file(user_earnings, interaction.user, export, zip_formats_argument)
+                                file = await self.generate_export_file(user_earnings, interaction.user, export, zip_formats_list if export == "zip" else None)
                             except Exception as e:
                                 return await interaction.followup.send(f"❌ Export failed: {str(e)}", ephemeral=ephemeral)
                         
