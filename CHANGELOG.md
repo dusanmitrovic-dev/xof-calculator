@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.127.0] - 2025-03-12
+### Removed
+- Removed charts from excel generation since they did not work
+
 ## [0.126.0] - 2025-03-12
 ### Removed
 - Removed `hourly_rate` and `commission_percent` from export

@@ -11,8 +11,10 @@ import re
 import os
 
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
+from openpyxl.chart import LineChart, BarChart, PieChart, Reference
 from utils import file_handlers, validators, calculations
 from reportlab.lib.styles import getSampleStyleSheet
+from openpyxl.chart.label import DataLabelList
 from typing import Union, Optional, List, Dict
 from reportlab.lib.pagesizes import letter
 from discord import ui, app_commands
@@ -389,18 +391,18 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         buffer.write(json_data.encode('utf-8'))
 
     def _generate_excel(self, df, buffer):
-        """Generate Excel format export"""
+        """Generate Excel format export with formatting."""
         with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
+            # Write the main Earnings sheet
             df.to_excel(writer, index=False, sheet_name='Earnings')
             
-            # Add a summary sheet
+            # Add a summary sheet with numeric values
+            total_gross = df['gross_revenue'].sum()
+            total_earnings = df['total_cut'].sum()
+            total_hours = df['hours_worked'].sum()
             summary = pd.DataFrame({
                 'Metric': ['Total Gross Revenue', 'Total Earnings', 'Total Hours Worked'],
-                'Value': [
-                    None if df['gross_revenue'].sum() is None else f"${df['gross_revenue'].sum():.2f}", 
-                    None if df['total_cut'].sum() is None else f"${df['total_cut'].sum():.2f}",
-                    None if df['hours_worked'].sum() is None else f"{df['hours_worked'].sum():.1f}"
-                ]
+                'Value': [total_gross, total_earnings, total_hours]
             })
             summary.to_excel(writer, index=False, sheet_name='Summary')
             
@@ -412,11 +414,17 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                                     aggfunc='sum')
                 pivot.to_excel(writer, sheet_name='By Role')
             
-            # Add chart sheet for visualizations
+            # Access the workbook and sheets for formatting
             workbook = writer.book
-            chart_sheet = workbook.create_sheet(title="Charts")
+            summary_sheet = writer.sheets['Summary']
             
-            # Apply styling and formatting
+            # Apply number formatting to Summary sheet
+            for row in summary_sheet.iter_rows(min_row=2, max_row=3, min_col=2, max_col=2):
+                for cell in row:
+                    cell.number_format = '"$"#,##0.00'  # Currency format for revenue and earnings
+            summary_sheet.cell(row=4, column=2).number_format = '0.0'  # Decimal format for hours
+            
+            # Apply styling and formatting to all sheets
             for worksheet in writer.sheets.values():
                 for col in worksheet.columns:
                     max_length = 0
