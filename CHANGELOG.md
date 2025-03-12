@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.125.0] - 2025-03-12
+### Added
+- Display warning if `zip_formats` are set but `export` is not `zip`
+
 ## [0.124.0] - 2025-03-11
 ### Added
 - Added zip formats selection

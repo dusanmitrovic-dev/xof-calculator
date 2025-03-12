@@ -16,6 +16,7 @@ from reportlab.lib.styles import getSampleStyleSheet
 from typing import Union, Optional, List, Dict
 from reportlab.lib.pagesizes import letter
 from discord import ui, app_commands
+from discord.ui import Select, View, Button
 from discord.ext import commands
 from reportlab.lib import colors
 from utils import file_handlers
@@ -594,7 +595,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
     def _generate_svg(self, df, user, buffer, user_earnings):
         """Generate SVG format export"""
         # Create SVG visualization
-        fig, axes = plt.subplots(1, 2, figsize=(12, 6))
+        fig, axes = plt.subplots(1, 2, figsize=(24, 12))
         
         # Plot 1: Line chart
         dates = [datetime.strptime(entry['date'], '%d/%m/%Y') for entry in user_earnings]
@@ -1446,7 +1447,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         range_to: Optional[str] = None,
         send_to_message: Optional[str] = None,
         # zip_formats: Optional[str] = None
-        zip_formats: Optional[List[str]] = None
+        zip_formats: Optional[str] = None
     ):
         """Command for users to view their earnings with enhanced reporting."""
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
@@ -1563,55 +1564,57 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             else:
                 pass
 
+            if export != "zip" and zip_formats:
+                await interaction.followup.send("⚠️ Zip formats are set but the export format is not 'zip'.", ephemeral=ephemeral)
+                return
+
             # Process zip_formats selection
             zip_formats_list = []
 
-            zip_formats_list = []
-            if export == "zip":
-                # Default to all formats if none selected
-                if not zip_formats:
-                    zip_formats_list = ALL_ZIP_FORMATS.copy()
-                else:
-                    # Check if "all" was explicitly chosen
-                    if "all" in zip_formats:
-                        zip_formats_list = ALL_ZIP_FORMATS.copy()
-                    else:
-                        # Filter valid formats (choices enforce validity, but double-check)
-                        zip_formats_list = [fmt for fmt in zip_formats if fmt in ALL_ZIP_FORMATS]
-            
-            # Handle zip_formats input # note: might need to rollback to this
-            # if zip_formats: 
-            #     # Split the input string by common separators
-            #     formats = re.split(r'[ ,\.\-_\s]+', zip_formats)
-            #     for fmt in formats:
-            #         fmt = fmt.lower().strip()
-            #         if fmt and fmt in ALL_ZIP_FORMATS:
-            #             zip_formats_list.append(fmt)
-            #         elif fmt == "all":
+            # zip_formats_list = [] # note: deep seek
+            # if export == "zip":
+            #     # Default to all formats if none selected
+            #     if not zip_formats:
+            #         zip_formats_list = ALL_ZIP_FORMATS.copy()
+            #     else:
+            #         # Check if "all" was explicitly chosen
+            #         if "all" in zip_formats:
             #             zip_formats_list = ALL_ZIP_FORMATS.copy()
-            #             break
+            #         else:
+            #             # Filter valid formats (choices enforce validity, but double-check)
+            #             zip_formats_list = [fmt for fmt in zip_formats if fmt in ALL_ZIP_FORMATS]
             
-            # If export is zip but no formats specified, use all formats
-            # if export == "zip" and not zip_formats_list:
-            #     zip_formats_list = ALL_ZIP_FORMATS.copy()
-            
-            # # Validate formats
-            # if export == "zip" and not zip_formats_list:
-            #     await interaction.followup.send(
-            #         "❌ No valid export formats specified for ZIP archive.",
-            #         ephemeral=ephemeral
-            #     )
-            #     return
-
-            if "all" in zip_formats:
-                zip_formats_list = ALL_ZIP_FORMATS.copy()
+            # Handle zip_formats input
+            # Process zip_formats selection
+            if export == "zip":
+                if zip_formats:
+                    formats = re.split(r'[ ,\.\-_\s]+', zip_formats)
+                    for fmt in formats:
+                        fmt = fmt.lower().strip()
+                        if fmt and fmt in ALL_ZIP_FORMATS:
+                            zip_formats_list.append(fmt)
+                        elif fmt == "all":
+                            zip_formats_list = ALL_ZIP_FORMATS.copy()
+                            break
+                
+                # If export is zip but no formats specified, use all formats
+                if not zip_formats_list:
+                    zip_formats_list = ALL_ZIP_FORMATS.copy()
+                
+                # Validate formats
+                if not zip_formats_list:
+                    await interaction.followup.send(
+                        "❌ No valid export formats specified for ZIP archive.",
+                        ephemeral=ephemeral
+                    )
+                    return
 
             file = None
             if export != "none":
                 try:
                     file = await self.generate_export_file(user_earnings, interaction.user, export, zip_formats_list if export == "zip" else None)
                 except Exception as e:
-                    return await interaction.followup.send(f" Export failed: {str(e)}", ephemeral=ephemeral)
+                    return await interaction.followup.send(f"❌ Export failed: {str(e)}", ephemeral=ephemeral)
 
             if file:
                 await interaction.followup.send(file=file, ephemeral=ephemeral)
