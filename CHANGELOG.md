@@ -12,7 +12,7 @@
 
 ## [0.128.0] - 2025-03-12
 ### Removed
-- Removed charts from excel generation since they did not work
+- Removed charts from excel generation since they did not work.
 
 ## [0.127.0] - 2025-03-12
 ### Removed
