@@ -318,13 +318,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         # Convert earnings to DataFrame for easier manipulation
         df = pd.DataFrame(user_earnings)
         
-        # Calculate additional metrics if needed
-        if 'hours_worked' in df.columns and 'total_cut' in df.columns:
-            df['hourly_rate'] = df['total_cut'] / df['hours_worked']
-        
-        if 'gross_revenue' in df.columns and 'total_cut' in df.columns:
-            df['commission_percent'] = (df['total_cut'] / df['gross_revenue']) * 100
-        
         # If zip_formats not specified, use all formats
         if zip_formats is None:
             zip_formats = ALL_ZIP_FORMATS
@@ -402,14 +395,11 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             
             # Add a summary sheet
             summary = pd.DataFrame({
-                'Metric': ['Total Gross Revenue', 'Total Earnings', 'Total Hours Worked', 
-                        'Average Hourly', 'Average Commission %'],
+                'Metric': ['Total Gross Revenue', 'Total Earnings', 'Total Hours Worked'],
                 'Value': [
-                    f"${df['gross_revenue'].sum():.2f}", 
-                    f"${df['total_cut'].sum():.2f}",
-                    f"{df['hours_worked'].sum():.1f}",
-                    f"${df['total_cut'].sum() / df['hours_worked'].sum():.2f}",
-                    f"{(df['total_cut'].sum() / df['gross_revenue'].sum() * 100):.2f}%"
+                    None if df['gross_revenue'].sum() is None else f"${df['gross_revenue'].sum():.2f}", 
+                    None if df['total_cut'].sum() is None else f"${df['total_cut'].sum():.2f}",
+                    None if df['hours_worked'].sum() is None else f"{df['hours_worked'].sum():.1f}"
                 ]
             })
             summary.to_excel(writer, index=False, sheet_name='Summary')
@@ -432,7 +422,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                     max_length = 0
                     column = col[0].column_letter
                     for cell in col:
-                        if cell.value:
+                        if cell.value is not None:
                             max_length = max(max_length, len(str(cell.value)))
                     worksheet.column_dimensions[column].width = max_length + 2
 
