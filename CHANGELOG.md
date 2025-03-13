@@ -36,7 +36,7 @@
 
 ## [0.124.0] - 2025-03-12
 ### Added
-- Added zip formats selection
+- Added zip formats selection.
 
 ## [0.123.0] - 2025-03-11
 ### Changed
