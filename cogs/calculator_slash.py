@@ -1251,65 +1251,31 @@ Generated on {datetime.now().strftime('%d/%m/%Y %H:%M')}
 
     #     return embed
 
-    async def create_table_embed(self, interaction, user_earnings, embed):
-        """Creates paginated table embeds that respect Discord's character and field limits."""
-        # Constants
-        MAX_FIELDS_PER_EMBED = 20  # Leave room for other fields
-        MAX_EMBED_SIZE = 5800  # Leave some buffer from the 6000 limit
+    async def create_list_embed(self, interaction, user_earnings, embed):
+        """Creates properly sized list entries that respect Discord's 1024 character limit per field."""
+        embeds = [embed]
+        current_embed = embed
+        field_count = 0
+        MAX_FIELDS_PER_EMBED = 20  # Keep some space for other fields
         
-        table_header = "```\n  # |   Date     |   Role    |  Gross   |  Total   \n----|------------|-----------|----------|--------\n"
-        table_rows = []
-        total_gross = 0
-        total_cut_sum = 0
-            
-        for index, entry in enumerate(user_earnings, start=1):
+        for idx, entry in enumerate(user_earnings, start=1):
             gross_revenue = float(entry['gross_revenue'])
             total_cut = float(entry['total_cut'])
-            total_gross += gross_revenue
-            total_cut_sum += total_cut
-            table_rows.append(f"{index:3} | {entry['date']:10} | {entry['role'].capitalize():<9} | {gross_revenue:8.2f} | {total_cut:6.2f}\n")
-
-        # Create initial embed
-        current_embed = embed
-        embeds = [current_embed]
-        current_embed_size = len(current_embed.title) + (len(current_embed.description) if current_embed.description else 0)
-        field_count = 0
-        
-        # Build table chunks with proper overflow handling
-        current_chunk = table_header
-        
-        for row in table_rows:
-            # Check if adding this row would exceed the chunk size
-            if len(current_chunk) + len(row) + 3 > 1024:
-                # Add current chunk if it has content beyond header
-                if current_chunk != table_header:
-                    chunk_value = current_chunk + "```"
-                    # Check if adding this field would exceed embed size
-                    if current_embed_size + len(chunk_value) > MAX_EMBED_SIZE or field_count >= MAX_FIELDS_PER_EMBED:
-                        # Create new embed
-                        current_embed = discord.Embed(
-                            title=f"{embed.title} (continued)",
-                            color=embed.color,
-                            timestamp=interaction.created_at
-                        )
-                        embeds.append(current_embed)
-                        current_embed_size = len(current_embed.title)
-                        field_count = 0
-                    
-                    current_embed.add_field(name="", value=chunk_value, inline=False)
-                    current_embed_size += len(chunk_value)
-                    field_count += 1
-                    
-                current_chunk = "```\n"  # Start new chunk without table header
-                
-            current_chunk += row
-
-        # Add remaining content
-        if current_chunk and current_chunk != table_header:
-            chunk_value = current_chunk + "```"
+            total_cut_percent = (total_cut / gross_revenue * 100 if gross_revenue != 0 else 0.0)
             
-            # Check if adding this field would exceed embed size
-            if current_embed_size + len(chunk_value) > MAX_EMBED_SIZE or field_count >= MAX_FIELDS_PER_EMBED:
+            # Create a more compact entry that's guaranteed to be under 1024 chars
+            entry_text = (
+                f"```diff\n"
+                f"+ Entry #{idx}\n"
+                f"📅 Date:    {entry.get('date', 'N/A')}\n"
+                f"🎯 Role:    {entry.get('role', 'N/A').capitalize()}\n"
+                f"💰 Gross:   ${gross_revenue:.2f}\n"
+                f"💸 Cut:     ${total_cut:.2f} ({total_cut_percent:.1f}%)\n"
+                f"```"
+            )
+            
+            # Check if we need a new embed due to field limits
+            if field_count >= MAX_FIELDS_PER_EMBED:
                 # Create new embed
                 current_embed = discord.Embed(
                     title=f"{embed.title} (continued)",
@@ -1317,127 +1283,94 @@ Generated on {datetime.now().strftime('%d/%m/%Y %H:%M')}
                     timestamp=interaction.created_at
                 )
                 embeds.append(current_embed)
-                current_embed_size = len(current_embed.title)
                 field_count = 0
-                
-            current_embed.add_field(name="", value=chunk_value, inline=False)
-            current_embed_size += len(chunk_value)
+            
+            # Add the entry as a single field
+            # current_embed.add_field(name=f"Entry #{idx}", value=entry_text, inline=False)
+            field_count += 1
+        
+        return embeds
+
+    async def create_table_embed(self, interaction, user_earnings, embed):
+        """Creates a table display that respects Discord's field character limits."""
+        rows_per_chunk = 15  # Adjust based on your typical row length
+        embeds = [embed]
+        current_embed = embed
+        field_count = 0
+        MAX_FIELDS_PER_EMBED = 20
+        
+        # Calculate totals first
+        total_gross = sum(float(entry['gross_revenue']) for entry in user_earnings)
+        total_cut_sum = sum(float(entry['total_cut']) for entry in user_earnings)
+        
+        # Process entries in chunks
+        for i in range(0, len(user_earnings), rows_per_chunk):
+            chunk = user_earnings[i:i+rows_per_chunk]
+            
+            # Create header for each chunk
+            table_text = "```\n  # |   Date     |   Role    |  Gross   |  Total   \n----|------------|-----------|----------|--------\n"
+            
+            # Add rows to this chunk
+            for j, entry in enumerate(chunk, start=i+1):
+                gross_revenue = float(entry['gross_revenue'])
+                total_cut = float(entry['total_cut'])
+                row = f"{j:3} | {entry['date']:10} | {entry['role'].capitalize():<9} | {gross_revenue:8.2f} | {total_cut:6.2f}\n"
+                table_text += row
+            
+            table_text += "```"
+            
+            # Check if we need a new embed
+            if field_count >= MAX_FIELDS_PER_EMBED:
+                # Create new embed
+                current_embed = discord.Embed(
+                    title=f"{embed.title} (continued)",
+                    color=embed.color,
+                    timestamp=interaction.created_at
+                )
+                embeds.append(current_embed)
+                field_count = 0
+            
+            # Add the chunk as a field
+            chunk_start = i + 1
+            chunk_end = min(i + rows_per_chunk, len(user_earnings))
+            current_embed.add_field(
+                name=f"Entries {chunk_start}-{chunk_end}", 
+                value=table_text, 
+                inline=False
+            )
             field_count += 1
         
         # Add totals to the last embed
-        totals_gross = f"```\n{total_gross:.2f}\n```"
-        totals_cut = f"```\n{total_cut_sum:.2f}\n```"
-        
-        # Check if adding totals would exceed embed size
-        if current_embed_size + len(totals_gross) + len(totals_cut) > MAX_EMBED_SIZE or field_count >= MAX_FIELDS_PER_EMBED - 1:
-            # Create new embed for totals
-            current_embed = discord.Embed(
+        last_embed = embeds[-1]
+        if field_count >= MAX_FIELDS_PER_EMBED - 1:
+            # Create a new embed for totals if needed
+            summary_embed = discord.Embed(
                 title=f"{embed.title} (Summary)",
                 color=embed.color,
                 timestamp=interaction.created_at
             )
-            embeds.append(current_embed)
+            embeds.append(summary_embed)
+            last_embed = summary_embed
         
-        current_embed.add_field(name="Total Gross", value=totals_gross, inline=True)
-        current_embed.add_field(name="Total Cut", value=totals_cut, inline=True)
-
+        last_embed.add_field(name="Total Gross", value=f"```\n{total_gross:.2f}\n```", inline=True)
+        last_embed.add_field(name="Total Cut", value=f"```\n{total_cut_sum:.2f}\n```", inline=True)
+        
         return embeds
 
-    async def create_list_embed(self, interaction, user_earnings, embed):
-        """Creates paginated list embeds that respect Discord's character and field limits."""
-        # Constants
-        MAX_FIELDS_PER_EMBED = 20  # Leave room for other fields
-        MAX_EMBED_SIZE = 5800  # Leave some buffer from the 6000 limit
-        
-        # Create initial embed
-        current_embed = embed
-        embeds = [current_embed]
-        current_embed_size = len(current_embed.title) + (len(current_embed.description) if current_embed.description else 0)
-        field_count = 0
-        
-        # Process each entry
-        current_chunk = []
-        current_chunk_size = 0
-        
-        for idx, entry in enumerate(user_earnings, start=1):
-            gross_revenue = float(entry['gross_revenue'])
-            total_cut_percent = (float(entry['total_cut']) / gross_revenue * 100 if gross_revenue != 0 else 0.0)
-            entry_text = (
-                    f"```diff\n"
-                    f"+ Entry #{idx}\n"
-                    f"📅 Date:    {entry.get('date', 'N/A')}\n"
-                    f"🎯 Role:    {entry.get('role', 'N/A').capitalize()}\n"
-                    f"💰 Gross:   ${float(entry.get('gross_revenue', 0)):.2f}\n"
-                    f"💸 Cut:     ${float(entry.get('total_cut', 0)):.2f} "
-                    f"({float(entry.get('total_cut', 0))/float(entry.get('gross_revenue', 1))*100:.1f}%)\n"
-                    f"```\n"
-                )
-            
-            # Check if adding this entry would exceed the chunk size
-            if current_chunk_size + len(entry_text) > 1024:
-                # Add current chunk if it has content
-                if current_chunk:
-                    chunk_value = "\n".join(current_chunk)
-                    
-                    # Check if adding this field would exceed embed size
-                    if current_embed_size + len(chunk_value) > MAX_EMBED_SIZE or field_count >= MAX_FIELDS_PER_EMBED:
-                        # Create new embed
-                        current_embed = discord.Embed(
-                            title=f"{embed.title} (continued)",
-                            color=embed.color,
-                            timestamp=interaction.created_at
-                        )
-                        embeds.append(current_embed)
-                        current_embed_size = len(current_embed.title)
-                        field_count = 0
-                    
-                    current_embed.add_field(name="", value=chunk_value, inline=False)
-                    current_embed_size += len(chunk_value)
-                    field_count += 1
-                    
-                current_chunk = [entry_text]
-                current_chunk_size = len(entry_text)
-            else:
-                current_chunk.append(entry_text)
-                current_chunk_size += len(entry_text)
-
-        # Add remaining content
-        if current_chunk:
-            chunk_value = "\n".join(current_chunk)
-            
-            # Check if adding this field would exceed embed size
-            if current_embed_size + len(chunk_value) > MAX_EMBED_SIZE or field_count >= MAX_FIELDS_PER_EMBED:
-                # Create new embed
-                current_embed = discord.Embed(
-                    title=f"{embed.title} (continued)",
-                    color=embed.color,
-                    timestamp=interaction.created_at
-                )
-                embeds.append(current_embed)
-            
-            current_embed.add_field(name="", value=chunk_value, inline=False)
-
-        return embeds
-
-    # Helper function to send paginated embeds
     async def send_paginated_embeds(self, interaction, embeds, ephemeral=True):
-        """Sends multiple embeds as separate messages."""
+        """Sends multiple embeds as separate messages with page numbering."""
         if not embeds:
             await interaction.followup.send("No data to display.", ephemeral=ephemeral)
             return
+        
+        total_pages = len(embeds)
+        
+        for i, embed in enumerate(embeds, start=1):
+            # Add page number to footer
+            embed.set_footer(text=f"Page {i}/{total_pages} • Today at {datetime.now().strftime('%I:%M %p')}")
             
-        if len(embeds) == 1:
-            await interaction.followup.send(embed=embeds[0], ephemeral=ephemeral)
-        else:
-            # Send first embed with a note about pagination
-            first_embed = embeds[0]
-            first_embed.set_footer(text=f"Page 1/{len(embeds)}")
-            await interaction.followup.send(embed=first_embed, ephemeral=ephemeral)
-            
-            # Send subsequent embeds
-            for i, embed in enumerate(embeds[1:], start=2):
-                embed.set_footer(text=f"Page {i}/{len(embeds)}")
-                await interaction.followup.send(embed=embed, ephemeral=ephemeral)
+            # Send the embed
+            await interaction.followup.send(embed=embed, ephemeral=ephemeral)
 
     def parse_mentions(self, send_to_str: str, guild: discord.Guild) -> tuple[list[discord.Member], list[discord.Role]]:
         """Parse user and role mentions from a string"""
