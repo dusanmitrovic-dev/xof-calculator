@@ -60,7 +60,7 @@
 
 ## [0.118.0] - 2025-03-11
 ### Fixed
-- Correctly displaying report message sent
+- Correctly displaying report message sent.
 
 ## [0.117.0] - 2025-03-11
 ### Added
