@@ -1286,7 +1286,7 @@ Generated on {datetime.now().strftime('%d/%m/%Y %H:%M')}
                 field_count = 0
             
             # Add the entry as a single field
-            # current_embed.add_field(name=f"Entry #{idx}", value=entry_text, inline=False)
+            current_embed.add_field(name=f"", value=entry_text, inline=False)
             field_count += 1
         
         return embeds
