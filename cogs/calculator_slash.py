@@ -1367,7 +1367,8 @@ Generated on {datetime.now().strftime('%d/%m/%Y %H:%M')}
         range_from="Starting date (dd/mm/yyyy)",
         range_to="Ending date (dd/mm/yyyy)",
         send_to_message="Message to send to the selected users or roles",
-        zip_formats="Available formats: txt, csv, json, xlsx, pdf, png, markdown, html, svg"
+        zip_formats="Available formats: txt, csv, json, xlsx, pdf, png, markdown, html, svg",
+        all_data="[Admin] Use all earnings data, not just specific user's"
     )
     @app_commands.choices(
         export=[
@@ -1398,7 +1399,8 @@ Generated on {datetime.now().strftime('%d/%m/%Y %H:%M')}
         range_to: Optional[str] = None,
         send_to_message: Optional[str] = None,
         # zip_formats: Optional[str] = None
-        zip_formats: Optional[str] = None
+        zip_formats: Optional[str] = None,
+        all_data: Optional[bool] = False
     ):
         """Command for users to view their earnings with enhanced reporting."""
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
@@ -1421,10 +1423,11 @@ Generated on {datetime.now().strftime('%d/%m/%Y %H:%M')}
             earnings_data = await file_handlers.load_json(settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS)
             user_earnings = None
 
-            if user:
-                user_earnings = earnings_data.get(user.mention, [])
-            else:
-                user_earnings = earnings_data.get(interaction.user.mention, [])
+            if not all_data:
+                if user:
+                    user_earnings = earnings_data.get(user.mention, [])
+                else:
+                    user_earnings = earnings_data.get(interaction.user.mention, [])
 
             # Date filtering
             if range_from or range_to:
