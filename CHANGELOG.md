@@ -28,7 +28,7 @@
 
 ## [0.126.0] - 2025-03-12
 ### Removed
-- Removed `hourly_rate` and `commission_percent` from export
+- Removed `hourly_rate` and `commission_percent` from export.
 
 ## [0.125.0] - 2025-03-12
 ### Added
