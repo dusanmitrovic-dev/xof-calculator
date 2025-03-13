@@ -1293,11 +1293,12 @@ Generated on {datetime.now().strftime('%d/%m/%Y %H:%M')}
 
     async def create_table_embed(self, interaction, user_earnings, embed):
         """Creates a table display that respects Discord's field character limits."""
-        rows_per_chunk = 15  # Adjust based on your typical row length
+        # Decrease rows per chunk to ensure we stay within size limits
+        rows_per_chunk = 8  # Reduced from 15
         embeds = [embed]
         current_embed = embed
         field_count = 0
-        MAX_FIELDS_PER_EMBED = 20
+        MAX_FIELDS_PER_EMBED = 6  # Reduced from 20 to keep embed size smaller
         
         # Calculate totals first
         total_gross = sum(float(entry['gross_revenue']) for entry in user_earnings)
@@ -1308,13 +1309,14 @@ Generated on {datetime.now().strftime('%d/%m/%Y %H:%M')}
             chunk = user_earnings[i:i+rows_per_chunk]
             
             # Create header for each chunk
-            table_text = "```\n  # |   Date     |   Role    |  Gross   |  Total   \n----|------------|-----------|----------|--------\n"
+            table_text = "```\n  # |   Date     |   Role    |  Gross   |  Cut    \n----|------------|-----------|----------|--------\n"
             
             # Add rows to this chunk
             for j, entry in enumerate(chunk, start=i+1):
                 gross_revenue = float(entry['gross_revenue'])
                 total_cut = float(entry['total_cut'])
-                row = f"{j:3} | {entry['date']:10} | {entry['role'].capitalize():<9} | {gross_revenue:8.2f} | {total_cut:6.2f}\n"
+                # Make the row more compact
+                row = f"{j:3} | {entry['date'][:10]} | {entry['role'].capitalize()[:9]} | {gross_revenue:8.2f} | {total_cut:6.2f}\n"
                 table_text += row
             
             table_text += "```"
@@ -1340,20 +1342,16 @@ Generated on {datetime.now().strftime('%d/%m/%Y %H:%M')}
             )
             field_count += 1
         
-        # Add totals to the last embed
-        last_embed = embeds[-1]
-        if field_count >= MAX_FIELDS_PER_EMBED - 1:
-            # Create a new embed for totals if needed
-            summary_embed = discord.Embed(
-                title=f"{embed.title} (Summary)",
-                color=embed.color,
-                timestamp=interaction.created_at
-            )
-            embeds.append(summary_embed)
-            last_embed = summary_embed
+        # Add totals to a new embed always to ensure we don't exceed limits
+        summary_embed = discord.Embed(
+            title=f"{embed.title} (Summary)",
+            color=embed.color,
+            timestamp=interaction.created_at
+        )
+        embeds.append(summary_embed)
         
-        last_embed.add_field(name="Total Gross", value=f"```\n{total_gross:.2f}\n```", inline=True)
-        last_embed.add_field(name="Total Cut", value=f"```\n{total_cut_sum:.2f}\n```", inline=True)
+        summary_embed.add_field(name="Total Gross", value=f"```\n${total_gross:.2f}\n```", inline=True)
+        summary_embed.add_field(name="Total Cut", value=f"```\n${total_cut_sum:.2f}\n```", inline=True)
         
         return embeds
 
