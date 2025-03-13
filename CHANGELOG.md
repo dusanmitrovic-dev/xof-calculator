@@ -68,7 +68,7 @@
 
 ## [0.116.0] - 2025-03-11
 ### Changed
-- DM-ed users first receive table then file
+- DM-ed users first receive table then file.
 
 ## [0.115.0] - 2025-03-11
 ### Added
