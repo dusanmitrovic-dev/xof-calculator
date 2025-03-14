@@ -351,19 +351,33 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         elements.append(Paragraph("Detailed Earnings", subtitle_style))
         
         # Format data for the table
-        data = [["#", "User" if all_data else "", "Date", "Role", "Shift", "Hours", "Gross Revenue", "Earnings"]]
+        if all_data:
+            data = [["#", "User", "Date", "Role", "Shift", "Hours", "Gross Revenue", "Earnings"]]
+        else:
+            data = [["#", "Date", "Role", "Shift", "Hours", "Gross Revenue", "Earnings"]]
         for i, entry in enumerate(user_earnings, 1):
             hourly = float(entry['total_cut']) / float(entry['hours_worked']) if float(entry['hours_worked']) > 0 else 0
-            data.append([
-                i,
-                f"{entry.get('display_name', '')} (@{entry.get('username', '')})" if all_data else "",
-                entry['date'],
-                entry['role'],
-                entry['shift'].capitalize(),
-                f"{float(entry['hours_worked']):.1f}",
-                f"${float(entry['gross_revenue']):.2f}",
-                f"${float(entry['total_cut']):.2f}"
-            ])
+            if all_data:
+                data.append([
+                    i,
+                    f"{entry.get('display_name', '')} (@{entry.get('username', '')})",
+                    entry['date'],
+                    entry['role'],
+                    entry['shift'].capitalize(),
+                    f"{float(entry['hours_worked']):.1f}",
+                    f"${float(entry['gross_revenue']):.2f}",
+                    f"${float(entry['total_cut']):.2f}"
+                ])
+            else:
+                data.append([
+                    i,
+                    entry['date'],
+                    entry['role'],
+                    entry['shift'].capitalize(),
+                    f"{float(entry['hours_worked']):.1f}",
+                    f"${float(entry['gross_revenue']):.2f}",
+                    f"${float(entry['total_cut']):.2f}"
+                ])
         
         # Create the table
         detail_table = Table(data)
@@ -434,11 +448,12 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
     def _generate_svg(self, df, user, buffer, user_earnings, all_data=False):
         """Generate SVG format export"""
         fig, ax = plt.subplots(figsize=(16, 9))
-        
+
         if all_data:
-            # Create stacked bar chart for multiple users
+            # Line chart for multiple users
             pivot = df.pivot_table(index='date', columns='display_name', values='total_cut', aggfunc='sum')
-            pivot.plot(kind='bar', stacked=True, ax=ax)
+            for user in pivot.columns:
+                ax.plot(pivot.index, pivot[user], marker='o', linestyle='-', label=user)
             ax.set_title('Daily Earnings by User')
         else:
             # Line chart for individual user
@@ -446,9 +461,10 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             ax.plot_date(dates, [float(e['gross_revenue']) for e in user_earnings], 'b-o', label='Gross Revenue')
             ax.plot_date(dates, [float(e['total_cut']) for e in user_earnings], 'r-o', label='Earnings')
             ax.set_title('Revenue & Earnings Over Time')
-        
+
         ax.legend()
         ax.grid(True, linestyle='--', alpha=0.7)
+        plt.xticks(rotation=45)
         plt.savefig(buffer, format='svg')
         plt.close(fig)
 
@@ -1272,7 +1288,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
 
     #     return embed
 
-    async def create_list_embed(self, interaction, user_earnings, embed, all_data=False):
+    async def create_list_embed(self, interaction, user_earnings, embed, all_data=False, period=False):
         """Creates properly sized list entries that respect Discord's 1024 character limit per field."""
         embeds = [embed]
         current_embed = embed
@@ -1295,6 +1311,8 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                 entry_text += f"👤 User:    {f'{user.display_name} (@{user.name})' if user else 'Unknown'}\n"
             
             entry_text += f"📅 Date:    {entry.get('date', 'N/A')}\n"
+            # if period:
+            #     entry_text += f"⌛ Period:  {entry.get('period', 'N/A')}\n"
             entry_text += f"🎯 Role:    {entry.get('role', 'N/A').capitalize()}\n"
             entry_text += f"💰 Gross:   ${gross_revenue:.2f}\n"
             entry_text += f"💸 Cut:     ${total_cut:.2f} ({total_cut_percent:.1f}%)\n"
