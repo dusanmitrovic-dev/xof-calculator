@@ -257,8 +257,14 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
             # Reorder columns if showing user data
             if all_data and 'display_name' in df.columns:
-                df = df[['display_name', 'username', 'date', 'role', 'shift', 
+                df = df[['user', 'date', 'role', 
                         'hours_worked', 'gross_revenue', 'total_cut']]
+            else:
+                df = df[['date', 'role', 
+                        'hours_worked', 'gross_revenue', 'total_cut']]
+
+            if 'models' in df.columns:
+                df.drop(columns=['models', 'shift'], inplace=True)
                 
             # Main Earnings sheet
             df.fillna('null', inplace=True)
@@ -406,11 +412,13 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         title = 'Full Earnings Overview' if all_data else f'Earnings Report for {user.display_name}'
         if all_data:
             # Group by user if showing all data
-            user_groups = df.groupby('display_name')
+            user_groups = df.groupby('user')
             for name, group in user_groups:
                 dates = [datetime.strptime(d, '%d/%m/%Y') for d in group['date']]
-                axes.plot(dates, group['total_cut'], 'o-', label=name)
+                axes.plot(dates, group['gross_revenue'], 'o-', label=name)
             axes.set_title('Earnings by User Over Time')
+
+            axes.legend(loc='center left', bbox_to_anchor=(0, 0.5))
         else:
             dates = [datetime.strptime(entry['date'], '%d/%m/%Y') for entry in user_earnings]
             axes.plot(dates, [float(e['gross_revenue']) for e in user_earnings], 'b-o', label='Gross Revenue')
@@ -545,94 +553,183 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         buffer.write(html_content.encode('utf-8'))
 
     def _generate_markdown(self, df, user, buffer, user_earnings, all_data):
-        """Generate Markdown format export"""
+        """Generate Markdown format export
+        
+        Args:
+            df: DataFrame containing earnings data
+            user: User object for individual reports
+            buffer: Output buffer to write markdown content
+            user_earnings: List of user earnings entries
+            all_data: Boolean indicating if this is a full report or user-specific
+        """
         report_title = "Full Earnings Report" if all_data else f"Earnings Report for {user.display_name}"
         
-        md_content = f"""# {report_title}
-
-    Generated on {datetime.now().strftime('%d/%m/%Y %H:%M')}
-
-    ## Summary
-
-    """
-        if all_data:
-            md_content += f"* **Total Users:** {len(df['user_id'].unique())}\n"
+        # Validate dates - filter out future dates
+        current_date = datetime.now()
+        valid_earnings = []
+        for entry in user_earnings:
+            entry_date = datetime.strptime(entry['date'], '%d/%m/%Y')
+            if entry_date <= current_date:
+                valid_earnings.append(entry)
+            # else: future date detected, skip this entry
         
-        md_content += f"""* **Total Gross Revenue:** ${df['gross_revenue'].sum():.2f}
-    * **Total Earnings:** ${df['total_cut'].sum():.2f}
-    * **Total Hours Worked:** {df['hours_worked'].sum():.1f}
+        # Recalculate totals based on valid entries
+        valid_df = df[df['date'].apply(lambda x: datetime.strptime(x, '%d/%m/%Y') <= current_date)]
+        
+    #     md_content = f"""# {report_title}
 
-    ## Detailed Earnings
+    # Generated on {current_date.strftime('%d/%m/%Y %H:%M')}
 
-    | {'#' if not all_data else '# | User'} | Date       | Role       | Shift | Hours | Gross Revenue | Earnings |
-    |---{ '|----' if all_data else '' }|------------|------------|-------|-------|--------------|----------|
+    # ## Summary
+
+    # """
+        md_content = ""
+        md_content += f"# {report_title}\n\nGenerated on {current_date.strftime('%d/%m/%Y %H:%M')}\n\n## Summary\n\n"
+        if all_data:
+            # Count only users with valid usernames
+            unique_users = len([u for u in valid_df['user_id'].unique() if u and str(u).lower() != 'none'])
+            md_content += f"\n* **Total Users:** {unique_users}\n"
+        
+            md_content += f"""* **Total Gross Revenue:** ${valid_df['gross_revenue'].sum():.2f}
+* **Total Earnings:** ${valid_df['total_cut'].sum():.2f}
+* **Total Hours Worked:** {valid_df['hours_worked'].sum():.1f}
+
+## Detailed Earnings
+
+| # | User | Date | Role | Shift | Hours | Gross Revenue | Earnings |
+|---|-----|------|------|-------|-------|--------------|----------|
     """
-        for i, entry in enumerate(user_earnings, 1):
-            if all_data:
-                user_col = f"| {entry.get('display_name', '')} (@{entry.get('username', '')}) "
-            else:
-                user_col = ""
+        for i, entry in enumerate(valid_earnings, 1):
+            # Handle None values for username and display_name
+            display_name = entry.get('display_name', '')
+            username = entry.get('username', '')
             
-            md_content += f"| {i} {user_col}| {entry['date']} | {entry['role']} | {entry['shift'].capitalize()} | {float(entry['hours_worked']):.1f} | ${float(entry['gross_revenue']):.2f} | ${float(entry['total_cut']):.2f} |\n"
-
+            if display_name is None or display_name.lower() == 'none':
+                display_name = 'Unknown'
+            if username is None or username.lower() == 'none':
+                username = 'unknown'
+                
+            user_col = f"{display_name} (@{username})"
+            
+            # Ensure hours_worked is non-negative
+            hours = max(0, float(entry.get('hours_worked', 0)))
+            
+            # Ensure all numeric values are correctly formatted
+            gross_revenue = float(entry.get('gross_revenue', 0))
+            total_cut = float(entry.get('total_cut', 0))
+            
+            md_content += f"| {i} | {user_col} | {entry['date']} | {entry['role']} | {entry['shift'].capitalize()} | {hours:.1f} | ${gross_revenue:.2f} | ${total_cut:.2f} |\n"
+            
         # Role summary table
         md_content += "\n## Earnings by Role\n\n"
-        md_content += "| Role       | Total Earnings | Hours Worked | Percentage of Total |\n"
-        md_content += "|------------|---------------|--------------|--------------------|\n"
+        md_content += "| Role | Total Earnings | Hours Worked | Percentage of Total |\n"
+        md_content += "|------|---------------|--------------|--------------------|\n"
         
-        role_summary = df.groupby('role').agg({
+        role_summary = valid_df.groupby('role').agg({
             'total_cut': 'sum',
             'hours_worked': 'sum'
         }).reset_index()
         
-        total_earnings = df['total_cut'].sum()
+        total_earnings = valid_df['total_cut'].sum()
         
         for _, row in role_summary.iterrows():
-            percentage = (row['total_cut'] / total_earnings) * 100
+            # Avoid division by zero
+            percentage = (row['total_cut'] / total_earnings) * 100 if total_earnings > 0 else 0
             md_content += f"| {row['role']} | ${row['total_cut']:.2f} | {row['hours_worked']:.1f} | {percentage:.1f}% |\n"
         
         buffer.write(md_content.encode('utf-8'))
 
     def _generate_txt(self, df, interaction, user, buffer, user_earnings, all_data=False):
-        """Generate TXT format export"""
+        """Generate TXT format export
+        
+        Args:
+            df: DataFrame containing earnings data
+            interaction: Discord interaction object
+            user: User object for individual reports
+            buffer: Output buffer to write TXT content
+            user_earnings: List of user earnings entries
+            all_data: Boolean indicating if this is a full report or user-specific
+        """
         report_title = "FULL EARNINGS REPORT" if all_data else f"EARNINGS REPORT FOR {user.display_name.upper()}"
+
+        # Validate dates - filter out future dates
+        current_date = datetime.now()
+        valid_earnings = []
+        for entry in user_earnings:
+            entry_date = datetime.strptime(entry['date'], '%d/%m/%Y')
+            if entry_date <= current_date:
+                valid_earnings.append(entry)
+        
+        # Recalculate totals based on valid entries
+        valid_df = df[df['date'].apply(lambda x: datetime.strptime(x, '%d/%m/%Y') <= current_date)]
 
         text_content = f"============================================\n"
         text_content += f"   {report_title}\n"
-        text_content += f"   Generated on {datetime.now().strftime('%d/%m/%Y %H:%M')}\n"
+        text_content += f"   Generated on {current_date.strftime('%d/%m/%Y %H:%M')}\n"
         text_content += f"============================================\n\n"
         
         if all_data:
-            unique_users = set(entry.get('user_id') for entry in user_earnings)
+            # Count only valid users
+            unique_users = set(entry.get('user_id') for entry in valid_earnings if entry.get('user_id'))
             text_content += f"Total Users:         {len(unique_users)}\n"
         
-        text_content += f"Total Gross Revenue: ${df['gross_revenue'].sum():.2f}\n"
-        text_content += f"Total Earnings:      ${df['total_cut'].sum():.2f}\n"
-        text_content += f"Total Hours Worked:  {df['hours_worked'].sum():.1f}\n"
+        text_content += f"Total Gross Revenue: ${valid_df['gross_revenue'].sum():.2f}\n"
+        text_content += f"Total Earnings:      ${valid_df['total_cut'].sum():.2f}\n"
+        text_content += f"Total Hours Worked:  {valid_df['hours_worked'].sum():.1f}\n"
         
         # Table headers
         if all_data:
             text_content += "\n#   User                Date       Role        Shift     Hours  Gross ($)  Earnings ($)\n"
-            text_content += "-" * 88 + "\n"  # Adjusted separator length
+            text_content += "-" * 88 + "\n"  # Separator length for full report
         else:
             text_content += "\n#   Date       Role        Shift     Hours  Gross ($)  Earnings ($)\n"
-            text_content += "-" * 67 + "\n"  # Adjusted separator length
+            text_content += "-" * 67 + "\n"  # Separator length for user-specific report
         
-        for i, entry in enumerate(user_earnings, 1):
+        for i, entry in enumerate(valid_earnings, 1):
+            # Format hours and monetary values
+            hours = max(0, float(entry.get('hours_worked', 0)))
+            gross = float(entry.get('gross_revenue', 0))
+            earnings = float(entry.get('total_cut', 0))
+            
             if all_data:
-                user_id = entry.get('user_id', '')
-                user = interaction.guild.get_member(user_id)
-                if user:
-                    # Use only the display name, truncated to 20 characters
-                    user_info = f"{user.display_name[:20]:20}"
+                # Handle user display
+                user_id = entry.get('user_id')
+                username = entry.get('username', '')
+                display_name = entry.get('display_name', '')
+                
+                if display_name and display_name.lower() != 'none':
+                    user_info = f"{display_name[:18]} (@{username[:8]})"
+                elif username and username.lower() != 'none':
+                    user_info = f"@{username[:20]}"
                 else:
-                    user_info = "Unknown User".ljust(20)
-                text_content += f"{i:3} {user_info} {entry['date']:10} {entry['role']:12} {entry['shift'].capitalize():8} {float(entry['hours_worked']):6.1f} {float(entry['gross_revenue']):10.2f} {float(entry['total_cut']):12.2f}\n"
+                    user_info = "Unknown User"
+                
+                user_info = user_info.ljust(20)
+                
+                text_content += f"{i:3} {user_info} {entry['date']:10} {entry['role']:10} {entry['shift'].capitalize():8} {hours:6.1f} {gross:10.2f} {earnings:12.2f}\n"
             else:
-                text_content += f"{i:3} {entry['date']:10} {entry['role']:12} {entry['shift'].capitalize():8} {float(entry['hours_worked']):6.1f} {float(entry['gross_revenue']):10.2f} {float(entry['total_cut']):12.2f}\n"
+                text_content += f"{i:3} {entry['date']:10} {entry['role']:10} {entry['shift'].capitalize():8} {hours:6.1f} {gross:10.2f} {earnings:12.2f}\n"
+        
+        # Add role summary table
+        text_content += "\n============================================\n"
+        text_content += "EARNINGS BY ROLE\n"
+        text_content += "============================================\n\n"
+        text_content += "Role        Total Earnings    Hours Worked    % of Total\n"
+        text_content += "-" * 60 + "\n"
+        
+        role_summary = valid_df.groupby('role').agg({
+            'total_cut': 'sum',
+            'hours_worked': 'sum'
+        }).reset_index()
+        
+        total_earnings = valid_df['total_cut'].sum()
+        
+        for _, row in role_summary.iterrows():
+            # Avoid division by zero
+            percentage = (row['total_cut'] / total_earnings) * 100 if total_earnings > 0 else 0
+            text_content += f"{row['role']:10} ${row['total_cut']:15.2f} {row['hours_worked']:15.1f} {percentage:10.1f}%\n"
         
         buffer.write(text_content.encode('utf-8'))
-
     def add_footer(self, canvas, doc, username):
         """Add footer to the PDF pages"""
         canvas.saveState()
@@ -1473,7 +1570,12 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                             interaction.guild.get_member(int(user_id.strip('<@>'))).name
                             if interaction.guild.get_member(int(user_id.strip('<@>')))
                             else None
-                        )
+                        ),
+                        'user': (
+                            f"{interaction.guild.get_member(int(user_id.strip('<@>'))).display_name} (@{interaction.guild.get_member(int(user_id.strip('<@>'))).name})"
+                            if interaction.guild.get_member(int(user_id.strip('<@>')))
+                            else None
+                        ),
                     } 
                     for user_id, entries in earnings_data.items() 
                     for entry in entries
