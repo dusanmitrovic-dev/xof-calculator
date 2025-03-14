@@ -1327,7 +1327,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                 role_display = role_str[:9] if len(role_str) >= 9 else role_str.ljust(9)
                 
                 # Use fixed width formatting to align columns properly
-                row = f"{j:3} | {date_display} | {role_display} | ${gross_revenue:7.2f} | ${total_cut:7.2f}\n"
+                row = f"{j:3} | {date_display} | {role_display} |  {gross_revenue:7.2f} |  {total_cut:7.2f}\n"
                 
                 table_text += row
             
@@ -1363,8 +1363,8 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         )
         embeds.append(summary_embed)
         
-        summary_embed.add_field(name="Total Gross", value=f"```\n${total_gross:.2f}\n```", inline=True)
-        summary_embed.add_field(name="Total Cut", value=f"```\n${total_cut_sum:.2f}\n```", inline=True)
+        summary_embed.add_field(name="Total Gross", value=f"```\n {total_gross:.2f}\n```", inline=True)
+        summary_embed.add_field(name="Total Cut", value=f"```\n {total_cut_sum:.2f}\n```", inline=True)
         
         return embeds
 
