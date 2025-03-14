@@ -588,7 +588,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         
         buffer.write(md_content.encode('utf-8'))
 
-    def _generate_txt(self, df, user, buffer, user_earnings):
+    def _generate_txt(self, df, user, buffer, user_earnings, all_data=False):
         """Generate TXT format export"""
         report_title = "FULL EARNINGS REPORT" if all_data else f"EARNINGS REPORT FOR {user.display_name.upper()}"
     
