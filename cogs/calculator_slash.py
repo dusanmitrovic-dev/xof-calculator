@@ -1251,28 +1251,32 @@ Generated on {datetime.now().strftime('%d/%m/%Y %H:%M')}
 
     #     return embed
 
-    async def create_list_embed(self, interaction, user_earnings, embed):
+    async def create_list_embed(self, interaction, user_earnings, embed, all_data=False):
         """Creates properly sized list entries that respect Discord's 1024 character limit per field."""
         embeds = [embed]
         current_embed = embed
         field_count = 0
-        MAX_FIELDS_PER_EMBED = 20  # Keep some space for other fields
+        MAX_FIELDS_PER_EMBED = 8  # Reduced from 20 to stay within limits
         
         for idx, entry in enumerate(user_earnings, start=1):
             gross_revenue = float(entry['gross_revenue'])
             total_cut = float(entry['total_cut'])
             total_cut_percent = (total_cut / gross_revenue * 100 if gross_revenue != 0 else 0.0)
             
-            # Create a more compact entry that's guaranteed to be under 1024 chars
-            entry_text = (
-                f"```diff\n"
-                f"+ Entry #{idx}\n"
-                f"📅 Date:    {entry.get('date', 'N/A')}\n"
-                f"🎯 Role:    {entry.get('role', 'N/A').capitalize()}\n"
-                f"💰 Gross:   ${gross_revenue:.2f}\n"
-                f"💸 Cut:     ${total_cut:.2f} ({total_cut_percent:.1f}%)\n"
-                f"```"
-            )
+            # Create entry text
+            entry_text = f"```diff\n+ Entry #{idx}\n"
+            
+            # Add username if all_data is True and user_id is available
+            if all_data and 'user_id' in entry:
+                user_id = entry['user_id'].strip('<@>')
+                user = interaction.guild.get_member(int(user_id))
+                entry_text += f"👤 User:    {f'{user.display_name} (@{user.name})' if user else 'Unknown'}\n"
+            
+            entry_text += f"📅 Date:    {entry.get('date', 'N/A')}\n"
+            entry_text += f"🎯 Role:    {entry.get('role', 'N/A').capitalize()}\n"
+            entry_text += f"💰 Gross:   ${gross_revenue:.2f}\n"
+            entry_text += f"💸 Cut:     ${total_cut:.2f} ({total_cut_percent:.1f}%)\n"
+            entry_text += "```"
             
             # Check if we need a new embed due to field limits
             if field_count >= MAX_FIELDS_PER_EMBED:
@@ -1285,20 +1289,38 @@ Generated on {datetime.now().strftime('%d/%m/%Y %H:%M')}
                 embeds.append(current_embed)
                 field_count = 0
             
-            # Add the entry as a single field
             current_embed.add_field(name=f"", value=entry_text, inline=False)
             field_count += 1
         
+        # Add totals to last embed
+        total_gross = sum(float(entry['gross_revenue']) for entry in user_earnings)
+        total_cut_sum = sum(float(entry['total_cut']) for entry in user_earnings)
+        
+        # Add totals field to the last embed
+        if field_count >= MAX_FIELDS_PER_EMBED - 2:
+            # Create a new embed if we're close to the limit
+            summary_embed = discord.Embed(
+                title=f"{embed.title} (Summary)",
+                color=embed.color,
+                timestamp=interaction.created_at
+            )
+            embeds.append(summary_embed)
+            last_embed = summary_embed
+        else:
+            last_embed = embeds[-1]
+        
+        last_embed.add_field(name="Total Gross", value=f"```\n${total_gross:.2f}\n```", inline=True)
+        last_embed.add_field(name="Total Cut", value=f"```\n${total_cut_sum:.2f}\n```", inline=True)
+        
         return embeds
 
-    async def create_table_embed(self, interaction, user_earnings, embed):
+    async def create_table_embed(self, interaction, user_earnings, embed, all_data=False):
         """Creates a table display that respects Discord's field character limits."""
-        # Decrease rows per chunk to ensure we stay within size limits
-        rows_per_chunk = 8  # Reduced from 15
+        rows_per_chunk = 6  # Further reduced to ensure we stay within limits
         embeds = [embed]
         current_embed = embed
         field_count = 0
-        MAX_FIELDS_PER_EMBED = 6  # Reduced from 20 to keep embed size smaller
+        MAX_FIELDS_PER_EMBED = 5  # Further reduced to keep embed size smaller
         
         # Calculate totals first
         total_gross = sum(float(entry['gross_revenue']) for entry in user_earnings)
@@ -1308,15 +1330,24 @@ Generated on {datetime.now().strftime('%d/%m/%Y %H:%M')}
         for i in range(0, len(user_earnings), rows_per_chunk):
             chunk = user_earnings[i:i+rows_per_chunk]
             
-            # Create header for each chunk
-            table_text = "```\n  # |   Date     |   Role    |  Gross   |  Cut    \n----|------------|-----------|----------|--------\n"
+            table_text = "```\n  # |   Date     |   Role    |  Gross   |   Cut    \n----|------------|-----------|----------|----------\n"
             
             # Add rows to this chunk
             for j, entry in enumerate(chunk, start=i+1):
                 gross_revenue = float(entry['gross_revenue'])
                 total_cut = float(entry['total_cut'])
-                # Make the row more compact
-                row = f"{j:3} | {entry['date'][:10]} | {entry['role'].capitalize()[:9]} | {gross_revenue:8.2f} | {total_cut:6.2f}\n"
+                
+                # Get the date safely
+                date_str = str(entry.get('date', 'N/A'))
+                date_display = date_str[:10] if len(date_str) >= 10 else date_str
+                
+                # Get the role safely
+                role_str = str(entry.get('role', 'N/A')).capitalize()
+                role_display = role_str[:9] if len(role_str) >= 9 else role_str.ljust(9)
+                
+                # Use fixed width formatting to align columns properly
+                row = f"{j:3} | {date_display} | {role_display} | ${gross_revenue:7.2f} | ${total_cut:7.2f}\n"
+                
                 table_text += row
             
             table_text += "```"
@@ -1342,7 +1373,7 @@ Generated on {datetime.now().strftime('%d/%m/%Y %H:%M')}
             )
             field_count += 1
         
-        # Add totals to a new embed always to ensure we don't exceed limits
+        # Always add totals to a new embed to ensure we don't exceed limits
         summary_embed = discord.Embed(
             title=f"{embed.title} (Summary)",
             color=embed.color,
@@ -1548,7 +1579,12 @@ Generated on {datetime.now().strftime('%d/%m/%Y %H:%M')}
                 else:
                     user_earnings = earnings_data.get(interaction.user.mention, [])
             else:
-                user_earnings = [entry for entries in earnings_data.values() if entries for entry in entries]
+                # When all_data is True, add user_id to each entry
+                user_earnings = [
+                    {**entry, 'user_id': user_id} 
+                    for user_id, entries in earnings_data.items() 
+                    for entry in entries
+                ]
 
             # Date filtering
             if range_from or range_to:
@@ -1637,8 +1673,22 @@ Generated on {datetime.now().strftime('%d/%m/%Y %H:%M')}
             embed.add_field(name="Total Gross", value=f"```\n{total_gross:.2f}\n```", inline=True)
             embed.add_field(name="Total Cut", value=f"```\n{total_cut_sum:.2f}\n```", inline=True)
 
-            await interaction.followup.send(embed=embed, ephemeral=ephemeral)
+            if not all_data:
+                await interaction.followup.send(embed=embed, ephemeral=ephemeral)
 
+            # if display_entries: # todo: remove
+            #     base_embed = discord.Embed(
+            #         title=f"📊 Earnings {('Table' if as_table else 'List')} {(' - ' + period.upper() if period else '')}",
+            #         color=0x2ECC71,
+            #         timestamp=interaction.created_at
+            #     )
+
+                # embed = await self.create_table_embed(interaction, user_earnings, embed) if as_table \ # todo: remove old logic
+                #     else await self.create_list_embed(interaction, user_earnings, embed)
+                
+                # await interaction.followup.send(embed=embed, ephemeral=ephemeral)
+
+                # Update your command handler to pass the all_data parameter
             if display_entries:
                 base_embed = discord.Embed(
                     title=f"📊 Earnings {('Table' if as_table else 'List')} {(' - ' + period.upper() if period else '')}",
@@ -1646,13 +1696,8 @@ Generated on {datetime.now().strftime('%d/%m/%Y %H:%M')}
                     timestamp=interaction.created_at
                 )
 
-                # embed = await self.create_table_embed(interaction, user_earnings, embed) if as_table \ # todo: remove old logic
-                #     else await self.create_list_embed(interaction, user_earnings, embed)
-                
-                # await interaction.followup.send(embed=embed, ephemeral=ephemeral)
-
-                embeds = await self.create_table_embed(interaction, user_earnings, base_embed) if as_table \
-                    else await self.create_list_embed(interaction, user_earnings, base_embed)
+                embeds = await self.create_table_embed(interaction, user_earnings, base_embed, all_data) if as_table \
+                    else await self.create_list_embed(interaction, user_earnings, base_embed, all_data)
                 
                 await self.send_paginated_embeds(interaction, embeds, ephemeral=ephemeral)
                 
