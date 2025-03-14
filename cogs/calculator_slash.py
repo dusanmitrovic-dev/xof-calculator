@@ -186,12 +186,12 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                     fmt_buffer.close()
         else:
             # Handle single format export
-            buffer = self._generate_format_buffer(df, user, export_format, user_earnings)
+            buffer = self._generate_format_buffer(df, user, export_format, user_earnings, all_data)
         
         buffer.seek(0)
         return discord.File(buffer, filename=f"{base_name}.{export_format}")
 
-    def _generate_format_buffer(self, df, user, format_type, user_earnings):
+    def _generate_format_buffer(self, df, user, format_type, user_earnings, all_data=False):
         """
         Helper method to generate a specific format export buffer.
         
@@ -200,6 +200,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             user: User object with display_name attribute
             format_type: String indicating the desired export format
             user_earnings: Original list of earnings data
+            all_data: Boolean indicating if this is a full report with multiple users
             
         Returns:
             io.BytesIO: Buffer containing the exported data
@@ -208,23 +209,23 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         
         try:
             if format_type == "csv":
-                self._generate_csv(df, buffer)
+                self._generate_csv(df, buffer, all_data)
             elif format_type == "json":
-                self._generate_json(df, buffer)
+                self._generate_json(df, buffer, all_data)
             elif format_type == "xlsx":
-                self._generate_excel(df, buffer)
+                self._generate_excel(df, buffer, all_data)
             elif format_type == "pdf":
-                self._generate_pdf(df, user, buffer, user_earnings)
+                self._generate_pdf(df, user, buffer, user_earnings, all_data)
             elif format_type == "png":
-                self._generate_png(df, user, buffer, user_earnings)
+                self._generate_png(df, user, buffer, user_earnings, all_data)
             elif format_type == "svg":
-                self._generate_svg(df, user, buffer, user_earnings)
+                self._generate_svg(df, user, buffer, user_earnings, all_data)
             elif format_type == "html":
-                self._generate_html(df, user, buffer, user_earnings)
+                self._generate_html(df, user, buffer, user_earnings, all_data)
             elif format_type == "markdown":
-                self._generate_markdown(df, user, buffer, user_earnings)
+                self._generate_markdown(df, user, buffer, user_earnings, all_data)
             else:  # txt
-                self._generate_txt(df, user, buffer, user_earnings)
+                self._generate_txt(df, user, buffer, user_earnings, all_data)
         except Exception as e:
             # If there's an error, write the error to the buffer
             error_msg = f"Error generating {format_type} format: {str(e)}"
@@ -233,71 +234,83 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         buffer.seek(0)
         return buffer
 
-    def _generate_csv(self, df, buffer):
+    def _generate_csv(self, df, buffer, all_data=False):
         """Generate CSV format export"""
+        if all_data and 'display_name' in df.columns:
+            df = df[['display_name', 'username', 'date', 'role', 'shift', 
+                    'hours_worked', 'gross_revenue', 'total_cut']]
         df.to_csv(buffer, index=False)
 
-    def _generate_json(self, df, buffer):
+    def _generate_json(self, df, buffer, all_data=False):
         """Generate JSON format export"""
+            # Add user info to JSON output if needed
+        if all_data and 'display_name' not in df.columns:
+            df['display_name'] = ''
+            df['username'] = ''
+        
         json_data = df.to_json(orient='records', date_format='iso', indent=2)
         buffer.write(json_data.encode('utf-8'))
 
-    def _generate_excel(self, df, buffer):
+    def _generate_excel(self, df, buffer, all_data=False):
         """Generate Excel format export with formatting."""
         with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
-            # Write the main Earnings sheet
+            # Reorder columns if showing user data
+            if all_data and 'display_name' in df.columns:
+                df = df[['display_name', 'username', 'date', 'role', 'shift', 
+                        'hours_worked', 'gross_revenue', 'total_cut']]
+                
+            # Main Earnings sheet
             df.to_excel(writer, index=False, sheet_name='Earnings')
-            
-            # Add a summary sheet with numeric values
-            total_gross = df['gross_revenue'].sum()
-            total_earnings = df['total_cut'].sum()
-            total_hours = df['hours_worked'].sum()
-            summary = pd.DataFrame({
+                
+            # Summary sheet
+            summary_data = {
                 'Metric': ['Total Gross Revenue', 'Total Earnings', 'Total Hours Worked'],
-                'Value': [total_gross, total_earnings, total_hours]
-            })
-            summary.to_excel(writer, index=False, sheet_name='Summary')
-            
-            # Add a pivot table by role
+                'Value': [df['gross_revenue'].sum(), df['total_cut'].sum(), df['hours_worked'].sum()]
+            }
+            if all_data:
+                summary_data['Metric'].insert(0, 'Total Users')
+                summary_data['Value'].insert(0, len(df['user_id'].unique()))
+                
+            summary_df = pd.DataFrame(summary_data)
+            summary_df.to_excel(writer, index=False, sheet_name='Summary')
+                
+            # Pivot table handling
             if 'role' in df.columns:
-                pivot = pd.pivot_table(df, 
-                                    values=['gross_revenue', 'total_cut', 'hours_worked'],
+                pivot_fields = ['gross_revenue', 'total_cut', 'hours_worked']
+                if all_data and 'display_name' in df.columns:
+                    pivot_fields.append('display_name')
+                    
+                pivot = pd.pivot_table(df,
+                                    values=pivot_fields,
                                     index=['role'],
                                     aggfunc='sum')
                 pivot.to_excel(writer, sheet_name='By Role')
-            
-            # Access the workbook and sheets for formatting
+                
+            # Formatting
             workbook = writer.book
+            number_format = workbook.add_format({'num_format': '"$"#,##0.00'})
+            decimal_format = workbook.add_format({'num_format': '0.00'})
+                
+            # Format summary sheet
             summary_sheet = writer.sheets['Summary']
-            
-            # Apply number formatting to Summary sheet
-            for row in summary_sheet.iter_rows(min_row=2, max_row=3, min_col=2, max_col=2):
-                for cell in row:
-                    cell.number_format = '"$"#,##0.00'  # Currency format for revenue and earnings
-            summary_sheet.cell(row=4, column=2).number_format = '0.0'  # Decimal format for hours
-            
-            # Apply styling and formatting to all sheets
-            for worksheet in writer.sheets.values():
-                for col in worksheet.columns:
-                    max_length = 0
-                    column = col[0].column_letter
-                    for cell in col:
-                        if cell.value is not None:
-                            max_length = max(max_length, len(str(cell.value)))
-                    worksheet.column_dimensions[column].width = max_length + 2
+            summary_sheet.set_column('A:A', 25)
+            summary_sheet.set_column('B:B', 15, number_format)
+            if all_data:
+                summary_sheet.cell(row=2, column=2).number_format = '0'
 
-    def _generate_pdf(self, df, user, buffer, user_earnings):
+    def _generate_pdf(self, df, user, buffer, user_earnings, all_data=False):
         """Generate PDF format export"""
         doc = SimpleDocTemplate(buffer, pagesize=letter)
         elements = []
         
-        # Add title
+        # Title based on report type
         styles = getSampleStyleSheet()
         title_style = styles["Title"]
-        elements.append(Paragraph(f"Earnings Report for {user.display_name}", title_style))
+        report_title = "Full Earnings Report" if all_data else f"Earnings Report for {user.display_name}"
+        elements.append(Paragraph(report_title, title_style))
         elements.append(Spacer(1, 12))
         
-        # Add summary section
+        # Summary section
         subtitle_style = styles["Heading2"]
         elements.append(Paragraph("Summary", subtitle_style))
         
@@ -307,6 +320,9 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             ["Total Earnings", f"${df['total_cut'].sum():.2f}"],
             ["Total Hours Worked", f"{df['hours_worked'].sum():.1f}"],
         ]
+        
+        if all_data:
+            summary_data.insert(1, ["Total Users", f"{len(df['user_id'].unique())}"])
         
         summary_table = Table(summary_data, colWidths=[250, 150])
         summary_table.setStyle(TableStyle([
@@ -377,71 +393,78 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         # Build the PDF document
         doc.build(elements)
 
-    def _generate_png(self, df, user, buffer, user_earnings):
+    def _generate_png(self, df, user, buffer, user_earnings, all_data=False):
         """Generate PNG format export"""
-        # Create a more sophisticated visualization with multiple charts
         fig, axes = plt.subplots(figsize=(12, 6))
+    
+        # Plot configuration
+        title = 'Full Earnings Overview' if all_data else f'Earnings Report for {user.display_name}'
+        if all_data:
+            # Group by user if showing all data
+            user_groups = df.groupby('display_name')
+            for name, group in user_groups:
+                dates = [datetime.strptime(d, '%d/%m/%Y') for d in group['date']]
+                axes.plot(dates, group['total_cut'], 'o-', label=name)
+            axes.set_title('Earnings by User Over Time')
+        else:
+            dates = [datetime.strptime(entry['date'], '%d/%m/%Y') for entry in user_earnings]
+            axes.plot(dates, [float(e['gross_revenue']) for e in user_earnings], 'b-o', label='Gross Revenue')
+            axes.plot(dates, [float(e['total_cut']) for e in user_earnings], 'r-o', label='Earnings')
+            axes.set_title('Revenue & Earnings Over Time')
         
-        # Plot 1: Line chart of revenue and earnings
-        dates = [datetime.strptime(entry['date'], '%d/%m/%Y') for entry in user_earnings]
-        axes.plot(dates, [float(e['gross_revenue']) for e in user_earnings], 'b-o', label='Gross Revenue')
-        axes.plot(dates, [float(e['total_cut']) for e in user_earnings], 'r-o', label='Earnings')
-        axes.set_title('Revenue & Earnings Over Time')
+        fig.suptitle(title, fontsize=16)
         axes.legend()
         axes.grid(True, linestyle='--', alpha=0.7)
-        
-        # Add a title to the overall figure
-        fig.suptitle(f'Earnings Report for {user.display_name}', fontsize=16)
-        fig.tight_layout(rect=[0, 0, 1, 0.95])
-        
         plt.savefig(buffer, format='png', dpi=150)
         plt.close(fig)
 
-    def _generate_svg(self, df, user, buffer, user_earnings):
+    def _generate_svg(self, df, user, buffer, user_earnings, all_data=False):
         """Generate SVG format export"""
-        # Create SVG visualization
-        fig, ax1 = plt.subplots(figsize=(16, 9))
+        fig, ax = plt.subplots(figsize=(16, 9))
         
-        # Plot 1: Line chart
-        dates = [datetime.strptime(entry['date'], '%d/%m/%Y') for entry in user_earnings]
-        ax1.plot_date(dates, [float(e['gross_revenue']) for e in user_earnings], 'b-o', label='Gross Revenue')
-        ax1.plot_date(dates, [float(e['total_cut']) for e in user_earnings], 'r-o', label='Earnings')
-        ax1.set_title('Revenue & Earnings Over Time')
-        ax1.legend()
-        ax1.grid(True, linestyle='--', alpha=0.7)
+        if all_data:
+            # Create stacked bar chart for multiple users
+            pivot = df.pivot_table(index='date', columns='display_name', values='total_cut', aggfunc='sum')
+            pivot.plot(kind='bar', stacked=True, ax=ax)
+            ax.set_title('Daily Earnings by User')
+        else:
+            # Line chart for individual user
+            dates = [datetime.strptime(entry['date'], '%d/%m/%Y') for entry in user_earnings]
+            ax.plot_date(dates, [float(e['gross_revenue']) for e in user_earnings], 'b-o', label='Gross Revenue')
+            ax.plot_date(dates, [float(e['total_cut']) for e in user_earnings], 'r-o', label='Earnings')
+            ax.set_title('Revenue & Earnings Over Time')
         
-        fig.tight_layout()
+        ax.legend()
+        ax.grid(True, linestyle='--', alpha=0.7)
         plt.savefig(buffer, format='svg')
         plt.close(fig)
 
-    def _generate_html(self, df, user, buffer, user_earnings):
+    def _generate_html(self, df, user, buffer, user_earnings, all_data=False):
         """Generate HTML format export"""
-        # Create an interactive HTML report with tables and charts
+        report_title = "Full Earnings Report" if all_data else f"Earnings Report for {user.display_name}"
+        user_column = ""
+        
+        if all_data:
+            user_column = "<th>User</th>"
+        
         html_content = f"""
         <!DOCTYPE html>
         <html>
         <head>
-            <title>Earnings Report for {user.display_name}</title>
+            <title>{report_title}</title>
             <style>
-                body {{ font-family: Arial, sans-serif; margin: 20px; }}
-                h1, h2 {{ color: #ffffff; }}
-                table {{ border-collapse: collapse; width: 100%; margin: 15px 0; }}
-                th, td {{ border: 1px solid #ddd; padding: 8px; text-align: left; }}
-                th {{ background-color: #333366; color: white; }}
-                tr:nth-child(even) {{ background-color: #f2f2f2; }}
-                .summary {{ background-color: #f8f8f8; padding: 15px; border-radius: 5px; margin-bottom: 20px; }}
-                .summary-item {{ margin: 5px 0; }}
-                .header {{ background-color: #333366; color: white; padding: 10px; border-radius: 5px; }}
+                /* ... existing styles ... */
             </style>
         </head>
         <body>
             <div class="header">
-                <h1>Earnings Report for {user.display_name}</h1>
+                <h1>{report_title}</h1>
                 <p>Generated on {datetime.now().strftime('%d/%m/%Y %H:%M')}</p>
             </div>
             
             <h2>Summary</h2>
             <div class="summary">
+                {'<p class="summary-item"><strong>Total Users:</strong> ' + str(len(df["user_id"].unique())) + "</p>" if all_data else ""}
                 <p class="summary-item"><strong>Total Gross Revenue:</strong> ${df['gross_revenue'].sum():.2f}</p>
                 <p class="summary-item"><strong>Total Earnings:</strong> ${df['total_cut'].sum():.2f}</p>
                 <p class="summary-item"><strong>Total Hours Worked:</strong> {df['hours_worked'].sum():.1f}</p>
@@ -451,6 +474,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             <table>
                 <tr>
                     <th>#</th>
+                    {user_column}
                     <th>Date</th>
                     <th>Role</th>
                     <th>Shift</th>
@@ -460,12 +484,11 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                 </tr>
         """
         
-        # Add table rows
         for i, entry in enumerate(user_earnings, 1):
-            hourly = float(entry['total_cut']) / float(entry['hours_worked']) if float(entry['hours_worked']) > 0 else 0
             html_content += f"""
                 <tr>
                     <td>{i}</td>
+                    {"<td>" + f"{entry.get('display_name', '')} (@{entry.get('username', '')})" + "</td>" if all_data else ""}
                     <td>{entry['date']}</td>
                     <td>{entry['role']}</td>
                     <td>{entry['shift'].capitalize()}</td>
@@ -516,36 +539,42 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         
         buffer.write(html_content.encode('utf-8'))
 
-    def _generate_markdown(self, df, user, buffer, user_earnings):
+    def _generate_markdown(self, df, user, buffer, user_earnings, all_data):
         """Generate Markdown format export"""
-        # Create a markdown report
-        md_content = f"""# Earnings Report for {user.display_name}
-
-Generated on {datetime.now().strftime('%d/%m/%Y %H:%M')}
-
-## Summary
-
-
-* **Total Gross Revenue:** ${df['gross_revenue'].sum():.2f}
-* **Total Earnings:** ${df['total_cut'].sum():.2f}
-* **Total Hours Worked:** {df['hours_worked'].sum():.1f}
-
-## Detailed Earnings
-
-
-| # | Date       | Role       | Shift | Hours | Gross Revenue | Earnings |
-|---|------------|------------|-------|-------|--------------|----------|
-"""
+        report_title = "Full Earnings Report" if all_data else f"Earnings Report for {user.display_name}"
         
-        # Add table rows
+        md_content = f"""# {report_title}
+
+    Generated on {datetime.now().strftime('%d/%m/%Y %H:%M')}
+
+    ## Summary
+
+    """
+        if all_data:
+            md_content += f"* **Total Users:** {len(df['user_id'].unique())}\n"
+        
+        md_content += f"""* **Total Gross Revenue:** ${df['gross_revenue'].sum():.2f}
+    * **Total Earnings:** ${df['total_cut'].sum():.2f}
+    * **Total Hours Worked:** {df['hours_worked'].sum():.1f}
+
+    ## Detailed Earnings
+
+    | {'#' if not all_data else '# | User'} | Date       | Role       | Shift | Hours | Gross Revenue | Earnings |
+    |---{ '|----' if all_data else '' }|------------|------------|-------|-------|--------------|----------|
+    """
         for i, entry in enumerate(user_earnings, 1):
-            md_content += f"| {i} | {entry['date']} | {entry['role']} | {entry['shift'].capitalize()} | {float(entry['hours_worked']):.1f} | ${float(entry['gross_revenue']):.2f} | ${float(entry['total_cut']):.2f} |\n"
-        
+            if all_data:
+                user_col = f"| {entry.get('display_name', '')} (@{entry.get('username', '')}) "
+            else:
+                user_col = ""
+            
+            md_content += f"| {i} {user_col}| {entry['date']} | {entry['role']} | {entry['shift'].capitalize()} | {float(entry['hours_worked']):.1f} | ${float(entry['gross_revenue']):.2f} | ${float(entry['total_cut']):.2f} |\n"
+
+        # Role summary table
         md_content += "\n## Earnings by Role\n\n"
         md_content += "| Role       | Total Earnings | Hours Worked | Percentage of Total |\n"
         md_content += "|------------|---------------|--------------|--------------------|\n"
         
-        # Add role summary rows
         role_summary = df.groupby('role').agg({
             'total_cut': 'sum',
             'hours_worked': 'sum'
@@ -555,54 +584,40 @@ Generated on {datetime.now().strftime('%d/%m/%Y %H:%M')}
         
         for _, row in role_summary.iterrows():
             percentage = (row['total_cut'] / total_earnings) * 100
-            
             md_content += f"| {row['role']} | ${row['total_cut']:.2f} | {row['hours_worked']:.1f} | {percentage:.1f}% |\n"
         
         buffer.write(md_content.encode('utf-8'))
 
     def _generate_txt(self, df, user, buffer, user_earnings):
         """Generate TXT format export"""
-        # Create an improved text report with ASCII art charts
+        report_title = "FULL EARNINGS REPORT" if all_data else f"EARNINGS REPORT FOR {user.display_name.upper()}"
+    
         text_content = f"============================================\n"
-        text_content += f"   EARNINGS REPORT FOR {user.display_name.upper()}\n"
+        text_content += f"   {report_title}\n"
         text_content += f"   Generated on {datetime.now().strftime('%d/%m/%Y %H:%M')}\n"
         text_content += f"============================================\n\n"
         
-        # Summary section
-        text_content += "SUMMARY\n"
-        text_content += "-------\n"
+        if all_data:
+            text_content += f"Total Users:         {len(df['user_id'].unique())}\n"
+        
         text_content += f"Total Gross Revenue: ${df['gross_revenue'].sum():.2f}\n"
         text_content += f"Total Earnings:      ${df['total_cut'].sum():.2f}\n"
         text_content += f"Total Hours Worked:  {df['hours_worked'].sum():.1f}\n"
         
-        # Detailed section
-        text_content += "\nDETAILED EARNINGS\n"
-        text_content += "------------------\n"
-        text_content += f"{'#':3} | {'DATE':10} | {'ROLE':12} | {'SHIFT':8} | {'HOURS':6} | {'GROSS ($)':10} | {'EARNINGS ($)':12}\n"
-        text_content += "-" * 80 + "\n"
+        # Table headers
+        if all_data:
+            text_content += "\n#   User                Date       Role        Shift     Hours  Gross ($)  Earnings ($)\n"
+            text_content += "-" * 100 + "\n"
+        else:
+            text_content += "\n#   Date       Role        Shift     Hours  Gross ($)  Earnings ($)\n"
+            text_content += "-" * 80 + "\n"
         
         for i, entry in enumerate(user_earnings, 1):
-            text_content += f"{i:3} | {entry['date']:10} | {entry['role']:12} | {entry['shift'].capitalize():8} | {float(entry['hours_worked']):6.1f} | {float(entry['gross_revenue']):10.2f} | {float(entry['total_cut']):12.2f} \n"
-        
-        text_content += "\n"
-        
-        # Role summary
-        role_summary = df.groupby('role').agg({
-            'total_cut': 'sum',
-            'hours_worked': 'sum'
-        }).reset_index()
-        
-        text_content += "EARNINGS BY ROLE\n"
-        text_content += "-----------------\n"
-        text_content += f"{'ROLE':12} | {'EARNINGS ($)':12} | {'HOURS':6} | {'PERCENT':8}\n"
-        text_content += "-" * 48 + "\n"
-        
-        total_earnings = df['total_cut'].sum()
-        
-        for _, row in role_summary.iterrows():
-            percentage = (row['total_cut'] / total_earnings) * 100
-            
-            text_content += f"{row['role']:12} | {row['total_cut']:12.2f} | {row['hours_worked']:6.1f} | {percentage:7.1f}%\n"
+            if all_data:
+                user_info = f"{entry.get('display_name', '')[:15]:15} (@{entry.get('username', '')[:10]})"
+                text_content += f"{i:3} {user_info} {entry['date']:10} {entry['role']:12} {entry['shift'].capitalize():8} {float(entry['hours_worked']):6.1f} {float(entry['gross_revenue']):10.2f} {float(entry['total_cut']):12.2f}\n"
+            else:
+                text_content += f"{i:3} {entry['date']:10} {entry['role']:12} {entry['shift'].capitalize():8} {float(entry['hours_worked']):6.1f} {float(entry['gross_revenue']):10.2f} {float(entry['total_cut']):12.2f}\n"
         
         buffer.write(text_content.encode('utf-8'))
 
