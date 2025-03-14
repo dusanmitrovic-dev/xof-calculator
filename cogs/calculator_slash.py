@@ -261,43 +261,46 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                         'hours_worked', 'gross_revenue', 'total_cut']]
                 
             # Main Earnings sheet
+            df.fillna('null', inplace=True)
             df.to_excel(writer, index=False, sheet_name='Earnings')
                 
-            # Summary sheet
-            summary_data = {
+            # Add a summary sheet with numeric values
+            total_gross = df['gross_revenue'].sum()
+            total_earnings = df['total_cut'].sum()
+            total_hours = df['hours_worked'].sum()
+            summary = pd.DataFrame({
                 'Metric': ['Total Gross Revenue', 'Total Earnings', 'Total Hours Worked'],
-                'Value': [df['gross_revenue'].sum(), df['total_cut'].sum(), df['hours_worked'].sum()]
-            }
-            if all_data:
-                summary_data['Metric'].insert(0, 'Total Users')
-                summary_data['Value'].insert(0, len(df['user_id'].unique()))
-                
-            summary_df = pd.DataFrame(summary_data)
-            summary_df.to_excel(writer, index=False, sheet_name='Summary')
-                
-            # Pivot table handling
+                'Value': [total_gross, total_earnings, total_hours]
+            })
+            summary.to_excel(writer, index=False, sheet_name='Summary')
+            
+            # Add a pivot table by role
             if 'role' in df.columns:
-                pivot_fields = ['gross_revenue', 'total_cut', 'hours_worked']
-                if all_data and 'display_name' in df.columns:
-                    pivot_fields.append('display_name')
-                    
-                pivot = pd.pivot_table(df,
-                                    values=pivot_fields,
+                pivot = pd.pivot_table(df, 
+                                    values=['gross_revenue', 'total_cut', 'hours_worked'],
                                     index=['role'],
                                     aggfunc='sum')
                 pivot.to_excel(writer, sheet_name='By Role')
-                
-            # Formatting
+            
+            # Access the workbook and sheets for formatting
             workbook = writer.book
-            number_format = workbook.add_format({'num_format': '"$"#,##0.00'})
-            decimal_format = workbook.add_format({'num_format': '0.00'})
-                
-            # Format summary sheet
             summary_sheet = writer.sheets['Summary']
-            summary_sheet.set_column('A:A', 25)
-            summary_sheet.set_column('B:B', 15, number_format)
-            if all_data:
-                summary_sheet.cell(row=2, column=2).number_format = '0'
+            
+            # Apply number formatting to Summary sheet
+            for row in summary_sheet.iter_rows(min_row=2, max_row=3, min_col=2, max_col=2):
+                for cell in row:
+                    cell.number_format = '"$"#,##0.00'  # Currency format for revenue and earnings
+            summary_sheet.cell(row=4, column=2).number_format = '0.0'  # Decimal format for hours
+            
+            # Apply styling and formatting to all sheets
+            for worksheet in writer.sheets.values():
+                for col in worksheet.columns:
+                    max_length = 0
+                    column = col[0].column_letter
+                    for cell in col:
+                        if cell.value is not None:
+                            max_length = max(max_length, len(str(cell.value)))
+                    worksheet.column_dimensions[column].width = max_length + 2
 
     def _generate_pdf(self, df, user, buffer, user_earnings, all_data=False):
         """Generate PDF format export"""
