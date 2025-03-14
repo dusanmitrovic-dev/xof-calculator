@@ -1311,8 +1311,8 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                 entry_text += f"👤 User:    {f'{user.display_name} (@{user.name})' if user else 'Unknown'}\n"
             
             entry_text += f"📅 Date:    {entry.get('date', 'N/A')}\n"
-            # if period:
-            #     entry_text += f"⌛ Period:  {entry.get('period', 'N/A')}\n"
+            if period:
+                entry_text += f"⌛ Period:  {entry.get('period', 'N/A')}\n"
             entry_text += f"🎯 Role:    {entry.get('role', 'N/A').capitalize()}\n"
             entry_text += f"💰 Gross:   ${gross_revenue:.2f}\n"
             entry_text += f"💸 Cut:     ${total_cut:.2f} ({total_cut_percent:.1f}%)\n"
@@ -1759,7 +1759,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                 )
 
                 embeds = await self.create_table_embed(interaction, user_earnings, base_embed, all_data) if as_table \
-                    else await self.create_list_embed(interaction, user_earnings, base_embed, all_data)
+                    else await self.create_list_embed(interaction, user_earnings, base_embed, all_data, period is None)
                 
                 await self.send_paginated_embeds(interaction, embeds, ephemeral=ephemeral)
                 

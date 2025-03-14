@@ -2,6 +2,30 @@
 
 ## [Unreleased]
 
+## [0.132.0] - 2025-03-14  
+
+### Added  
+- Support for `all_data` in Markdown export.  
+- Support for `all_data` in PDF export.  
+- Support for `all_data` in Excel export.  
+- Updated export methods to handle `all_data` properly.  
+- List now displays `username` and `user display name`.  
+- First, second, and final attempts at `unlimited embed length` for tables and lists.  
+
+### Changed  
+- `PDF display` was updated.  
+- `HTML display` was modified.  
+- `Generated file names` now reflect `all_data` set.  
+
+### Fixed  
+- Tables `no longer include '$' signs`.  
+- Table display issues were resolved.  
+- Fixed `TXT and CSV display issues`.  
+- Fixed error in `_generate_txt()` function (`positional argument mismatch`).  
+
+### Removed  
+- `Residual commented-out` `generate_export_file` method.  
+
 ## [0.131.0] - 2025-03-12
 ### Added
 - Selection by `period` command parameter.

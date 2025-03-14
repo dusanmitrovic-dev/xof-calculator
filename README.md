@@ -341,6 +341,20 @@
 - [x] (v0.126.0) Remove `hourly_rate` and `commission_percent` from export
 - [x] (v0.127.0) Remove charts from excel generation since they did not work
 - [x] (v0.131.0) Selection by `period` command parameter
+- [x] (v0.132.0) Support for all_data in Markdown export  
+- [x] (v0.132.0) Support for all_data in PDF export  
+- [x] (v0.132.0) Support for all_data in Excel export  
+- [x] (v0.132.0) Updated export methods to handle all_data properly  
+- [x] (v0.132.0) List now displays username and user display name  
+- [x] (v0.132.0) First, second, and final attempts at unlimited embed length for tables and lists  
+- [x] (v0.132.0) PDF display was updated  
+- [x] (v0.132.0) HTML display was modified  
+- [x] (v0.132.0) Generated file names now reflect all_data set  
+- [x] (v0.132.0) Tables no longer include '$' signs  
+- [x] (v0.132.0) Table display issues were resolved  
+- [x] (v0.132.0) Fixed TXT and CSV display issues  
+- [x] (v0.132.0) Fixed error in _generate_txt() function (positional argument mismatch)  
+- [x] (v0.132.0) Residual commented-out generate_export_file method removed  
 - [ ] Option to set default zip exports in settings
 - [ ] Display hourly cut in employee cut?
 - [ ] Add functionality to select column names to display in `view-earnings`
