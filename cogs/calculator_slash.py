@@ -345,11 +345,12 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         elements.append(Paragraph("Detailed Earnings", subtitle_style))
         
         # Format data for the table
-        data = [["#", "Date", "Role", "Shift", "Hours", "Gross Revenue", "Earnings"]]
+        data = [["#", "User" if all_data else "", "Date", "Role", "Shift", "Hours", "Gross Revenue", "Earnings"]]
         for i, entry in enumerate(user_earnings, 1):
             hourly = float(entry['total_cut']) / float(entry['hours_worked']) if float(entry['hours_worked']) > 0 else 0
             data.append([
                 i,
+                f"{entry.get('display_name', '')} (@{entry.get('username', '')})" if all_data else "",
                 entry['date'],
                 entry['role'],
                 entry['shift'].capitalize(),
