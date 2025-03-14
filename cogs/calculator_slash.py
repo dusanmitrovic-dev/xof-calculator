@@ -554,7 +554,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
 
     def _generate_markdown(self, df, user, buffer, user_earnings, all_data):
         """Generate Markdown format export
-        
+
         Args:
             df: DataFrame containing earnings data
             user: User object for individual reports
@@ -563,81 +563,82 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             all_data: Boolean indicating if this is a full report or user-specific
         """
         report_title = "Full Earnings Report" if all_data else f"Earnings Report for {user.display_name}"
-        
-        # Validate dates - filter out future dates
         current_date = datetime.now()
-        valid_earnings = []
-        for entry in user_earnings:
-            entry_date = datetime.strptime(entry['date'], '%d/%m/%Y')
-            if entry_date <= current_date:
-                valid_earnings.append(entry)
-            # else: future date detected, skip this entry
-        
-        # Recalculate totals based on valid entries
+
+        # Filter out future dates
+        valid_earnings = [
+            entry for entry in user_earnings 
+            if datetime.strptime(entry['date'], '%d/%m/%Y') <= current_date
+        ]
+
         valid_df = df[df['date'].apply(lambda x: datetime.strptime(x, '%d/%m/%Y') <= current_date)]
-        
-    #     md_content = f"""# {report_title}
 
-    # Generated on {current_date.strftime('%d/%m/%Y %H:%M')}
+        # Markdown Content Initialization
+        md_content = f"# {report_title}\n\nGenerated on {current_date.strftime('%d/%m/%Y %H:%M')}\n\n## Summary\n\n"
 
-    # ## Summary
-
-    # """
-        md_content = ""
-        md_content += f"# {report_title}\n\nGenerated on {current_date.strftime('%d/%m/%Y %H:%M')}\n\n## Summary\n\n"
         if all_data:
-            # Count only users with valid usernames
-            unique_users = len([u for u in valid_df['user_id'].unique() if u and str(u).lower() != 'none'])
-            md_content += f"\n* **Total Users:** {unique_users}\n"
-        
-            md_content += f"""* **Total Gross Revenue:** ${valid_df['gross_revenue'].sum():.2f}
+            unique_users = valid_df['user_id'].nunique()
+            md_content += f"""
+* **Total Users:** {unique_users}
+* **Total Gross Revenue:** ${valid_df['gross_revenue'].sum():.2f}
 * **Total Earnings:** ${valid_df['total_cut'].sum():.2f}
 * **Total Hours Worked:** {valid_df['hours_worked'].sum():.1f}
 
 ## Detailed Earnings
 
 | # | User | Date | Role | Shift | Hours | Gross Revenue | Earnings |
-|---|-----|------|------|-------|-------|--------------|----------|
-    """
+|---|------|------|------|-------|-------|--------------|----------|
+"""
+        else:
+            # Summary for a single user
+            total_hours = sum(float(entry.get('hours_worked', 0)) for entry in valid_earnings)
+            total_gross = sum(float(entry.get('gross_revenue', 0)) for entry in valid_earnings)
+            total_earnings = sum(float(entry.get('total_cut', 0)) for entry in valid_earnings)
+
+            md_content += f"""
+* **User:** {user.display_name}
+* **Total Hours Worked:** {total_hours:.1f}
+* **Total Gross Revenue:** ${total_gross:.2f}
+* **Total Earnings:** ${total_earnings:.2f}
+
+## Detailed Earnings
+
+| # | Date | Role | Shift | Hours | Gross Revenue | Earnings |
+|---|------|------|-------|-------|--------------|----------|
+"""
+
+        # Append Earnings Data
         for i, entry in enumerate(valid_earnings, 1):
-            # Handle None values for username and display_name
-            display_name = entry.get('display_name', '')
-            username = entry.get('username', '')
-            
-            if display_name is None or display_name.lower() == 'none':
-                display_name = 'Unknown'
-            if username is None or username.lower() == 'none':
-                username = 'unknown'
-                
-            user_col = f"{display_name} (@{username})"
-            
-            # Ensure hours_worked is non-negative
             hours = max(0, float(entry.get('hours_worked', 0)))
-            
-            # Ensure all numeric values are correctly formatted
             gross_revenue = float(entry.get('gross_revenue', 0))
             total_cut = float(entry.get('total_cut', 0))
-            
-            md_content += f"| {i} | {user_col} | {entry['date']} | {entry['role']} | {entry['shift'].capitalize()} | {hours:.1f} | ${gross_revenue:.2f} | ${total_cut:.2f} |\n"
-            
-        # Role summary table
+
+            if all_data:
+                display_name = entry.get('display_name', 'Unknown') or 'Unknown'
+                username = entry.get('username', 'unknown') or 'unknown'
+                user_col = f"{display_name} (@{username})"
+                md_content += f"| {i} | {user_col} | {entry['date']} | {entry['role']} | {entry['shift'].capitalize()} | {hours:.1f} | ${gross_revenue:.2f} | ${total_cut:.2f} |\n"
+            else:
+                md_content += f"| {i} | {entry['date']} | {entry['role']} | {entry['shift'].capitalize()} | {hours:.1f} | ${gross_revenue:.2f} | ${total_cut:.2f} |\n"
+
+        # Role Summary Table (for both cases)
         md_content += "\n## Earnings by Role\n\n"
         md_content += "| Role | Total Earnings | Hours Worked | Percentage of Total |\n"
         md_content += "|------|---------------|--------------|--------------------|\n"
-        
+
         role_summary = valid_df.groupby('role').agg({
             'total_cut': 'sum',
             'hours_worked': 'sum'
         }).reset_index()
-        
+
         total_earnings = valid_df['total_cut'].sum()
-        
+
         for _, row in role_summary.iterrows():
-            # Avoid division by zero
             percentage = (row['total_cut'] / total_earnings) * 100 if total_earnings > 0 else 0
             md_content += f"| {row['role']} | ${row['total_cut']:.2f} | {row['hours_worked']:.1f} | {percentage:.1f}% |\n"
-        
+
         buffer.write(md_content.encode('utf-8'))
+
 
     def _generate_txt(self, df, interaction, user, buffer, user_earnings, all_data=False):
         """Generate TXT format export
@@ -1307,7 +1308,10 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         for i in range(0, len(user_earnings), rows_per_chunk):
             chunk = user_earnings[i:i+rows_per_chunk]
             
-            table_text = "```\n  # |   Date     |   Role    |  Gross   |   Cut    \n----|------------|-----------|----------|----------\n"
+            if i == 0:
+                table_text = "```\n  # |   Date     |   Role    |  Gross   |   Cut    \n----|------------|-----------|----------|----------\n"
+            else:
+                table_text = "```"
             
             # Add rows to this chunk
             for j, entry in enumerate(chunk, start=i+1):
@@ -1344,7 +1348,8 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             chunk_start = i + 1
             chunk_end = min(i + rows_per_chunk, len(user_earnings))
             current_embed.add_field(
-                name=f"Entries {chunk_start}-{chunk_end}", 
+                name=f"", 
+                # name=f"Entries {chunk_start}-{chunk_end}", 
                 value=table_text, 
                 inline=False
             )
@@ -1747,6 +1752,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             file = None
             if export != "none":
                 try:
+                    print(len(user_earnings))
                     file = await self.generate_export_file(user_earnings, interaction, interaction.user, export, zip_formats_list if export == "zip" else None, all_data)
                 except Exception as e:
                     return await interaction.followup.send(f"❌ Export failed: {str(e)}", ephemeral=ephemeral)
