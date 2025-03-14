@@ -150,7 +150,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         guild_settings = display_settings.get(str(guild_id), {})
         return guild_settings.get('ephemeral_responses', True)
 
-    async def generate_export_file(self, user_earnings, user, export_format, zip_formats=None):
+    async def generate_export_file(self, user_earnings, user, export_format, zip_formats=None, all_data=False):
         """
         Generate export file based on format choice with improved visualizations.
         
@@ -163,8 +163,11 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         Returns:
             discord.File: File object ready for Discord attachment
         """
-        sanitized_name = Path(user.display_name).stem[:32].replace(" ", "_")
-        base_name = f"{sanitized_name}_earnings_{datetime.now().strftime('%d_%m_%Y')}"
+        if all_data:
+            base_name = f"full_earnings_report_{datetime.now().strftime('%d_%m_%Y')}"
+        else:
+            sanitized_name = Path(user.display_name).stem[:32].replace(" ", "_")
+            base_name = f"{sanitized_name}_earnings_{datetime.now().strftime('%d_%m_%Y')}"
         
         # Convert earnings to DataFrame for easier manipulation
         df = pd.DataFrame(user_earnings)
@@ -1601,7 +1604,7 @@ Generated on {datetime.now().strftime('%d/%m/%Y %H:%M')}
             file = None
             if export != "none":
                 try:
-                    file = await self.generate_export_file(user_earnings, interaction.user, export, zip_formats_list if export == "zip" else None)
+                    file = await self.generate_export_file(user_earnings, interaction.user, export, zip_formats_list if export == "zip" else None, all_data)
                 except Exception as e:
                     return await interaction.followup.send(f"❌ Export failed: {str(e)}", ephemeral=ephemeral)
 
@@ -1653,7 +1656,7 @@ Generated on {datetime.now().strftime('%d/%m/%Y %H:%M')}
                         file = None
                         if export != "none":
                             try:
-                                file = await self.generate_export_file(user_earnings, interaction.user, export, zip_formats_list if export == "zip" else None)
+                                file = await self.generate_export_file(user_earnings, interaction.user, export, zip_formats_list if export == "zip" else None, all_data)
                             except Exception as e:
                                 return await interaction.followup.send(f"❌ Export failed: {str(e)}", ephemeral=ephemeral)
                         
