@@ -466,7 +466,50 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         <head>
             <title>{report_title}</title>
             <style>
-                /* ... existing styles ... */
+                body {{
+                    font-family: Arial, sans-serif;
+                    background-color: #f4f4f4;
+                    color: #333;
+                    margin: 0;
+                    padding: 20px;
+                }}
+                .header {{
+                    background: #343a40;
+                    color: white;
+                    padding: 15px;
+                    text-align: center;
+                    border-radius: 5px;
+                }}
+                .summary, table {{
+                    background: white;
+                    padding: 15px;
+                    margin: 20px 0;
+                    border-radius: 5px;
+                    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                }}
+                .summary-item {{
+                    margin: 5px 0;
+                    font-size: 16px;
+                }}
+                table {{
+                    width: 100%;
+                    border-collapse: collapse;
+                }}
+                th, td {{
+                    padding: 12px;
+                    text-align: left;
+                    border-bottom: 1px solid #ddd;
+                }}
+                th {{
+                    background: #343a40;
+                    color: white;
+                }}
+                tr:nth-child(even) {{
+                    background: #f9f9f9;
+                }}
+                tr:hover {{
+                    background: #f1f1f1;
+                }}
             </style>
         </head>
         <body>
@@ -551,6 +594,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         """
         
         buffer.write(html_content.encode('utf-8'))
+
 
     def _generate_markdown(self, df, user, buffer, user_earnings, all_data):
         """Generate Markdown format export
