@@ -150,7 +150,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         guild_settings = display_settings.get(str(guild_id), {})
         return guild_settings.get('ephemeral_responses', True)
 
-    async def generate_export_file(self, user_earnings, user, export_format, zip_formats=None, all_data=False):
+    async def generate_export_file(self, user_earnings, interaction, user, export_format, zip_formats=None, all_data=False):
         """
         Generate export file based on format choice with improved visualizations.
         
@@ -181,17 +181,17 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         if export_format == "zip":
             with zipfile.ZipFile(buffer, 'w') as zip_file:
                 for fmt in zip_formats:
-                    fmt_buffer = self._generate_format_buffer(df, user, fmt, user_earnings)
+                    fmt_buffer = self._generate_format_buffer(df, interaction, user, fmt, user_earnings)
                     zip_file.writestr(f"{base_name}.{fmt}", fmt_buffer.getvalue())
                     fmt_buffer.close()
         else:
             # Handle single format export
-            buffer = self._generate_format_buffer(df, user, export_format, user_earnings, all_data)
+            buffer = self._generate_format_buffer(df, interaction, user, export_format, user_earnings, all_data)
         
         buffer.seek(0)
         return discord.File(buffer, filename=f"{base_name}.{export_format}")
 
-    def _generate_format_buffer(self, df, user, format_type, user_earnings, all_data=False):
+    def _generate_format_buffer(self, df, interaction, user, format_type, user_earnings, all_data=False):
         """
         Helper method to generate a specific format export buffer.
         
@@ -225,7 +225,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             elif format_type == "markdown":
                 self._generate_markdown(df, user, buffer, user_earnings, all_data)
             else:  # txt
-                self._generate_txt(df, user, buffer, user_earnings, all_data)
+                self._generate_txt(df, interaction, user, buffer, user_earnings, all_data)
         except Exception as e:
             # If there's an error, write the error to the buffer
             error_msg = f"Error generating {format_type} format: {str(e)}"
@@ -239,6 +239,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         if all_data and 'display_name' in df.columns:
             df = df[['display_name', 'username', 'date', 'role', 'shift', 
                     'hours_worked', 'gross_revenue', 'total_cut']]
+        df.fillna('null', inplace=True)
         df.to_csv(buffer, index=False)
 
     def _generate_json(self, df, buffer, all_data=False):
@@ -588,17 +589,18 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         
         buffer.write(md_content.encode('utf-8'))
 
-    def _generate_txt(self, df, user, buffer, user_earnings, all_data=False):
+    def _generate_txt(self, df, interaction, user, buffer, user_earnings, all_data=False):
         """Generate TXT format export"""
         report_title = "FULL EARNINGS REPORT" if all_data else f"EARNINGS REPORT FOR {user.display_name.upper()}"
-    
+
         text_content = f"============================================\n"
         text_content += f"   {report_title}\n"
         text_content += f"   Generated on {datetime.now().strftime('%d/%m/%Y %H:%M')}\n"
         text_content += f"============================================\n\n"
         
         if all_data:
-            text_content += f"Total Users:         {len(df['user_id'].unique())}\n"
+            unique_users = set(entry.get('user_id') for entry in user_earnings)
+            text_content += f"Total Users:         {len(unique_users)}\n"
         
         text_content += f"Total Gross Revenue: ${df['gross_revenue'].sum():.2f}\n"
         text_content += f"Total Earnings:      ${df['total_cut'].sum():.2f}\n"
@@ -607,14 +609,20 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         # Table headers
         if all_data:
             text_content += "\n#   User                Date       Role        Shift     Hours  Gross ($)  Earnings ($)\n"
-            text_content += "-" * 100 + "\n"
+            text_content += "-" * 88 + "\n"  # Adjusted separator length
         else:
             text_content += "\n#   Date       Role        Shift     Hours  Gross ($)  Earnings ($)\n"
-            text_content += "-" * 80 + "\n"
+            text_content += "-" * 67 + "\n"  # Adjusted separator length
         
         for i, entry in enumerate(user_earnings, 1):
             if all_data:
-                user_info = f"{entry.get('display_name', '')[:15]:15} (@{entry.get('username', '')[:10]})"
+                user_id = entry.get('user_id', '')
+                user = interaction.guild.get_member(user_id)
+                if user:
+                    # Use only the display name, truncated to 20 characters
+                    user_info = f"{user.display_name[:20]:20}"
+                else:
+                    user_info = "Unknown User".ljust(20)
                 text_content += f"{i:3} {user_info} {entry['date']:10} {entry['role']:12} {entry['shift'].capitalize():8} {float(entry['hours_worked']):6.1f} {float(entry['gross_revenue']):10.2f} {float(entry['total_cut']):12.2f}\n"
             else:
                 text_content += f"{i:3} {entry['date']:10} {entry['role']:12} {entry['shift'].capitalize():8} {float(entry['hours_worked']):6.1f} {float(entry['gross_revenue']):10.2f} {float(entry['total_cut']):12.2f}\n"
@@ -1135,8 +1143,9 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             
             # Add username if all_data is True and user_id is available
             if all_data and 'user_id' in entry:
-                user_id = entry['user_id'].strip('<@>')
-                user = interaction.guild.get_member(int(user_id))
+                # user_id = entry['user_id'].strip('<@>')
+                # user = interaction.guild.get_member(int(user_id))
+                user = interaction.guild.get_member(entry['user_id'])
                 entry_text += f"👤 User:    {f'{user.display_name} (@{user.name})' if user else 'Unknown'}\n"
             
             entry_text += f"📅 Date:    {entry.get('date', 'N/A')}\n"
@@ -1448,7 +1457,20 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             else:
                 # When all_data is True, add user_id to each entry
                 user_earnings = [
-                    {**entry, 'user_id': user_id} 
+                    {
+                        **entry, 
+                        'user_id': int(user_id.strip('<@>')),
+                        'display_name': (
+                            interaction.guild.get_member(int(user_id.strip('<@>'))).display_name
+                            if interaction.guild.get_member(int(user_id.strip('<@>')))
+                            else None
+                        ),
+                        'username': (
+                            interaction.guild.get_member(int(user_id.strip('<@>'))).name
+                            if interaction.guild.get_member(int(user_id.strip('<@>')))
+                            else None
+                        )
+                    } 
                     for user_id, entries in earnings_data.items() 
                     for entry in entries
                 ]
@@ -1619,7 +1641,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             file = None
             if export != "none":
                 try:
-                    file = await self.generate_export_file(user_earnings, interaction.user, export, zip_formats_list if export == "zip" else None, all_data)
+                    file = await self.generate_export_file(user_earnings, interaction, interaction.user, export, zip_formats_list if export == "zip" else None, all_data)
                 except Exception as e:
                     return await interaction.followup.send(f"❌ Export failed: {str(e)}", ephemeral=ephemeral)
 
@@ -1671,7 +1693,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                         file = None
                         if export != "none":
                             try:
-                                file = await self.generate_export_file(user_earnings, interaction.user, export, zip_formats_list if export == "zip" else None, all_data)
+                                file = await self.generate_export_file(user_earnings, interaction, interaction.user, export, zip_formats_list if export == "zip" else None, all_data)
                             except Exception as e:
                                 return await interaction.followup.send(f"❌ Export failed: {str(e)}", ephemeral=ephemeral)
                         
