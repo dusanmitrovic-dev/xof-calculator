@@ -1601,9 +1601,15 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         
         try:
             # Permission check
-            if not interaction.user.guild_permissions.administrator and user:
+            if user and not interaction.user.guild_permissions.administrator:
                 await interaction.response.send_message(
-                    "❌ You need administrator permissions to view other users' earnings.",
+                    f"❌ You need administrator permissions to view {user.mention}'s earnings.",
+                    ephemeral=ephemeral
+                )
+                return
+            elif all_data and not interaction.user.guild_permissions.administrator:
+                await interaction.response.send_message(
+                    "❌ You need administrator permissions to view all earnings data.",
                     ephemeral=ephemeral
                 )
                 return
