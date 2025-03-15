@@ -1716,7 +1716,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             # else:
             #     if file:
             #         await interaction.followup.send(file=file, ephemeral=ephemeral)
-                # await interaction.followup.send(embed=embed, ephemeral=ephemeral) # todo: check if this is needed if not remove
 
             # Create embed
             embed = discord.Embed(
