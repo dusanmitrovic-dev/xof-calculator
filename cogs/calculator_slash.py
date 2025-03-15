@@ -1702,14 +1702,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             # total_gross = sum(float(entry['gross_revenue']) for entry in user_earnings)
             # total_cut = sum(float(entry['total_cut']) for entry in user_earnings)
 
-            # embed = discord.Embed( # todo: remove
-            #     title=f"📊 Earnings Summary - {interaction.user.display_name}",
-            #     color=0x2ECC71,
-            #     timestamp=interaction.created_at
-            # )
-            # embed.add_field(name="Total Gross", value=f"```\n{total_gross:.2f}\n```", inline=True)
-            # embed.add_field(name="Total Cut", value=f"```\n{total_cut:.2f}\n```", inline=True)
-
             # Create embed
             embed = discord.Embed(
                 title=f"📊 Earnings Summary - {interaction.user.display_name}",
