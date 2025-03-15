@@ -1780,7 +1780,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             zip_formats_list = []
             
             # Handle zip_formats input
-            # Process zip_formats selection
             if export == "zip":
                 if zip_formats:
                     formats = re.split(r'[ ,\.\-_\s]+', zip_formats)
