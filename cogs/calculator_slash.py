@@ -1872,7 +1872,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                             )
                             report__message_embed.add_field(name="Sent by", value=interaction.user.mention, inline=False)
                             await recipient.send(embed=report__message_embed)
-                        # await interaction.followup.send(f"✅ Report sent to {recipient.mention}", ephemeral=ephemeral) # todo: remove
                         # note: sent success logic
                         successfully_sent_to_content += f"- {recipient.mention} ({recipient.name})\n"
                         success_count += 1
