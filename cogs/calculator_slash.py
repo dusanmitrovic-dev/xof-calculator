@@ -1771,7 +1771,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                 await interaction.followup.send("⚠️ Zip formats are set but the export format is not 'zip'.", ephemeral=ephemeral)
                 return
 
-            # Process zip_formats selection
             zip_formats_list = []
             
             # Handle zip_formats input
