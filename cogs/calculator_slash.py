@@ -1897,8 +1897,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                     await interaction.followup.send(f"✅ Report message sent with content: ", embed=report__message_embed, ephemeral=ephemeral)
                 await interaction.followup.send(embed=report_embed, ephemeral=ephemeral)
             else:
-                # Send to command user if no recipients specified
-                # await interaction.followup.send(embed=embed, ephemeral=ephemeral) # todo: remove
                 pass
 
         except Exception as e:
