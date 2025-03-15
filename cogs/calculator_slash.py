@@ -1778,19 +1778,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
 
             # Process zip_formats selection
             zip_formats_list = []
-
-            # zip_formats_list = [] # note: deep seek
-            # if export == "zip":
-            #     # Default to all formats if none selected
-            #     if not zip_formats:
-            #         zip_formats_list = ALL_ZIP_FORMATS.copy()
-            #     else:
-            #         # Check if "all" was explicitly chosen
-            #         if "all" in zip_formats:
-            #             zip_formats_list = ALL_ZIP_FORMATS.copy()
-            #         else:
-            #             # Filter valid formats (choices enforce validity, but double-check)
-            #             zip_formats_list = [fmt for fmt in zip_formats if fmt in ALL_ZIP_FORMATS]
             
             # Handle zip_formats input
             # Process zip_formats selection
