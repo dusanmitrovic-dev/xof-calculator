@@ -1261,33 +1261,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
 
     #     return embed
 
-    # async def create_list_embed(self, interaction, user_earnings, embed):
-    #     current_chunk = []
-    #     for idx, entry in enumerate(user_earnings, start=1):
-    #         gross_revenue = float(entry['gross_revenue'])
-    #         total_cut_percent = (float(entry['total_cut']) / gross_revenue * 100 if gross_revenue != 0 else 0.0)
-    #         entry_text = (
-    #                 f"```diff\n"
-    #                 f"+ Entry #{idx}\n"
-    #                 f"📅 Date:    {entry.get('date', 'N/A')}\n"
-    #                 f"🎯 Role:    {entry.get('role', 'N/A').capitalize()}\n"
-    #                 f"💰 Gross:   ${float(entry.get('gross_revenue', 0)):.2f}\n"
-    #                 f"💸 Cut:     ${float(entry.get('total_cut', 0)):.2f} "
-    #                 f"({float(entry.get('total_cut', 0))/float(entry.get('gross_revenue', 1))*100:.1f}%)\n"
-    #                 f"```\n"
-    #             )
-
-    #         if len("\n".join(current_chunk + [entry_text])) > 1024:
-    #             embed.add_field(name="", value="\n".join(current_chunk), inline=False)
-    #             current_chunk = [entry_text]
-    #         else:
-    #             current_chunk.append(entry_text)
-
-    #     if current_chunk:
-    #         embed.add_field(name="", value="\n".join(current_chunk), inline=False)
-
-    #     return embed
-
     async def create_list_embed(self, interaction, user_earnings, embed, all_data=False, period=False):
         """Creates properly sized list entries that respect Discord's 1024 character limit per field."""
         embeds = [embed]
