@@ -1744,13 +1744,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             if not all_data:
                 await interaction.followup.send(embed=embed, ephemeral=ephemeral)
 
-            # if display_entries: # todo: remove
-            #     base_embed = discord.Embed(
-            #         title=f"📊 Earnings {('Table' if as_table else 'List')} {(' - ' + period.upper() if period else '')}",
-            #         color=0x2ECC71,
-            #         timestamp=interaction.created_at
-            #     )
-
             if display_entries:
                 base_embed = discord.Embed(
                     title=f"📊 Earnings {('Table' if as_table else 'List')} {(' - ' + period.upper() if period else '')}",
