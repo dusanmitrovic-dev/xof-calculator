@@ -1751,7 +1751,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             #         timestamp=interaction.created_at
             #     )
 
-                # Update your command handler to pass the all_data parameter
             if display_entries:
                 base_embed = discord.Embed(
                     title=f"📊 Earnings {('Table' if as_table else 'List')} {(' - ' + period.upper() if period else '')}",
