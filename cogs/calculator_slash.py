@@ -34,39 +34,6 @@ MAX_ENTRIES = 5000000
 
 logger = logging.getLogger("xof_calculator.calculator")
 
-# class ZipFormatSelector(Select): # todo: remove
-#     def __init__(self, formats: List[str]):
-#         options = [
-#             discord.SelectOption(label="All Formats", value="all", description="Select all available formats"),
-#         ]
-        
-#         for fmt in formats:
-#             options.append(
-#                 discord.SelectOption(label=fmt.upper(), value=fmt, description=f"Include {fmt.upper()} format")
-#             )
-        
-#         super().__init__(
-#             placeholder="Select formats to include in ZIP...",
-#             min_values=1,
-#             max_values=len(formats) + 1,  # +1 for "All" option
-#             options=options
-#         )
-        
-#         self.selected_formats = []
-    
-#     async def callback(self, interaction: discord.Interaction):
-#         self.selected_formats = self.values
-        
-#         # If "all" is selected, use all formats
-#         if "all" in self.selected_formats:
-#             self.selected_formats = ALL_ZIP_FORMATS.copy()
-        
-#         formats_str = ", ".join(self.selected_formats)
-#         await interaction.response.send_message(
-#             f"Selected formats: {formats_str}",
-#             ephemeral=True
-#         )
-
 class HoursWorkedModal(ui.Modal, title="Enter Hours Worked"):
     def __init__(self, cog, period, shift, role, gross_revenue, compensation_type):
         super().__init__()
