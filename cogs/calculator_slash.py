@@ -1880,22 +1880,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                     except Exception as e:
                         # note: sent failure logic
                         failures.append(f"{recipient.mention} ({str(e)})")
-
-                    #     content = f"📊 Earnings report from {interaction.user.mention}:" # todo: remove
-                    #     if send_to_message:
-                    #         content += f"\n\n{send_to_message}"
-                        
-                    #     await recipient.send(content)
-                    #     await recipient.send(embed=embed)
-                        
-                    #     if file:
-                    #         await recipient.send(file=file)
-                        
-                    #     success_count += 1
-                    # except discord.Forbidden:
-                    #     failures.append(f"{recipient.mention} (Blocked DMs)")
-                    # except Exception as e:
-                    #     failures.append(f"{recipient.mention} ({str(e)})")
                 
                 # Generate and send report
                 report_embed = await self.generate_report_embed(
