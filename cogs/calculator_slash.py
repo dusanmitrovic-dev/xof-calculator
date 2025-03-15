@@ -1226,31 +1226,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             view=None
         )
 
-    # async def create_table_embed(self, interaction, user_earnings, embed): # todo: remove old logic        
-    #     table_header = "```\n  # |   Date     |   Role    |  Gross   |  Total   \n----|------------|-----------|----------|--------\n"
-    #     table_rows = []
-    #     total_gross = 0
-    #     total_cut_sum = 0
-            
-    #     for index, entry in enumerate(user_earnings, start=1):
-    #         gross_revenue = float(entry['gross_revenue'])
-    #         total_cut = float(entry['total_cut'])
-    #         total_gross += gross_revenue
-    #         total_cut_sum += total_cut
-    #         table_rows.append(f"{index:3} | {entry['date']:10} | {entry['role'].capitalize():<9} | {gross_revenue:8.2f} | {total_cut:6.2f}\n")
-
-    #     # Build table chunks with proper overflow handling
-    #     current_chunk = table_header
-    #     for row in table_rows:
-    #         if len(current_chunk) + len(row) + 3 > 1024:
-    #             # Add current chunk if it has content beyond header
-    #             if current_chunk != table_header:
-    #                 embed.add_field(name="", value=current_chunk + "```", inline=False)
-    #             # current_chunk = table_header  # Start new chunk # todo: remove
-    #             current_chunk = "```\n"  # Start new chunk without table header 
-                
-    #         current_chunk += row
-
     async def create_list_embed(self, interaction, user_earnings, embed, all_data=False, period=False):
         """Creates properly sized list entries that respect Discord's 1024 character limit per field."""
         embeds = [embed]
