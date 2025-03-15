@@ -1751,11 +1751,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             #         timestamp=interaction.created_at
             #     )
 
-                # embed = await self.create_table_embed(interaction, user_earnings, embed) if as_table \ # todo: remove old logic
-                #     else await self.create_list_embed(interaction, user_earnings, embed)
-                
-                # await interaction.followup.send(embed=embed, ephemeral=ephemeral)
-
                 # Update your command handler to pass the all_data parameter
             if display_entries:
                 base_embed = discord.Embed(
