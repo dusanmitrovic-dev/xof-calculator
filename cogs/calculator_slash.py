@@ -1878,7 +1878,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                     except discord.Forbidden:
                         failures.append(f"{recipient.mention} (Blocked DMs)")
                     except Exception as e:
-                        # await interaction.followup.send(f"❌ Failed to send to {recipient.mention}: {str(e)}", ephemeral=ephemeral) # todo: remove
                         # note: sent failure logic
                         failures.append(f"{recipient.mention} ({str(e)})")
 
