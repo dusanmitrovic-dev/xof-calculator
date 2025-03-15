@@ -1850,23 +1850,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                 report__message_embed = None
                 successfully_sent_to_content = f"\n"
                 for recipient in recipients:
-                    #     try: # todo: remove
-                #         await send_to.send(f"{send_to.mention}")
-
-                #         if file:
-                #             await send_to.send(file=file)
-                #         await send_to.send(embed=embed)
-                #         if send_to_message:
-                #             report_embed = discord.Embed(
-                #                 title="Report message",
-                #                 description=f"{send_to_message}"
-                #             )
-                #             report_embed.add_field(name="Sent by", value=interaction.user.mention, inline=False)
-                #             await send_to.send(embed=report_embed)
-                #             await interaction.followup.send(f"✅ Report message sent with content: ", embed=report_embed, ephemeral=ephemeral)
-                #         await interaction.followup.send(f"✅ Report sent to {send_to.mention}", ephemeral=ephemeral)
-                #     except Exception as e:
-                #         await interaction.followup.send(f"❌ Failed to send to {send_to.mention}: {str(e)}", ephemeral=ephemeral)
                     try:
                         await recipient.send(f"{recipient.mention}")
 
