@@ -1698,10 +1698,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                     ephemeral=ephemeral
                 )
 
-            # # Create earnings summary embed
-            # total_gross = sum(float(entry['gross_revenue']) for entry in user_earnings)
-            # total_cut = sum(float(entry['total_cut']) for entry in user_earnings)
-
             # Create embed
             embed = discord.Embed(
                 title=f"📊 Earnings Summary - {interaction.user.display_name}",
