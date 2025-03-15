@@ -1710,13 +1710,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             # embed.add_field(name="Total Gross", value=f"```\n{total_gross:.2f}\n```", inline=True)
             # embed.add_field(name="Total Cut", value=f"```\n{total_cut:.2f}\n```", inline=True)
 
-            # # Send to recipients # todo: remove
-            # if send_to:
-            # note: send to logic
-            # else:
-            #     if file:
-            #         await interaction.followup.send(file=file, ephemeral=ephemeral)
-
             # Create embed
             embed = discord.Embed(
                 title=f"📊 Earnings Summary - {interaction.user.display_name}",
