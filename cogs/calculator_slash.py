@@ -67,22 +67,6 @@ logger = logging.getLogger("xof_calculator.calculator")
 #             ephemeral=True
 #         )
 
-# class FormatSelectorView(View):
-#     def __init__(self, timeout: float = 180):
-#         super().__init__(timeout=timeout)
-#         self.selector = ZipFormatSelector(ALL_ZIP_FORMATS)
-#         self.add_item(self.selector)
-#         self.confirmed = False
-
-#     @discord.ui.button(label="Confirm", style=discord.ButtonStyle.green)
-#     async def confirm(self, interaction: discord.Interaction, button: Button):
-#         self.confirmed = True
-#         self.stop()
-#         await interaction.response.send_message(
-#             f"Formats confirmed: {', '.join(self.selector.selected_formats)}",
-#             ephemeral=True
-#         )
-
 class HoursWorkedModal(ui.Modal, title="Enter Hours Worked"):
     def __init__(self, cog, period, shift, role, gross_revenue, compensation_type):
         super().__init__()
