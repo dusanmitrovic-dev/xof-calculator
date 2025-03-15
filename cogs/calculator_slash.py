@@ -1251,16 +1251,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                 
     #         current_chunk += row
 
-    #     # Add remaining content
-    #     if current_chunk != table_header:
-    #         embed.add_field(name="", value=current_chunk + "```", inline=False)
-            
-    #     # Add totals
-    #     embed.add_field(name="Total Gross", value=f"```\n{total_gross:.2f}\n```", inline=True)
-    #     embed.add_field(name="Total Cut", value=f"```\n{total_cut_sum:.2f}\n```", inline=True)
-
-    #     return embed
-
     async def create_list_embed(self, interaction, user_earnings, embed, all_data=False, period=False):
         """Creates properly sized list entries that respect Discord's 1024 character limit per field."""
         embeds = [embed]
