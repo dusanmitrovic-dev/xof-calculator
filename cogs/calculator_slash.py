@@ -1513,7 +1513,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         range_from: Optional[str] = None,
         range_to: Optional[str] = None,
         send_to_message: Optional[str] = None,
-        # zip_formats: Optional[str] = None
         zip_formats: Optional[str] = None,
         all_data: Optional[bool] = False
     ):
