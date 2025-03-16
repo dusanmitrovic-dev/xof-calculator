@@ -281,7 +281,7 @@
     - [x] (v0.104.0) `help` slash
     - [x] (v0.105.0) `calculate workflow`
     - [x] make helper functions
-- [ ] Remove `reset-earnings-config`
+- [x] Remove `reset-earnings-config`
 - [ ] Separate data and backup data
 - [x] (v0.77.0) Remove hours for commission views
 - [x] (v0.77.0) Remove net revenue in hourly views
