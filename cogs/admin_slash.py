@@ -960,7 +960,6 @@ class AdminSlashCommands(commands.Cog, name="admin"):
     async def clear_earnings(self, interaction: discord.Interaction):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
 
-        # guild_id = str(interaction.guild.id) # todo remove 
         guild_name = interaction.guild.name
 
         view = discord.ui.View()
