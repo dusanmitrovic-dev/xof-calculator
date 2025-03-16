@@ -1144,20 +1144,6 @@ class AdminSlashCommands(commands.Cog, name="admin"):
 
     async def reset_earnings(self, interaction: discord.Interaction):
         await file_handlers.save_json(settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS)
-
-    # @app_commands.default_permissions(administrator=True) # todo remove reset-earnings-config
-    # @app_commands.command(name="reset-earnings-config", description="Reset earnings configuration")
-    # async def reset_earnings_config(self, interaction: discord.Interaction):
-    #     async def reset_action(interaction: discord.Interaction):
-    #         await self.reset_earnings(interaction)
-    #         await interaction.response.edit_message(content="✅ Earnings configuration reset.", view=None)
-
-    #     view = ConfirmButton(reset_action, interaction.user.id)
-    #     await interaction.response.send_message(
-    #         "⚠️ Are you sure you want to reset all earnings data? This will delete all existing earnings entries.", 
-    #         view=view, 
-    #         ephemeral=True
-    #     )
     
     async def reset_models(self, interaction: discord.Interaction): 
         await file_handlers.save_json(settings.MODELS_DATA_FILE, settings.DEFAULT_MODELS_DATA)
