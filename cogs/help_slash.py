@@ -70,7 +70,6 @@ class HelpSlashCommands(commands.Cog):
                 "`/reset-period-config` - Reset period configuration",
                 "`/reset-role-config` - Reset role configuration",
                 "`/reset-bonus-config` - Reset bonus rules configuration",
-                # "`/reset-earnings-config` - Reset earnings configuration", # todo remove
                 "`/reset-models-config` - Reset models configuration",
                 "`/reset-compensation-config` - Reset compensation configuration"
             ])
