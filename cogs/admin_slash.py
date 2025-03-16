@@ -992,7 +992,6 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             await self.reset_role(interaction)
             await self.reset_bonus_rules(interaction)
             await self.reset_models(interaction)
-            # await self.reset_earnings(interaction) # todo remove
             await self.reset_display(interaction)
             await self.reset_compensation(interaction)
             try:
