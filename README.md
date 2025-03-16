@@ -355,15 +355,15 @@
 - [x] (v0.132.0) Fixed TXT and CSV display issues  
 - [x] (v0.132.0) Fixed error in _generate_txt() function (positional argument mismatch)  
 - [x] (v0.132.0) Residual commented-out generate_export_file method removed  
+- [x] View earnings remove period use role instead
+- [x] New view earnings slash command `view-earnings date-from date-to weekly/monthly`
+- [x] View earnings export
+- [x] Bulk earnings for everyone from period to period for weekly/monthly
+    - [x] With DM support notification that sends to everyone their earnings log
 - [ ] Option to set default zip exports in settings
 - [ ] Display hourly cut in employee cut?
 - [ ] Add functionality to select column names to display in `view-earnings`
 - [ ] Pip freeze > requirements.txt
-- [ ] View earnings remove period use role instead
-- [ ] New view earnings slash command `view-earnings date-from date-to weekly/monthly`
-- [x] View earnings export
-- [ ] Bulk earnings for everyone from period to period for weekly/monthly
-    - [ ] With DM support notification that sends to everyone their earnings log
 - [ ] Any way to use a date picker for `view-earnings`?
     - https://discord-date-2.shyked.fr/
 - [ ] Bot roles
