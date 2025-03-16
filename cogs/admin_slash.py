@@ -1284,7 +1284,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             ephemeral=ephemeral
         )
 
-    @app_commands.default_permissions(administrator=True) # todo double confirm button needed
+    @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="restore-earnings-backup", description="Restore the latest earnings configuration backup")
     async def restore_earnings_backup(self, interaction: discord.Interaction):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
