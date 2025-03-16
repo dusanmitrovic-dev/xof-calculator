@@ -360,6 +360,7 @@
 - [x] View earnings export
 - [x] Bulk earnings for everyone from period to period for weekly/monthly
     - [x] With DM support notification that sends to everyone their earnings log
+- [x] `Error`: 'NoneType' object has no attribute 'to_dict' in `view-earnings`
 - [ ] Option to set default zip exports in settings
 - [ ] Display hourly cut in employee cut?
 - [ ] Add functionality to select column names to display in `view-earnings`
@@ -367,7 +368,6 @@
 - [ ] Any way to use a date picker for `view-earnings`?
     - https://discord-date-2.shyked.fr/
 - [ ] Bot roles
-- [ ] `Error`: 'NoneType' object has no attribute 'to_dict' in `view-earnings`
 - [ ] ONE ADMIN COMMAND TO RULE THEM ALL ! (LOL)
 
 # Commission Settings Implementation
