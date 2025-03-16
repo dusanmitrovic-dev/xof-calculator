@@ -1050,7 +1050,6 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             else:
                 content = f"⚠️ Restored {restored_count} files, but {failed_count} failed. Check console for details."
 
-            # Edit the original message to show the result and remove buttons
             await interaction.edit_original_response(content=content, view=None)
 
         async def cancel_callback(interaction: discord.Interaction):
