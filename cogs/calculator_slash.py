@@ -262,113 +262,145 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
 
     def _generate_pdf(self, df, user, buffer, user_earnings, all_data=False):
         """Generate PDF format export"""
-        doc = SimpleDocTemplate(buffer, pagesize=letter)
-        elements = []
-        
-        # Title based on report type
-        styles = getSampleStyleSheet()
-        title_style = styles["Title"]
-        report_title = "Full Earnings Report" if all_data else f"Earnings Report for {user.display_name}"
-        elements.append(Paragraph(report_title, title_style))
-        elements.append(Spacer(1, 12))
-        
-        # Summary section
-        subtitle_style = styles["Heading2"]
-        elements.append(Paragraph("Summary", subtitle_style))
-        
-        summary_data = [
-            ["Metric", "Value"],
-            ["Total Gross Revenue", f"${df['gross_revenue'].sum():.2f}"],
-            ["Total Earnings", f"${df['total_cut'].sum():.2f}"],
-            ["Total Hours Worked", f"{df['hours_worked'].sum():.1f}"],
-        ]
-        
-        if all_data:
-            summary_data.insert(1, ["Total Users", f"{len(df['user_id'].unique())}"])
-        
-        summary_table = Table(summary_data, colWidths=[250, 150])
-        summary_table.setStyle(TableStyle([
-            ('BACKGROUND', (0,0), (1,0), colors.grey),
-            ('TEXTCOLOR', (0,0), (1,0), colors.whitesmoke),
-            ('ALIGN', (0,0), (1,-1), 'LEFT'),
-            ('FONTNAME', (0,0), (1,0), 'Helvetica-Bold'),
-            ('BOTTOMPADDING', (0,0), (1,0), 12),
-            ('BACKGROUND', (0,1), (1,-1), colors.beige),
-            ('GRID', (0,0), (1,-1), 1, colors.black)
-        ]))
-        elements.append(summary_table)
-        elements.append(Spacer(1, 24))
-        
-        # Add detailed table
-        elements.append(Paragraph("Detailed Earnings", subtitle_style))
-        
-        # Format data for the table
-        if all_data:
-            data = [["#", "User", "Date", "Role", "Shift", "Hours", "Gross Revenue", "Earnings"]]
-        else:
-            data = [["#", "Date", "Role", "Shift", "Hours", "Gross Revenue", "Earnings"]]
-        for i, entry in enumerate(user_earnings, 1):
-            hourly = float(entry['total_cut']) / float(entry['hours_worked']) if float(entry['hours_worked']) > 0 else 0
+        try:
+            doc = SimpleDocTemplate(buffer, pagesize=letter)
+            elements = []
+            
+            # Title based on report type
+            styles = getSampleStyleSheet()
+            title_style = styles["Title"]
+            report_title = "Full Earnings Report" if all_data else f"Earnings Report for {user.display_name}"
+            elements.append(Paragraph(report_title, title_style))
+            elements.append(Spacer(1, 12))
+            
+            # Summary section
+            subtitle_style = styles["Heading2"]
+            elements.append(Paragraph("Summary", subtitle_style))
+
+            summary_data = [
+                ["Metric", "Value"],
+                ["Total Gross Revenue", f"${df['gross_revenue'].sum():.2f}"],
+                ["Total Earnings", f"${df['total_cut'].sum():.2f}"],
+                ["Total Hours Worked", f"{df['hours_worked'].sum():.1f}"],
+            ]
+            
             if all_data:
-                data.append([
-                    i,
-                    f"{entry.get('display_name', '')} (@{entry.get('username', '')})",
-                    entry['date'],
-                    entry['role'],
-                    entry['shift'].capitalize(),
-                    f"{float(entry['hours_worked']):.1f}",
-                    f"${float(entry['gross_revenue']):.2f}",
-                    f"${float(entry['total_cut']):.2f}"
-                ])
+                summary_data.insert(1, ["Total Users", f"{len(df['user_id'].unique())}"])
+            
+            summary_table = Table(summary_data, colWidths=[250, 150])
+            summary_table.setStyle(TableStyle([
+                ('BACKGROUND', (0,0), (1,0), colors.grey),
+                ('TEXTCOLOR', (0,0), (1,0), colors.whitesmoke),
+                ('ALIGN', (0,0), (1,-1), 'LEFT'),
+                ('FONTNAME', (0,0), (1,0), 'Helvetica-Bold'),
+                ('BOTTOMPADDING', (0,0), (1,0), 12),
+                ('BACKGROUND', (0,1), (1,-1), colors.beige),
+                ('GRID', (0,0), (1,-1), 1, colors.black)
+            ]))
+            elements.append(summary_table)
+            elements.append(Spacer(1, 24))
+            
+            # Add detailed table
+            elements.append(Paragraph("Detailed Earnings", subtitle_style))
+            
+            # Format data for the table
+            if all_data:
+                data = [["#", "User", "Date", "Role", "Shift", "Hours", "Gross Revenue", "Earnings"]]
             else:
-                data.append([
-                    i,
-                    entry['date'],
-                    entry['role'],
-                    entry['shift'].capitalize(),
-                    f"{float(entry['hours_worked']):.1f}",
-                    f"${float(entry['gross_revenue']):.2f}",
-                    f"${float(entry['total_cut']):.2f}"
-                ])
-        
-        # Create the table
-        detail_table = Table(data)
-        detail_table.setStyle(TableStyle([
-            ('BACKGROUND', (0,0), (-1,0), colors.grey),
-            ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
-            ('ALIGN', (0,0), (-1,-1), 'CENTER'),
-            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
-            ('BOTTOMPADDING', (0,0), (-1,0), 12),
-            ('BACKGROUND', (0,1), (-1,-1), colors.beige),
-            ('GRID', (0,0), (-1,-1), 1, colors.black),
-            # Align numeric columns right
-            ('ALIGN', (4,1), (7,-1), 'RIGHT'),
-        ]))
-        elements.append(detail_table)
-        elements.append(Spacer(1, 24))
-        
-        # Add charts on a new page
-        elements.append(PageBreak())
-        elements.append(Paragraph("Earnings Visualization", subtitle_style))
-        elements.append(Spacer(1, 12))
-        # Generate and add chart as Image
-        chart_buffer = io.BytesIO()
-        plt.figure(figsize=(7, 4))
-        dates = [datetime.strptime(entry['date'], '%d/%m/%Y') for entry in user_earnings]
-        plt.plot(dates, [float(e['gross_revenue']) for e in user_earnings], 'b-', label='Gross Revenue')
-        plt.plot(dates, [float(e['total_cut']) for e in user_earnings], 'r-', label='Earnings')
-        plt.legend()
-        plt.grid(True, linestyle='--', alpha=0.7)
-        plt.title("Revenue vs Earnings Over Time")
-        plt.tight_layout()
-        plt.savefig(chart_buffer, format='png', dpi=150)
-        plt.close()
-        
-        chart_buffer.seek(0)
-        elements.append(Image(chart_buffer, width=450, height=250))
-        
-        # Build the PDF document
-        doc.build(elements)
+                data = [["#", "Date", "Role", "Shift", "Hours", "Gross Revenue", "Earnings"]]
+            for i, entry in enumerate(user_earnings, 1):
+                hourly = float(entry['total_cut']) / float(entry['hours_worked']) if float(entry['hours_worked']) > 0 else 0
+                if all_data:
+                    data.append([
+                        i,
+                        f"{entry.get('display_name', '')} (@{entry.get('username', '')})",
+                        entry['date'],
+                        entry['role'],
+                        entry['shift'].capitalize(),
+                        f"{float(entry['hours_worked']):.1f}",
+                        f"${float(entry['gross_revenue']):.2f}",
+                        f"${float(entry['total_cut']):.2f}"
+                    ])
+                else:
+                    data.append([
+                        i,
+                        entry['date'],
+                        entry['role'],
+                        entry['shift'].capitalize(),
+                        f"{float(entry['hours_worked']):.1f}",
+                        f"${float(entry['gross_revenue']):.2f}",
+                        f"${float(entry['total_cut']):.2f}"
+                    ])
+
+            user_earnings = user_earnings[1:-1]
+            
+            # Create the table
+            detail_table = Table(data)
+            detail_table.setStyle(TableStyle([
+                ('BACKGROUND', (0,0), (-1,0), colors.grey),
+                ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+                ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+                ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+                ('BOTTOMPADDING', (0,0), (-1,0), 12),
+                ('BACKGROUND', (0,1), (-1,-1), colors.beige),
+                ('GRID', (0,0), (-1,-1), 1, colors.black),
+                # Align numeric columns right
+                ('ALIGN', (4,1), (7,-1), 'RIGHT'),
+            ]))
+            elements.append(detail_table)
+            elements.append(Spacer(1, 24))
+            
+            # Add charts on a new page
+            elements.append(PageBreak())
+            elements.append(Paragraph("Earnings Visualization", subtitle_style))
+            elements.append(Spacer(1, 12))
+
+            # Generate and add chart as Image
+            chart_buffer = io.BytesIO()
+            with plt.rc_context():  # Isolate plot settings
+                fig, ax = plt.subplots(figsize=(7, 4))
+
+                # Extract dates and values
+                dates = [datetime.strptime(entry['date'], '%d/%m/%Y') for entry in user_earnings]
+                gross_revenue = [float(e['gross_revenue']) for e in user_earnings]
+                total_cut = [float(e['total_cut']) for e in user_earnings]
+
+                # Plot data
+                ax.plot(dates, gross_revenue, 'o-', label='Gross Revenue')
+                ax.plot(dates, total_cut, 'o-', label='Earnings')
+
+                # Format x-axis with 2-digit year (e.g., 2025 → 25)
+                ax.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m/%y'))  # %y for 2-digit year
+                fig.autofmt_xdate(rotation=45)  # Rotate labels for readability
+
+                # Add legend and grid
+                ax.legend()
+                ax.grid(True, linestyle='--', alpha=0.7)
+                plt.tight_layout()
+
+                # Save to buffer
+                plt.savefig(chart_buffer, format='png', dpi=150, bbox_inches='tight')
+                plt.close(fig)
+
+            chart_buffer.seek(0)
+            elements.append(Image(chart_buffer, width=450, height=250))
+
+            # Build the PDF document
+            doc.build(elements)
+        except Exception as e:
+            # Handle errors gracefully
+            error_buffer = io.BytesIO()
+            doc = SimpleDocTemplate(error_buffer, pagesize=letter)
+            styles = getSampleStyleSheet()
+            elements = [
+                Paragraph("Error Generating PDF", styles["Title"]),
+                Spacer(1, 12),
+                Paragraph(f"An error occurred: {str(e)}", styles["BodyText"])
+            ]
+            doc.build(elements)
+            error_buffer.seek(0)
+            buffer.write(error_buffer.read())
+            buffer.seek(0)
 
     def _generate_png(self, df, user, buffer, user_earnings, all_data=False):
         """Generate PNG format export"""
