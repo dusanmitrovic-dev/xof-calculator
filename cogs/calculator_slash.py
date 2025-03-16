@@ -1925,7 +1925,7 @@ class ModelSelectionView(ui.View):
             button = ui.Button(
                 label=model, 
                 style=discord.ButtonStyle.primary if model in self.selected_models else discord.ButtonStyle.secondary,
-                row=min(3, (current_page_models.index(model) // 5))  # Organize into rows of 5 buttons
+                row=min(3, (current_page_models.index(model) // 5))
             )
             button.callback = lambda i, m=model: self.on_model_toggled(i, m)
             self.add_item(button)
