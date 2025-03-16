@@ -192,7 +192,7 @@
             - [ ] Even tho set not displaying it for `calculate`
             - [x] (v0.27.0) `total` parameters set
     - [ ] Add detailed help messages for all commands (double check)
-- [ ] All admin slash commands are to be ephemeral
+- [x] All admin slash commands are to be ephemeral
 
 ### Display Enhancements
 
