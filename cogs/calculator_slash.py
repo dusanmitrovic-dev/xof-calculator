@@ -1693,7 +1693,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             file = None
             if export != "none":
                 try:
-                    print(len(user_earnings))
                     file = await self.generate_export_file(user_earnings, interaction, interaction.user, export, zip_formats_list if export == "zip" else None, all_data)
                 except Exception as e:
                     return await interaction.followup.send(f"❌ Export failed: {str(e)}", ephemeral=ephemeral)
