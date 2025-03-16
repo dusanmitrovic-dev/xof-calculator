@@ -2020,7 +2020,7 @@ class ModelSelectionView(ui.View):
     
     async def on_finish(self, interaction: discord.Interaction):
         await interaction.response.defer()
-        # Instead of finalizing, show preview with confirmation options
+
         await self.cog.preview_calculation(
             interaction, 
             self.period, 
