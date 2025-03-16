@@ -967,10 +967,6 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         view.add_item(discord.ui.Button(label="Cancel", style=discord.ButtonStyle.success, custom_id="cancel_clear_earnings"))
 
         async def confirm_callback(interaction):
-            # guild_id = str(interaction.guild.id) # todo remove when you check if it works
-            # earnings_data = await file_handlers.load_json(settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS)
-            # earnings_data[guild_id] = {}
-            # await file_handlers.save_json(settings.EARNINGS_FILE, earnings_data)
             await self.reset_earnings(interaction)
             await interaction.response.edit_message(content=f"✅ All earnings data for the guild ({guild_name}) has been successfully cleared.", view=None)
 
