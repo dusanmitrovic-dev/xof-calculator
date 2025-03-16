@@ -1,3 +1,4 @@
+import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
@@ -371,30 +372,61 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
 
     def _generate_png(self, df, user, buffer, user_earnings, all_data=False):
         """Generate PNG format export"""
-        fig, axes = plt.subplots(figsize=(12, 6))
-    
-        # Plot configuration
-        title = 'Full Earnings Overview' if all_data else f'Earnings Report for {user.display_name}'
-        if all_data:
-            # Group by user if showing all data
-            user_groups = df.groupby('user')
-            for name, group in user_groups:
-                dates = [datetime.strptime(d, '%d/%m/%Y') for d in group['date']]
-                axes.plot(dates, group['gross_revenue'], 'o-', label=name)
-            axes.set_title('Earnings by User Over Time')
+        try:
+            with plt.rc_context():  # Isolate plot settings
+                fig, ax = plt.subplots(figsize=(12, 6))
+                
+                # Validate and sort data
+                if not user_earnings:
+                    raise ValueError("No earnings data to plot")
+                    
+                # Sort entries by date ascending
+                sorted_earnings = sorted(
+                    [e for e in user_earnings if 'date' in e],
+                    key=lambda x: datetime.strptime(x['date'], '%d/%m/%Y')
+                )
 
-            axes.legend(loc='center left', bbox_to_anchor=(0, 0.5))
-        else:
-            dates = [datetime.strptime(entry['date'], '%d/%m/%Y') for entry in user_earnings]
-            axes.plot(dates, [float(e['gross_revenue']) for e in user_earnings], 'b-o', label='Gross Revenue')
-            axes.plot(dates, [float(e['total_cut']) for e in user_earnings], 'r-o', label='Earnings')
-            axes.set_title('Revenue & Earnings Over Time')
-        
-        fig.suptitle(title, fontsize=16)
-        axes.legend()
-        axes.grid(True, linestyle='--', alpha=0.7)
-        plt.savefig(buffer, format='png', dpi=150)
-        plt.close(fig)
+                # Create date objects
+                dates = [datetime.strptime(e['date'], '%d/%m/%Y') for e in sorted_earnings]
+                
+                if all_data:
+                    # Group by user if showing all data
+                    for user_id, group in df.groupby('user'):
+                        user_dates = [datetime.strptime(d, '%d/%m/%Y') for d in group['date']]
+                        ax.plot(user_dates, group['gross_revenue'], 'o-', label=user_id)
+                    ax.set_title('Earnings by User Over Time')
+                    ax.legend(loc='upper left')
+                else:
+                    # Plot individual user data
+                    ax.plot(dates, 
+                            [float(e['gross_revenue']) for e in sorted_earnings], 
+                            'b-o', label='Gross Revenue')
+                    ax.plot(dates, 
+                            [float(e['total_cut']) for e in sorted_earnings], 
+                            'r-o', label='Earnings')
+                    ax.set_title(f'Earnings for {user.display_name}')
+
+                # Format dates with 2-digit year (e.g., 2025 → 25)
+                ax.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m/%y'))  # %y for 2-digit year
+                fig.autofmt_xdate(rotation=45)  # Auto-rotate and space labels
+                
+                # Add legend and grid
+                ax.legend()
+                ax.grid(True, linestyle='--', alpha=0.7)
+                plt.tight_layout()
+                
+                # Save to buffer
+                plt.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
+                plt.close(fig)
+                
+        except Exception as e:
+            # Create error plot as fallback
+            plt.figure(figsize=(12, 6))
+            plt.text(0.5, 0.5, f"Error generating plot: {str(e)}", 
+                    ha='center', va='center')
+            plt.savefig(buffer, format='png')
+            plt.close()
+            buffer.seek(0)
 
     def _generate_svg(self, df, user, buffer, user_earnings, all_data=False):
         """Generate SVG format export"""
