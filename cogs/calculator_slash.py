@@ -400,7 +400,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                     for member in sorted_members:
                         group = valid_members[valid_members['member'] == member]
                         group = group.sort_values('date')
-                        ax2.plot(group['date'], group['gross_revenue'], 'o-', label=member.display_name)
+                        ax2.plot(group['date'], group['gross_revenue'], 'o-', label=f"{member.display_name} (@{member.name})")
                     
                     ax2.set_title("Users Revenue Comparison")
                     ax2.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m/%y'))
