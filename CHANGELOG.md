@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.134.0] - 2025-03-17  
+### Removed  
+- Remove unused report admin commands from help embed
+
 ## [0.133.0] - 2025-03-17  
 ### Removed  
 - Cleaned up commented-out code in multiple files (`admin_slash`, `calculator_slash`, `help_slash`).  

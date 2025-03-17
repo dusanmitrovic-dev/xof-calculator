@@ -100,17 +100,9 @@ class HelpSlashCommands(commands.Cog):
 
             # Report Commands
             report_commands = "\n".join([
-                "`/view-earnings` - View your earnings",
-                "`/view-earnings-table` - View your earnings in a table format"
+                "`/view-earnings` - View your earnings"
             ])
             embed.add_field(name="📌 Report Commands 📌", value=report_commands, inline=False)
-
-            # Report Admin Commands
-            report_admin_commands = "\n".join([
-                "`/view-earnings-admin` - View earnings for a specified user",
-                "`/view-earnings-admin-table` - View earnings for a specified user in table format"
-            ])
-            embed.add_field(name="📌 Report Admin Commands 📌", value=report_admin_commands, inline=False)
 
         await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
 
