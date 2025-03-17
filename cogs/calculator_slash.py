@@ -261,22 +261,24 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                     worksheet.column_dimensions[column].width = max_length + 2
 
     def _generate_pdf(self, df, interaction, user, buffer, user_earnings, all_data=False):
-        """Generate PDF format export with proper interaction handling"""
+        """Generate complete PDF report with aggregated charts and individual breakdowns"""
         try:
             doc = SimpleDocTemplate(buffer, pagesize=letter)
             elements = []
-            
-            # Title based on report type
             styles = getSampleStyleSheet()
+
+            # ======================
+            # 1. Title Section
+            # ======================
             title_style = styles["Title"]
             report_title = "XOF Agency Full Earnings Report" if all_data else f"XOF Agency Earnings Report for {user.display_name}"
             elements.append(Paragraph(report_title, title_style))
             elements.append(Spacer(1, 12))
-            
-            # Summary section
-            subtitle_style = styles["Heading2"]
-            elements.append(Paragraph("Summary", subtitle_style))
 
+            # ======================
+            # 2. Summary Section
+            # ======================
+            elements.append(Paragraph("Summary", styles["Heading2"]))
             summary_data = [
                 ["Metric", "Value"],
                 ["Total Gross Revenue", f"${df['gross_revenue'].sum():.2f}"],
@@ -299,40 +301,35 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             ]))
             elements.append(summary_table)
             elements.append(Spacer(1, 24))
-            
-            # Add detailed table
-            elements.append(Paragraph("Detailed Earnings", subtitle_style))
-            
-            # Format data for the table
-            if all_data:
-                data = [["#", "User", "Date", "Role", "Shift", "Hours", "Gross Revenue", "Earnings"]]
-            else:
-                data = [["#", "Date", "Role", "Shift", "Hours", "Gross Revenue", "Earnings"]]
-            for i, entry in enumerate(user_earnings, 1):
-                hourly = float(entry['total_cut']) / float(entry['hours_worked']) if float(entry['hours_worked']) > 0 else 0
-                if all_data:
-                    data.append([
-                        i,
-                        f"{entry.get('display_name', '')} (@{entry.get('username', '')})",
-                        entry['date'],
-                        entry['role'],
-                        entry['shift'].capitalize(),
-                        f"{float(entry['hours_worked']):.1f}",
-                        f"${float(entry['gross_revenue']):.2f}",
-                        f"${float(entry['total_cut']):.2f}"
-                    ])
-                else:
-                    data.append([
-                        i,
-                        entry['date'],
-                        entry['role'],
-                        entry['shift'].capitalize(),
-                        f"{float(entry['hours_worked']):.1f}",
-                        f"${float(entry['gross_revenue']):.2f}",
-                        f"${float(entry['total_cut']):.2f}"
-                    ])
 
-            # Create the table
+            # ======================
+            # 3. Detailed Table
+            # ======================
+            elements.append(Paragraph("Detailed Earnings", styles["Heading2"]))
+            headers = ["#", "User", "Date", "Role", "Shift", "Hours", "Gross Revenue", "Earnings"] if all_data else ["#", "Date", "Role", "Shift", "Hours", "Gross Revenue", "Earnings"]
+            data = [headers]
+            
+            for i, entry in enumerate(user_earnings, 1):
+                row = [
+                    i,
+                    f"{entry.get('display_name', '')} (@{entry.get('username', '')})",
+                    entry['date'],
+                    entry['role'],
+                    entry['shift'].capitalize(),
+                    f"{float(entry['hours_worked']):.1f}",
+                    f"${float(entry['gross_revenue']):.2f}",
+                    f"${float(entry['total_cut']):.2f}"
+                ] if all_data else [
+                    i,
+                    entry['date'],
+                    entry['role'],
+                    entry['shift'].capitalize(),
+                    f"{float(entry['hours_worked']):.1f}",
+                    f"${float(entry['gross_revenue']):.2f}",
+                    f"${float(entry['total_cut']):.2f}"
+                ]
+                data.append(row)
+
             detail_table = Table(data)
             detail_table.setStyle(TableStyle([
                 ('BACKGROUND', (0,0), (-1,0), colors.grey),
@@ -342,77 +339,127 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                 ('BOTTOMPADDING', (0,0), (-1,0), 12),
                 ('BACKGROUND', (0,1), (-1,-1), colors.beige),
                 ('GRID', (0,0), (-1,-1), 1, colors.black),
-                # Align numeric columns right
-                ('ALIGN', (4,1), (7,-1), 'RIGHT'),
+                ('ALIGN', (4,1), (-1,-1), 'RIGHT'),
             ]))
             elements.append(detail_table)
             elements.append(Spacer(1, 24))
-            
-            # Add charts on a new page
+
+            # ======================
+            # 4. Charts Section
+            # ======================
             elements.append(PageBreak())
-            elements.append(Paragraph("Charts", subtitle_style))
-            if all_data:
-                # elements.append(Paragraph("Earnings For All Users", subtitle_style))
-                pass
-            else:
-                # elements.append(Paragraph(f"Earnings For {user.display_name}", subtitle_style))
-                pass
+            elements.append(Paragraph("Earnings Analysis", styles["Heading2"]))
             elements.append(Spacer(1, 12))
 
-            # Generate and add chart as Image
-            chart_buffer = io.BytesIO()
-            with plt.rc_context():  # Isolate plot settings
-                fig, ax = plt.subplots(figsize=(7, 4))
+            if all_data:
+                # Process data with robust user ID handling
+                processed_df = pd.DataFrame(user_earnings)
+                
+                # Convert and extract user IDs
+                processed_df['user_id'] = processed_df['user_id'].astype(str)
+                processed_df['user_id'] = processed_df['user_id'].str.extract(r'(\d+)').fillna('0').astype(np.int64)
+                
+                # Get member info and dates
+                processed_df['date'] = pd.to_datetime(processed_df['date'], dayfirst=True)
+                processed_df['member'] = processed_df['user_id'].apply(
+                    lambda x: interaction.guild.get_member(int(x)) if interaction and x != 0 else None
+                )
 
-                # Aggregate data by date if showing all entries
-                if all_data:
-                    processed_df = pd.DataFrame(user_earnings)
-                    processed_df['date'] = pd.to_datetime(processed_df['date'], dayfirst=True)
-                    processed_df['member'] = processed_df['user_id'].apply(
-                        lambda x: interaction.guild.get_member(int(x)) if interaction else None
+                # 4a. Aggregated Timeline Chart
+                chart_buffer1 = io.BytesIO()
+                with plt.rc_context():
+                    fig1, ax1 = plt.subplots(figsize=(7, 3.5))
+                    agg_df = processed_df.groupby('date').agg({
+                        'gross_revenue': 'sum',
+                        'total_cut': 'sum'
+                    }).reset_index()
+                    
+                    ax1.plot(agg_df['date'], agg_df['gross_revenue'], 'o-', label='Total Gross')
+                    ax1.plot(agg_df['date'], agg_df['total_cut'], 'o-', label='Total Earnings')
+                    ax1.set_title("Aggregated Earnings Timeline")
+                    ax1.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m/%y'))
+                    plt.xticks(rotation=45)
+                    ax1.legend()
+                    ax1.grid(True, linestyle='--', alpha=0.7)
+                    plt.tight_layout()
+                    plt.savefig(chart_buffer1, format='png', dpi=150, bbox_inches='tight')
+                    plt.close(fig1)
+                
+                # 4b. User Comparison Chart
+                chart_buffer2 = io.BytesIO()
+                with plt.rc_context():
+                    fig2, ax2 = plt.subplots(figsize=(7, 5))  # Increased height
+                    valid_members = processed_df[processed_df['member'].notnull()]
+                    
+                    # Sort members by display name
+                    sorted_members = sorted(
+                        valid_members['member'].unique(),
+                        key=lambda m: m.display_name.lower()
                     )
                     
-                    # Combined chart with all users
-                    for member, group in processed_df.groupby('member'):
-                        label = member.display_name if member else "Unknown User"
+                    for member in sorted_members:
+                        group = valid_members[valid_members['member'] == member]
                         group = group.sort_values('date')
-                        ax.plot(group['date'], group['gross_revenue'], 'o-', label=label)
-                        ax.set_title(f'Earnings for All Valid Users')
+                        ax2.plot(group['date'], group['gross_revenue'], 'o-', label=member.display_name)
                     
-                    ax.set_title('All Valid Users - Gross Revenue Comparison')
-                else:
-                    # Individual user chart
-                    dates = [datetime.strptime(entry['date'], '%d/%m/%Y') for entry in user_earnings]
-                    gross_revenue = [float(e['gross_revenue']) for e in user_earnings]
-                    total_cut = [float(e['total_cut']) for e in user_earnings]
-                    ax.plot(dates, gross_revenue, 'o-', label='Gross Revenue')
-                    ax.plot(dates, total_cut, 'o-', label='Earnings')
-                    ax.set_title(f'Earnings for {user.display_name}')
+                    ax2.set_title("User Revenue Comparison")
+                    ax2.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m/%y'))
+                    plt.xticks(rotation=45)
+                    
+                    # Legend under the chart
+                    ax2.legend(
+                        loc='upper center',
+                        bbox_to_anchor=(0.5, -0.2),
+                        ncol=2,
+                        fontsize='small',
+                        frameon=False
+                    )
+                    plt.subplots_adjust(bottom=0.3)  # Add space at bottom
+                    
+                    ax2.grid(True, linestyle='--', alpha=0.7)
+                    plt.tight_layout()
+                    plt.savefig(chart_buffer2, format='png', dpi=150, bbox_inches='tight')
+                    plt.close(fig2)
 
-                # Formatting
-                ax.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m/%y'))
-                fig.autofmt_xdate(rotation=45)
-                # ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
-                ax.legend()
-                ax.grid(True, linestyle='--', alpha=0.7)
-                plt.tight_layout()
+                # Add both charts to PDF
+                elements.append(Image(chart_buffer1, width=450, height=200))
+                elements.append(Spacer(1, 12))
+                elements.append(Image(chart_buffer2, width=450, height=200))
+            
+            else:
+                # Single User Chart
+                chart_buffer = io.BytesIO()
+                with plt.rc_context():
+                    fig, ax = plt.subplots(figsize=(7, 4))
+                    dates = [datetime.strptime(e['date'], '%d/%m/%Y') for e in user_earnings]
+                    gross = [float(e['gross_revenue']) for e in user_earnings]
+                    earnings = [float(e['total_cut']) for e in user_earnings]
+                    ax.plot(dates, gross, 'o-', label='Gross Revenue')
+                    ax.plot(dates, earnings, 'o-', label='Earnings')
+                    ax.set_title(f'{user.display_name}\'s Earnings')
+                    ax.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m/%y'))
+                    plt.xticks(rotation=45)
+                    ax.legend()
+                    ax.grid(True, linestyle='--', alpha=0.7)
+                    plt.tight_layout()
+                    plt.savefig(chart_buffer, format='png', dpi=150, bbox_inches='tight')
+                    plt.close(fig)
+                
+                elements.append(Image(chart_buffer, width=450, height=250))
 
-                # Save to buffer
-                plt.savefig(chart_buffer, format='png', dpi=150, bbox_inches='tight')
-                plt.close(fig)
-
-            chart_buffer.seek(0)
-            elements.append(Image(chart_buffer, width=450, height=250))
-
-            # Add individual user charts if showing all data
+            # ======================
+            # 5. Individual Breakdowns
+            # ======================
             if all_data:
                 elements.append(PageBreak())
-                elements.append(Paragraph("Individual User Breakdowns", subtitle_style))
+                elements.append(Paragraph("Individual User Breakdowns", styles["Heading2"]))
                 
-                for member in processed_df['member'].unique():
-                    if not member:
-                        continue
-                        
+                valid_members = [m for m in processed_df['member'].unique() if m is not None]
+                
+                for member in valid_members:
+                    # elements.append(PageBreak())
+                    elements.append(Paragraph(member.display_name, styles["Heading3"]))
+                    
                     user_data = processed_df[processed_df['member'] == member]
                     dates = user_data['date'].dt.to_pydatetime()
                     gross = user_data['gross_revenue'].astype(float)
@@ -423,30 +470,29 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                     ax.plot(dates, earnings, 'o-', label='Earnings')
                     ax.set_title(f'{member.display_name}\'s Earnings')
                     ax.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m/%y'))
-                    fig.autofmt_xdate(rotation=45)
+                    plt.xticks(rotation=45)
                     ax.legend()
                     ax.grid(True, linestyle='--', alpha=0.7)
                     plt.tight_layout()
                     
-                    chart_buffer = io.BytesIO()
-                    plt.savefig(chart_buffer, format='png', dpi=150)
+                    user_buffer = io.BytesIO()
+                    plt.savefig(user_buffer, format='png', dpi=150)
                     plt.close(fig)
                     
-                    elements.append(Paragraph(member.display_name, styles["Heading3"]))
-                    elements.append(Image(chart_buffer, width=450, height=250))
+                    elements.append(Image(user_buffer, width=450, height=250))
                     elements.append(Spacer(1, 12))
 
-            # Build the PDF document
+            # Finalize document
             doc.build(elements)
+
         except Exception as e:
-            # Handle errors gracefully
+            # Error handling
             error_buffer = io.BytesIO()
             doc = SimpleDocTemplate(error_buffer, pagesize=letter)
-            styles = getSampleStyleSheet()
             elements = [
                 Paragraph("Error Generating PDF", styles["Title"]),
                 Spacer(1, 12),
-                Paragraph(f"An error occurred: {str(e)}", styles["BodyText"])
+                Paragraph(f"Failed to generate report: {str(e)}", styles["BodyText"])
             ]
             doc.build(elements)
             error_buffer.seek(0)
