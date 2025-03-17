@@ -371,6 +371,7 @@
 - [x] (v0.133.0) Enhance plot generation with error handling, improved data validation, and date display  
 - [x] (v0.133.0) Remove unused commented residual parameter `zip_formats` from function signature  
 - [x] (v0.134.0) Remove unused report admin commands from help embed
+- [x] (v0.135.0) Enhance earnings visualization by aggregating data and updating labels
 - [ ] Option to set default zip exports in settings
 - [ ] Display hourly cut in employee cut?
 - [ ] Add functionality to select column names to display in `view-earnings`

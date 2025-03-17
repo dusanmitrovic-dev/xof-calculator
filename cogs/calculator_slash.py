@@ -332,7 +332,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                         f"${float(entry['total_cut']):.2f}"
                     ])
 
-            user_earnings = user_earnings[1:-1]
+            # user_earnings = user_earnings[1:-1] # TODO: remove
             
             # Create the table
             detail_table = Table(data)
@@ -352,7 +352,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             
             # Add charts on a new page
             elements.append(PageBreak())
-            elements.append(Paragraph("Earnings Visualization", subtitle_style))
+            elements.append(Paragraph("Earnings Visualization Aggregated", subtitle_style))
             elements.append(Spacer(1, 12))
 
             # Generate and add chart as Image
@@ -361,9 +361,25 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                 fig, ax = plt.subplots(figsize=(7, 4))
 
                 # Extract dates and values
-                dates = [datetime.strptime(entry['date'], '%d/%m/%Y') for entry in user_earnings]
-                gross_revenue = [float(e['gross_revenue']) for e in user_earnings]
-                total_cut = [float(e['total_cut']) for e in user_earnings]
+                # dates = [datetime.strptime(entry['date'], '%d/%m/%Y') for entry in user_earnings]
+                # gross_revenue = [float(e['gross_revenue']) for e in user_earnings]
+                # total_cut = [float(e['total_cut']) for e in user_earnings]
+
+                # Aggregate data by date if showing all entries
+                if all_data:
+                    df = pd.DataFrame(user_earnings)
+                    df['date'] = pd.to_datetime(df['date'], dayfirst=True)
+                    df = df.groupby('date').agg({
+                        'gross_revenue': 'sum',
+                        'total_cut': 'sum'
+                    }).reset_index()
+                    dates = df['date'].dt.to_pydatetime()
+                    gross_revenue = df['gross_revenue'].tolist()
+                    total_cut = df['total_cut'].tolist()
+                else:
+                    dates = [datetime.strptime(entry['date'], '%d/%m/%Y') for entry in user_earnings]
+                    gross_revenue = [float(e['gross_revenue']) for e in user_earnings]
+                    total_cut = [float(e['total_cut']) for e in user_earnings]
 
                 # Plot data
                 ax.plot(dates, gross_revenue, 'o-', label='Gross Revenue')
