@@ -379,7 +379,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                         ax.plot(group['date'], group['gross_revenue'], 'o-', label=label)
                         ax.set_title(f'Earnings for All Valid Users')
                     
-                    ax.set_title('All Users - Gross Revenue Comparison')
+                    ax.set_title('All Valid Users - Gross Revenue Comparison')
                 else:
                     # Individual user chart
                     dates = [datetime.strptime(entry['date'], '%d/%m/%Y') for entry in user_earnings]
