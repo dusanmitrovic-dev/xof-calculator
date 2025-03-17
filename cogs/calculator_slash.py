@@ -448,7 +448,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                 
                 for member in valid_members:
                     # elements.append(PageBreak())
-                    elements.append(Paragraph(member.display_name, styles["Heading3"]))
+                    elements.append(Paragraph(f"{member.display_name} (@{member.name})", styles["Heading3"]))
                     
                     user_data = processed_df[processed_df['member'] == member]
                     dates = user_data['date'].dt.to_pydatetime()
