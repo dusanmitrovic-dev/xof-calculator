@@ -402,7 +402,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                         group = group.sort_values('date')
                         ax2.plot(group['date'], group['gross_revenue'], 'o-', label=member.display_name)
                     
-                    ax2.set_title("User Revenue Comparison")
+                    ax2.set_title("Users Revenue Comparison")
                     ax2.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m/%y'))
                     plt.xticks(rotation=45)
                     ax2.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
