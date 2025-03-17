@@ -1888,7 +1888,9 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                 await interaction.followup.send(embed=report_embed, ephemeral=ephemeral)
             else:
                 pass
-
+        
+        except ValueError:
+            await interaction.followup.send("❌ Invalid date format. Use dd/mm/yyyy.", ephemeral=ephemeral)
         except Exception as e:
             logger.error(f"Earnings command error: {str(e)}")
             await interaction.followup.send(
