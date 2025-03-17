@@ -23,7 +23,7 @@
 - Cleaned up commented-out code in multiple files (`admin_slash`, `calculator_slash`, `help_slash`).  
 
 ### Changed  
-- Improved error handling for PDF generation and plot creation in `calculator_slash`.  
+- Improved error handling for PDF generation and plot creation in `calculator_slash`,
 - Enhanced data validation and date formatting in earnings-related plots.  
 
 ## [0.132.0] - 2025-03-14  
