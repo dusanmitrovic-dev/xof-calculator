@@ -361,6 +361,16 @@
 - [x] Bulk earnings for everyone from period to period for weekly/monthly
     - [x] With DM support notification that sends to everyone their earnings log
 - [x] `Error`: 'NoneType' object has no attribute 'to_dict' in `view-earnings`
+- [x] (v0.133.0) Remove commented-out code in multiple files (`admin_slash`, `calculator_slash`, `help_slash`):
+  - `reset_earnings_config` method  
+  - `reset_earnings` method  
+  - `confirm_callback` function  
+  - `guild_id` in `clear_earnings` method  
+  - `restore_earnings_backup` method (TODO comment removed after verification)  
+- [x] (v0.133.0) Enhance PDF generation with error handling and improved chart formatting  
+- [x] (v0.133.0) Enhance plot generation with error handling, improved data validation, and date display  
+- [x] (v0.133.0) Remove unused commented residual parameter `zip_formats` from function signature  
+
 - [ ] Option to set default zip exports in settings
 - [ ] Display hourly cut in employee cut?
 - [ ] Add functionality to select column names to display in `view-earnings`

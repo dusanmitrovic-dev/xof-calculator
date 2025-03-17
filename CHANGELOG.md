@@ -2,8 +2,15 @@
 
 ## [Unreleased]
 
-## [0.132.0] - 2025-03-14  
+## [0.133.0] - 2025-03-17  
+### Removed  
+- Cleaned up commented-out code in multiple files (`admin_slash`, `calculator_slash`, `help_slash`).  
 
+### Changed  
+- Improved error handling for PDF generation and plot creation in `calculator_slash`.  
+- Enhanced data validation and date formatting in earnings-related plots.  
+
+## [0.132.0] - 2025-03-14  
 ### Added  
 - Support for `all_data` in Markdown export.  
 - Support for `all_data` in PDF export.  
@@ -24,7 +31,7 @@
 - Fixed error in `_generate_txt()` function (`positional argument mismatch`).  
 
 ### Removed  
-- `Residual commented-out` `generate_export_file` method.  
+- `Residual commented-out` `generate_export_file` method.
 
 ## [0.131.0] - 2025-03-12
 ### Added
