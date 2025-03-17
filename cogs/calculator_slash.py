@@ -388,12 +388,8 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                 # 4b. User Comparison Chart
                 chart_buffer2 = io.BytesIO()
                 with plt.rc_context():
+                    fig2, ax2 = plt.subplots(figsize=(7, 3.5))
                     valid_members = processed_df[processed_df['member'].notnull()]
-                    
-                    num_users = len(valid_members['member'].unique())
-                    base_height = 6
-                    extra_height = num_users * 0.2  # 0.2 inches per user
-                    fig2, ax2 = plt.subplots(figsize=(7, base_height + extra_height))
                     
                     # Sort members by display name
                     sorted_members = sorted(
@@ -401,39 +397,16 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                         key=lambda m: m.display_name.lower()
                     )
                     
-                    # Plot data
                     for member in sorted_members:
                         group = valid_members[valid_members['member'] == member]
                         group = group.sort_values('date')
                         ax2.plot(group['date'], group['gross_revenue'], 'o-', label=member.display_name)
                     
-                    # Chart formatting
-                    ax2.set_title("User Revenue Comparison", pad=20)
+                    ax2.set_title("User Revenue Comparison")
                     ax2.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m/%y'))
                     plt.xticks(rotation=45)
+                    ax2.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
                     ax2.grid(True, linestyle='--', alpha=0.7)
-                    
-                    # Dynamic legend configuration
-                    ncol = 4 if num_users > 20 else (3 if num_users > 10 else 2)
-                    font_size = 'xx-small' if num_users > 30 else ('x-small' if num_users > 15 else 'small')
-                    
-                    legend = ax2.legend(
-                        loc='upper center',
-                        bbox_to_anchor=(0.5, -0.05),
-                        ncol=ncol,
-                        fontsize=font_size,
-                        frameon=False,
-                        markerscale=0.8,
-                        columnspacing=1,
-                        handletextpad=0.5
-                    )
-                    
-                    # Adjust spacing dynamically
-                    plt.subplots_adjust(
-                        bottom=0.2 + (num_users * 0.015),  # More users = more bottom space
-                        top=0.9
-                    )
-                    
                     plt.tight_layout()
                     plt.savefig(chart_buffer2, format='png', dpi=150, bbox_inches='tight')
                     plt.close(fig2)

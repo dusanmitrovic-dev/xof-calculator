@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.137.0] - 2025-03-17  
+### Changed  
+- Simplify user revenue comparison chart by removing dynamic legend configuration and adjusting layout
+
 ## [0.136.0] - 2025-03-17  
 ### Changed  
 - Update PDF generation to include interaction handling and improve report titles
