@@ -167,7 +167,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             elif format_type == "xlsx":
                 self._generate_excel(df, buffer, all_data)
             elif format_type == "pdf":
-                self._generate_pdf(df, user, buffer, user_earnings, all_data)
+                self._generate_pdf(df, interaction, user, buffer, user_earnings, all_data)
             elif format_type == "png":
                 self._generate_png(df, user, buffer, user_earnings, all_data)
             elif format_type == "svg":
@@ -260,8 +260,8 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                             max_length = max(max_length, len(str(cell.value)))
                     worksheet.column_dimensions[column].width = max_length + 2
 
-    def _generate_pdf(self, df, user, buffer, user_earnings, all_data=False):
-        """Generate PDF format export"""
+    def _generate_pdf(self, df, interaction, user, buffer, user_earnings, all_data=False):
+        """Generate PDF format export with proper interaction handling"""
         try:
             doc = SimpleDocTemplate(buffer, pagesize=letter)
             elements = []
@@ -269,7 +269,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             # Title based on report type
             styles = getSampleStyleSheet()
             title_style = styles["Title"]
-            report_title = "Full Earnings Report" if all_data else f"Earnings Report for {user.display_name}"
+            report_title = "XOF Agency Full Earnings Report" if all_data else f"XOF Agency Earnings Report for {user.display_name}"
             elements.append(Paragraph(report_title, title_style))
             elements.append(Spacer(1, 12))
             
@@ -332,8 +332,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                         f"${float(entry['total_cut']):.2f}"
                     ])
 
-            # user_earnings = user_earnings[1:-1] # TODO: remove
-            
             # Create the table
             detail_table = Table(data)
             detail_table.setStyle(TableStyle([
@@ -352,7 +350,13 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             
             # Add charts on a new page
             elements.append(PageBreak())
-            elements.append(Paragraph("Earnings Visualization Aggregated", subtitle_style))
+            elements.append(Paragraph("Charts", subtitle_style))
+            if all_data:
+                # elements.append(Paragraph("Earnings For All Users", subtitle_style))
+                pass
+            else:
+                # elements.append(Paragraph(f"Earnings For {user.display_name}", subtitle_style))
+                pass
             elements.append(Spacer(1, 12))
 
             # Generate and add chart as Image
@@ -360,36 +364,35 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             with plt.rc_context():  # Isolate plot settings
                 fig, ax = plt.subplots(figsize=(7, 4))
 
-                # Extract dates and values
-                # dates = [datetime.strptime(entry['date'], '%d/%m/%Y') for entry in user_earnings]
-                # gross_revenue = [float(e['gross_revenue']) for e in user_earnings]
-                # total_cut = [float(e['total_cut']) for e in user_earnings]
-
                 # Aggregate data by date if showing all entries
                 if all_data:
-                    df = pd.DataFrame(user_earnings)
-                    df['date'] = pd.to_datetime(df['date'], dayfirst=True)
-                    df = df.groupby('date').agg({
-                        'gross_revenue': 'sum',
-                        'total_cut': 'sum'
-                    }).reset_index()
-                    dates = df['date'].dt.to_pydatetime()
-                    gross_revenue = df['gross_revenue'].tolist()
-                    total_cut = df['total_cut'].tolist()
+                    processed_df = pd.DataFrame(user_earnings)
+                    processed_df['date'] = pd.to_datetime(processed_df['date'], dayfirst=True)
+                    processed_df['member'] = processed_df['user_id'].apply(
+                        lambda x: interaction.guild.get_member(int(x)) if interaction else None
+                    )
+                    
+                    # Combined chart with all users
+                    for member, group in processed_df.groupby('member'):
+                        label = member.display_name if member else "Unknown User"
+                        group = group.sort_values('date')
+                        ax.plot(group['date'], group['gross_revenue'], 'o-', label=label)
+                        ax.set_title(f'Earnings for All Valid Users')
+                    
+                    ax.set_title('All Users - Gross Revenue Comparison')
                 else:
+                    # Individual user chart
                     dates = [datetime.strptime(entry['date'], '%d/%m/%Y') for entry in user_earnings]
                     gross_revenue = [float(e['gross_revenue']) for e in user_earnings]
                     total_cut = [float(e['total_cut']) for e in user_earnings]
+                    ax.plot(dates, gross_revenue, 'o-', label='Gross Revenue')
+                    ax.plot(dates, total_cut, 'o-', label='Earnings')
+                    ax.set_title(f'Earnings for {user.display_name}')
 
-                # Plot data
-                ax.plot(dates, gross_revenue, 'o-', label='Gross Revenue')
-                ax.plot(dates, total_cut, 'o-', label='Earnings')
-
-                # Format x-axis with 2-digit year (e.g., 2025 → 25)
-                ax.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m/%y'))  # %y for 2-digit year
-                fig.autofmt_xdate(rotation=45)  # Rotate labels for readability
-
-                # Add legend and grid
+                # Formatting
+                ax.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m/%y'))
+                fig.autofmt_xdate(rotation=45)
+                # ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
                 ax.legend()
                 ax.grid(True, linestyle='--', alpha=0.7)
                 plt.tight_layout()
@@ -400,6 +403,38 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
 
             chart_buffer.seek(0)
             elements.append(Image(chart_buffer, width=450, height=250))
+
+            # Add individual user charts if showing all data
+            if all_data:
+                elements.append(PageBreak())
+                elements.append(Paragraph("Individual User Breakdowns", subtitle_style))
+                
+                for member in processed_df['member'].unique():
+                    if not member:
+                        continue
+                        
+                    user_data = processed_df[processed_df['member'] == member]
+                    dates = user_data['date'].dt.to_pydatetime()
+                    gross = user_data['gross_revenue'].astype(float)
+                    earnings = user_data['total_cut'].astype(float)
+
+                    fig, ax = plt.subplots(figsize=(7, 4))
+                    ax.plot(dates, gross, 'o-', label='Gross Revenue')
+                    ax.plot(dates, earnings, 'o-', label='Earnings')
+                    ax.set_title(f'{member.display_name}\'s Earnings')
+                    ax.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m/%y'))
+                    fig.autofmt_xdate(rotation=45)
+                    ax.legend()
+                    ax.grid(True, linestyle='--', alpha=0.7)
+                    plt.tight_layout()
+                    
+                    chart_buffer = io.BytesIO()
+                    plt.savefig(chart_buffer, format='png', dpi=150)
+                    plt.close(fig)
+                    
+                    elements.append(Paragraph(member.display_name, styles["Heading3"]))
+                    elements.append(Image(chart_buffer, width=450, height=250))
+                    elements.append(Spacer(1, 12))
 
             # Build the PDF document
             doc.build(elements)
@@ -501,7 +536,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
 
     def _generate_html(self, df, user, buffer, user_earnings, all_data=False):
         """Generate HTML format export"""
-        report_title = "Full Earnings Report" if all_data else f"Earnings Report for {user.display_name}"
+        report_title = "XOF Agency Full Earnings Report" if all_data else f"XOF Agency Earnings Report for {user.display_name}"
         user_column = ""
         
         if all_data:
@@ -653,7 +688,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             user_earnings: List of user earnings entries
             all_data: Boolean indicating if this is a full report or user-specific
         """
-        report_title = "Full Earnings Report" if all_data else f"Earnings Report for {user.display_name}"
+        report_title = "XOF Agency Full Earnings Report" if all_data else f"XOF Agency Earnings Report for {user.display_name}"
         current_date = datetime.now()
 
         # Filter out future dates
@@ -742,7 +777,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             user_earnings: List of user earnings entries
             all_data: Boolean indicating if this is a full report or user-specific
         """
-        report_title = "FULL EARNINGS REPORT" if all_data else f"EARNINGS REPORT FOR {user.display_name.upper()}"
+        report_title = "XOF Agency Full Earnings Report" if all_data else f"XOF Agency Earnings Report for {user.display_name}"
 
         # Validate dates - filter out future dates
         current_date = datetime.now()
