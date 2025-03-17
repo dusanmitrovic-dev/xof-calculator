@@ -12,7 +12,7 @@
 
 ## [0.135.0] - 2025-03-17  
 ### Changed  
-- Enhance earnings visualization by aggregating data and updating labels
+- Enhance earnings visualization by aggregating data and updating labels.
 
 ## [0.134.0] - 2025-03-17  
 ### Removed  
