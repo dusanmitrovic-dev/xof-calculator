@@ -16,7 +16,7 @@
 
 ## [0.134.0] - 2025-03-17  
 ### Removed  
-- Remove unused report admin commands from help embed
+- Remove unused report admin commands from help embed.
 
 ## [0.133.0] - 2025-03-17  
 ### Removed  
