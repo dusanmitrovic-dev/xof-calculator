@@ -28,11 +28,11 @@
 
 ## [0.132.0] - 2025-03-14  
 ### Added  
-- Support for `all_data` in Markdown export.  
-- Support for `all_data` in PDF export.  
-- Support for `all_data` in Excel export.  
-- Updated export methods to handle `all_data` properly.  
-- List now displays `username` and `user display name`.  
+- Support for `all_data` in Markdown export,
+- Support for `all_data` in PDF export,
+- Support for `all_data` in Excel export,  
+- Updated export methods to handle `all_data` properly,
+- List now displays `username` and `user display name`,
 - First, second, and final attempts at `unlimited embed length` for tables and lists.  
 
 ### Changed  
