@@ -133,7 +133,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         if export_format == "zip":
             with zipfile.ZipFile(buffer, 'w') as zip_file:
                 for fmt in zip_formats:
-                    fmt_buffer = self._generate_format_buffer(df, interaction, user, fmt, user_earnings)
+                    fmt_buffer = self._generate_format_buffer(df, interaction, user, fmt, user_earnings, all_data)
                     zip_file.writestr(f"{base_name}.{fmt}", fmt_buffer.getvalue())
                     fmt_buffer.close()
         else:
@@ -171,7 +171,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             elif format_type == "png":
                 self._generate_png(df, user, buffer, user_earnings, all_data)
             elif format_type == "svg":
-                self._generate_svg(df, user, buffer, user_earnings, all_data)
+                self._generate_svg(df, user, buffer, user_earnings, all_data) # TODO: It displays User earnings instead of Full for Zip?
             elif format_type == "html":
                 self._generate_html(df, user, buffer, user_earnings, all_data)
             elif format_type == "markdown":
@@ -186,7 +186,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         buffer.seek(0)
         return buffer
 
-    def _generate_csv(self, df, buffer, all_data=False):
+    def _generate_csv(self, df, buffer, all_data=False): 
         """Generate CSV format export"""
         if all_data and 'display_name' in df.columns:
             df = df[['display_name', 'username', 'date', 'role', 'shift', 
@@ -385,7 +385,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                     plt.savefig(chart_buffer1, format='png', dpi=150, bbox_inches='tight')
                     plt.close(fig1)
                 
-                # 4b. User Comparison Chart
+                # 4b. User Comparison Chart # TODO: Use same chart as png users chart instead
                 chart_buffer2 = io.BytesIO()
                 with plt.rc_context():
                     fig2, ax2 = plt.subplots(figsize=(7, 3.5))
@@ -451,7 +451,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                     elements.append(Paragraph(f"{member.display_name} (@{member.name})", styles["Heading3"]))
                     
                     user_data = processed_df[processed_df['member'] == member]
-                    dates = user_data['date'].dt.to_pydatetime()
+                    dates = user_data['date'].dt.to_pydatetime() # TODO:  FutureWarning: The behavior of DatetimeProperties.to_pydatetime is deprecated, in a future version this will return a Series containing python datetime objects instead of an ndar
                     gross = user_data['gross_revenue'].astype(float)
                     earnings = user_data['total_cut'].astype(float)
 
@@ -513,7 +513,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                     for user_id, group in df.groupby('user'):
                         user_dates = [datetime.strptime(d, '%d/%m/%Y') for d in group['date']]
                         ax.plot(user_dates, group['gross_revenue'], 'o-', label=user_id)
-                    ax.set_title('Earnings by User Over Time')
+                    ax.set_title('Gross Revenue by User Over Time')
                     ax.legend(loc='upper left')
                 else:
                     # Plot individual user data
@@ -556,7 +556,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             pivot = df.pivot_table(index='date', columns='display_name', values='total_cut', aggfunc='sum')
             for user in pivot.columns:
                 ax.plot(pivot.index, pivot[user], marker='o', linestyle='-', label=user)
-            ax.set_title('Daily Earnings by User')
+            ax.set_title('Daily Gross Revenue by User')
         else:
             # Line chart for individual user
             dates = [datetime.strptime(entry['date'], '%d/%m/%Y') for entry in user_earnings]

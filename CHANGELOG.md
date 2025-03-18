@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.141.0] - 2025-03-18
+### Fixed
+- Include `all_data` parameter in format buffer generation for zip export.
+
 ## [0.140.0] - 2025-03-18
 ### Fixed
 - Ensure hourly rate defaults to "0" for better handling of missing values.
