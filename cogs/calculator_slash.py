@@ -1198,21 +1198,38 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         if compensation_type in ["hourly", "both"]:
             results["hours_worked"] = f"{hours:.2f}h"
         
-        results["date"] = current_date
-        results["sender"] = sender
-        results["shift"] = shift
-        results["role"] = role.name
-        results["period"] = period
-        results["gross_revenue"] = f"${float(results['gross_revenue']):,.2f}"
+        # results["date"] = current_date # TODO: remove
+        # results["sender"] = sender
+        # results["shift"] = shift
+        # results["role"] = role.name
+        # results["period"] = period
+        # results["gross_revenue"] = f"${float(results['gross_revenue']):,.2f}"
         
-        # Only add net revenue if using commission or both
-        if compensation_type in ["commission", "both"]:
-            results["net_revenue"] = f"${float(results['net_revenue']):,.2f} (80%)"
+        # # Only add net revenue if using commission or both
+        # if compensation_type in ["commission", "both"]:
+        #     results["net_revenue"] = f"${float(results['net_revenue']):,.2f} (80%)"
         
-        results["bonus"] = f"${float(results['bonus']):,.2f}"
-        results["employee_cut"] = f"${float(results['employee_cut']):,.2f}"
-        results["total_cut"] = f"${float(results['total_cut']):,.2f}"
-        results["models"] = models_list
+        # results["bonus"] = f"${float(results['bonus']):,.2f}"
+        # results["employee_cut"] = f"${float(results['employee_cut']):,.2f}"
+        # results["total_cut"] = f"${float(results['total_cut']):,.2f}"
+        # results["models"] = models_list
+
+        def format_currency(value):
+            return f"${float(value):,.2f}"
+
+        results.update({
+            "date": current_date,
+            "sender": sender,
+            "shift": shift,
+            "role": role.name,
+            "period": period,
+            "gross_revenue": format_currency(results["gross_revenue"]),
+            "net_revenue": format_currency(results.get("net_revenue", 0)) if compensation_type in ["commission", "both"] else None,
+            "bonus": format_currency(results["bonus"]),
+            "employee_cut": format_currency(results["employee_cut"]),
+            "total_cut": format_currency(results["total_cut"]),
+            "models": models_list
+        })
         
         # Create confirmation view
         view = ConfirmationView(
