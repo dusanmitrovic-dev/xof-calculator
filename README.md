@@ -376,7 +376,9 @@
 - [x] (v0.138.0) Added error handling for invalid date format in earnings command  
 - [x] (v0.138.0) Included member username in revenue comparison chart for better identification  
 - [x] (v0.138.0) Included member username in display name for clarity  
-- [x] (v0.138.0) Corrected title in user revenue comparison chart to improve clarity  
+- [x] (v0.138.0) Corrected title in user revenue comparison chart to improve clarity
+- [x] (v0.139.0) Improve commission percentage handling and update README for clarity
+- [ ] Avoid total cut rounding up values? on second decimal
 - [ ] Option to set default zip exports in settings
 - [ ] Display hourly cut in employee cut?
 - [ ] Add functionality to select column names to display in `view-earnings`

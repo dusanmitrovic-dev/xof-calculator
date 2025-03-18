@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.139.0] - 2025-03-18
+### Fixed
+- Improve commission percentage handling and update README for clarity.
+
 ## [0.138.0] - 2025-03-18
 ### Added
 - Added error handling for invalid date format in earnings command,
