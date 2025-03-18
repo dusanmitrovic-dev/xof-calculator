@@ -68,7 +68,7 @@
 - `Generated file names` now reflect `all_data` set.  
 
 ### Fixed  
-- Tables `no longer include '$' signs`.  
+- Tables `no longer include '$' signs`,
 - Table display issues were resolved.  
 - Fixed `TXT and CSV display issues`.  
 - Fixed error in `_generate_txt()` function (`positional argument mismatch`).  
