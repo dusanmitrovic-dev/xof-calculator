@@ -1062,8 +1062,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             await interaction.followup.send("❌ Role configuration not found.", ephemeral=ephemeral)
 
             return
-
-        # percentage = Decimal(str(role_config.get("commission_percentage", 0))) if isinstance(role_config.get("commission_percentage"), (int, float, Decimal, str)) else 0 # TODO: remove
         
         commission_percentage = role_config.get("commission_percentage", 0)
         percentage = None
