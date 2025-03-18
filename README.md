@@ -381,7 +381,8 @@
 - [x] (v0.140.0) Ensure hourly rate defaults to "0" for better handling of missing values
 - [x] (v0.141.0) Include `all_data` parameter in format buffer generation for zip export
 - [x] (v0.142.0) Decimal handling in bonus rule parsing, avoid unnecessary conversions
-- [ ] Avoid total cut rounding up values? on second decimal
+- [x] (v0.143.0) Simplify revenue calculations by removing quantization
+- [x] (v0.143.0) Avoid total cut rounding up values? on second decimal
 - [ ] Option to set default zip exports in settings
 - [ ] Display hourly cut in employee cut?
 - [ ] Add functionality to select column names to display in `view-earnings`

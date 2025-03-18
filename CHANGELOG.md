@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.143.0] - 2025-03-18
+### Fixed
+- Simplify revenue calculations by removing quantization. 
+
 ## [0.142.0] - 2025-03-18
 ### Fixed
 - Decimal handling in bonus rule parsing, avoid unnecessary conversions.

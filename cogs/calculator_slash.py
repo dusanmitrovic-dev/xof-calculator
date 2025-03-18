@@ -1036,7 +1036,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
     async def preview_calculation(self, interaction: discord.Interaction, period: str, shift: str, role: discord.Role, 
                          gross_revenue: Decimal, selected_models: List[str], compensation_type: str, hours_worked: Decimal):
         """Preview calculation and show confirmation options"""
-        
         guild_id = str(interaction.guild_id)
         logger.info(f"guild_id: {guild_id}")
         
@@ -1215,7 +1214,9 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         # results["models"] = models_list
 
         def format_currency(value):
-            return f"${float(value):,.2f}"
+            # return f"${float(value):,.2f}"
+            print(value)
+            return f"${float(value)}"
 
         results.update({
             "date": current_date,
