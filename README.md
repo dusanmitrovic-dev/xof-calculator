@@ -373,6 +373,10 @@
 - [x] (v0.134.0) Remove unused report admin commands from help embed
 - [x] (v0.135.0) Enhance earnings visualization by aggregating data and updating labels
 - [x] (v0.136.0) Update PDF generation to include interaction handling and improve report titles
+- [x] (v0.138.0) Added error handling for invalid date format in earnings command  
+- [x] (v0.138.0) Included member username in revenue comparison chart for better identification  
+- [x] (v0.138.0) Included member username in display name for clarity  
+- [x] (v0.138.0) Corrected title in user revenue comparison chart to improve clarity  
 - [ ] Option to set default zip exports in settings
 - [ ] Display hourly cut in employee cut?
 - [ ] Add functionality to select column names to display in `view-earnings`

@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## [0.138.0] - 2025-03-18
+### Added
+- Added error handling for invalid date format in earnings command,
+- Included member username in revenue comparison chart for better identification,
+- Included member username in display name for clarity,
+- Corrected title in user revenue comparison chart to improve clarity.
+
 ## [0.137.0] - 2025-03-17  
 ### Changed  
 - Simplify user revenue comparison chart by removing dynamic legend configuration and adjusting layout.
