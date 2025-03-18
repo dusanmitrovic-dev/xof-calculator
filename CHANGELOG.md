@@ -818,7 +818,7 @@ New admin slash commands:
 ### Added
 - `main.py` system remodeled:
     - bug fixes,
-    - clean code.
+    - clean code,
     - remodeled functions now being used instead.
 
 ## [0.0.22] - 2025-02-25
