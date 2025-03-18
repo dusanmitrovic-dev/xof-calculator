@@ -1087,9 +1087,9 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         bonus_rule_objects = []
         for rule in guild_bonus_rules:
             rule_obj = {
-                "from": Decimal(str(rule.get("from", 0))),
-                "to": Decimal(str(rule.get("to", 0))),
-                "amount": Decimal(str(rule.get("amount", 0)))
+                "from": Decimal(rule.get("from", "0")),
+                "to": Decimal(rule.get("to", "0")),
+                "amount": Decimal(rule.get("amount", "0"))
             }
             bonus_rule_objects.append(rule_obj)
         

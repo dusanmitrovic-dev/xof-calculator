@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.142.0] - 2025-03-18
+### Fixed
+- Decimal handling in bonus rule parsing, avoid unnecessary conversions.
+
 ## [0.141.0] - 2025-03-18
 ### Fixed
 - Include `all_data` parameter in format buffer generation for zip export.

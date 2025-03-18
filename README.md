@@ -380,6 +380,7 @@
 - [x] (v0.139.0) Improve commission percentage handling and update README for clarity
 - [x] (v0.140.0) Ensure hourly rate defaults to "0" for better handling of missing values
 - [x] (v0.141.0) Include `all_data` parameter in format buffer generation for zip export
+- [x] (v0.142.0) Decimal handling in bonus rule parsing, avoid unnecessary conversions
 - [ ] Avoid total cut rounding up values? on second decimal
 - [ ] Option to set default zip exports in settings
 - [ ] Display hourly cut in employee cut?
