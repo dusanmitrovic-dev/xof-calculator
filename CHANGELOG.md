@@ -63,7 +63,7 @@
 - First, second, and final attempts at `unlimited embed length` for tables and lists.  
 
 ### Changed  
-- `PDF display` was updated.  
+- `PDF display` was updated,
 - `HTML display` was modified.  
 - `Generated file names` now reflect `all_data` set.  
 
