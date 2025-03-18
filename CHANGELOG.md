@@ -64,7 +64,7 @@
 
 ### Changed  
 - `PDF display` was updated,
-- `HTML display` was modified.  
+- `HTML display` was modified,  
 - `Generated file names` now reflect `all_data` set.  
 
 ### Fixed  
