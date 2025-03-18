@@ -375,7 +375,7 @@ These functions now have full ephemeral support logic:
 ## [0.73.0] - 2025-03-07
 ### Added
 - `reset-display-config`,
-- `restore-display-config`.
+- `restore-display-config`,
 ### Changed
 - `reset-config` now resets display settings as well.
 
