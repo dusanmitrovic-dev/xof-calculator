@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.140.0] - 2025-03-18
+### Fixed
+- Ensure hourly rate defaults to "0" for better handling of missing values.
+
 ## [0.139.0] - 2025-03-18
 ### Fixed
 - Improve commission percentage handling and update README for clarity.

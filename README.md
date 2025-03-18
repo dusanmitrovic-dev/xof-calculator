@@ -378,6 +378,7 @@
 - [x] (v0.138.0) Included member username in display name for clarity  
 - [x] (v0.138.0) Corrected title in user revenue comparison chart to improve clarity
 - [x] (v0.139.0) Improve commission percentage handling and update README for clarity
+- [x] (v0.140.0) Ensure hourly rate defaults to "0" for better handling of missing values.
 - [ ] Avoid total cut rounding up values? on second decimal
 - [ ] Option to set default zip exports in settings
 - [ ] Display hourly cut in employee cut?

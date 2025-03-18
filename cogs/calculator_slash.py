@@ -1105,7 +1105,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             )
         elif compensation_type == "hourly":
             # Calculate hourly earnings
-            hourly_rate = Decimal(str(role_config.get("hourly_rate", 0))) if role_config.get("hourly_rate") else 0
+            hourly_rate = Decimal(str(role_config.get("hourly_rate", "0")))
             if user_config.get("override_role", False):
                 hourly_rate = Decimal(str(user_config.get("hourly_rate", hourly_rate)))
             
@@ -1117,7 +1117,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             )
         elif compensation_type == "both":
             # Calculate both commission and hourly earnings
-            hourly_rate = Decimal(str(role_config.get("hourly_rate", 0))) if role_config.get("hourly_rate") else 0
+            hourly_rate = Decimal(str(role_config.get("hourly_rate", "0")))
             if user_config.get("override_role", False):
                 hourly_rate = Decimal(str(user_config.get("hourly_rate", hourly_rate)))
             
