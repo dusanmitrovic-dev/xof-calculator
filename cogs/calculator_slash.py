@@ -1130,7 +1130,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             )
         
         # Log calculation preview
-        logger.info(f"Calculation preview for {interaction.user.name}: Gross=${results['gross_revenue']}, Net=${results['net_revenue']}, Total Cut=${results['total_cut']}")
+        logger.info(f"Calculation preview for {interaction.user.name}: Gross=${results['gross_revenue']}, Net=${results.get('net_revenue', 0)}, Total Cut=${results['total_cut']}")
         
         # Process models
         models_list = ", ".join(selected_models) if selected_models else ""
