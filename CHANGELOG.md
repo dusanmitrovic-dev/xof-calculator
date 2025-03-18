@@ -70,7 +70,7 @@
 ### Fixed  
 - Tables `no longer include '$' signs`,
 - Table display issues were resolved,
-- Fixed `TXT and CSV display issues`.  
+- Fixed `TXT and CSV display issues`,
 - Fixed error in `_generate_txt()` function (`positional argument mismatch`).  
 
 ### Removed  
