@@ -1201,7 +1201,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         
         # Only add hours worked if using hourly or both
         if compensation_type in ["hourly", "both"]:
-            results["hours_worked"] = f"{hours:.2f}h"
+            results["hours_worked"] = format_currency(hours_worked, decimal_places=2, thousands_separator=False) + "h"
         
         # results["date"] = current_date # TODO: remove
         # results["sender"] = sender
