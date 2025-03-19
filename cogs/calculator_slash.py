@@ -1164,7 +1164,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
 
         # Hours Worked (only show if not commission)
         if compensation_type != "commission":
-            fields.append(("⏰ Hours Worked", f"{hours_worked:.2f}h", True))
+            fields.append(("⏰ Hours Worked", format_currency(hours_worked, decimal_places=True) + "h", True))
 
         fields.extend([
             ("📥 Shift", shift, True),
