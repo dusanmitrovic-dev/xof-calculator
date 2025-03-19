@@ -1196,7 +1196,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         results["compensation"] = {
             "commission": format_currency(percentage, decimal_places=True) + "%",
             "hourly": f"{format_currency(hourly_rate, decimal_places=True, thousands_separator=True)}/h",
-            "both": f"{percentage:.2f}% + ${hourly_rate:,.2f}/h"
+            "both": f"{format_currency(percentage, decimal_places=True)}% + {format_currency(hourly_rate, decimal_places=True, thousands_separator=True)}/h"
         }[compensation_type]
         
         # Only add hours worked if using hourly or both
