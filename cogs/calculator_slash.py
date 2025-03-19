@@ -1355,7 +1355,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         for name, value, inline in fields:
             embed.add_field(name=name, value=value, inline=inline)
 
-        # embed.set_footer(text=f"Sale ID: {unique_id}")
+        embed.set_footer(text=f"Sale ID: {unique_id}")
         
         # Send the final result to everyone
         await interaction.channel.send(embed=embed)
