@@ -1195,7 +1195,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         # Add compensation result to results dictionary
         results["compensation"] = {
             "commission": format_currency(percentage, decimal_places=True) + "%",
-            "hourly": f"${hourly_rate:,.2f}/h",
+            "hourly": f"{format_currency(hourly_rate, decimal_places=True, thousands_separator=True)}/h",
             "both": f"{percentage:.2f}% + ${hourly_rate:,.2f}/h"
         }[compensation_type]
         
