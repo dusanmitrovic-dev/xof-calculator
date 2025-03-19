@@ -1152,7 +1152,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         compensation_value = {
             "commission": format_currency(percentage, decimal_places=True) + "%",
             "hourly": format_currency(hourly_rate, decimal_places=True, thousands_separator=True),
-            "both": f"{percentage:.2f}% + ${hourly_rate:,.2f}/h"
+            "both": f"{format_currency(percentage, decimal_places=True)}% + {format_currency(hourly_rate, decimal_places=True, thousands_separator=True)}/h"
         }[compensation_type]
         
         # Common fields
