@@ -1179,7 +1179,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         
         # Remaining fields
         fields.extend([
-            ("🎁 Bonus", f"${float(results['bonus']):,.2f}", True),
+            ("🎁 Bonus", format_currency(results['bonus'], decimal_places=True, thousands_separator=True), True),
             ("💼 Employee Cut", f"${float(results['employee_cut']):,.2f}", True),
             ("💰 Total Cut", f"${float(results['total_cut']):,.2f}", True),
             (" ", "" if results.get("compensation_type") == "hourly" else "", True),
