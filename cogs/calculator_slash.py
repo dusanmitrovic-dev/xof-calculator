@@ -1175,7 +1175,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         
         # Net Revenue (only show if not hourly)
         if compensation_type != "hourly":
-            fields.append(("💵 Net Revenue", f"${float(results['net_revenue']):,.2f} (80%)", True))
+            fields.append(("💵 Net Revenue", f"{format_currency(results['net_revenue'], decimal_places=True, thousands_separator=True)} (80%)", True))
         
         # Remaining fields
         fields.extend([
