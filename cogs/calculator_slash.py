@@ -6,6 +6,7 @@ import discord
 import asyncio
 import zipfile
 import logging
+import uuid
 import json
 import io
 import re
@@ -1142,7 +1143,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
 
         def format_currency(value, decimal_places=False, thousands_separator=False):
             if decimal_places:
-                formatted_value = f"{float(value):,.{decimal_places}f}"
+                formatted_value = f"{float(value):,.{settings.DECIMAL_PLACES}f}"
             else:
                 formatted_value = f"{float(value):,}{settings.DECIMAL_PLACES}" if thousands_separator else f"{float(value)}"
             
@@ -1201,7 +1202,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         
         # Only add hours worked if using hourly or both
         if compensation_type in ["hourly", "both"]:
-            results["hours_worked"] = format_currency(hours_worked, decimal_places=2, thousands_separator=False) + "h"
+            results["hours_worked"] = format_currency(hours_worked, decimal_places=True, thousands_separator=False)
         
         # results["date"] = current_date # TODO: remove
         # results["sender"] = sender
@@ -1264,10 +1265,13 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         # Add new entry - handle potential missing hours_worked key
         hours_worked = 0.0
         if "hours_worked" in results:
-            hours_worked = float(results["hours_worked"].replace('h', ''))
-        
+            hours_worked = float(results["hours_worked"].replace('h', ''). replace('$', '').replace(',', ''))
+
+        unique_id = str(uuid.uuid4())
+
         # Add new entry
         new_entry = {
+            "id": unique_id, # NOTE: Added entry ID
             "date": results["date"],
             "total_cut": float(results["total_cut"].replace('$', '').replace(',', '')),
             "gross_revenue": float(results["gross_revenue"].replace('$', '').replace(',', '')),
@@ -1350,6 +1354,8 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         
         for name, value, inline in fields:
             embed.add_field(name=name, value=value, inline=inline)
+
+        # embed.set_footer(text=f"Sale ID: {unique_id}")
         
         # Send the final result to everyone
         await interaction.channel.send(embed=embed)
