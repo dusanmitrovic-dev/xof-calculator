@@ -1170,7 +1170,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             ("📥 Shift", shift, True),
             ("🎯 Role", role.name, True),
             ("⌛ Period", period, True),
-            ("💰 Gross Revenue", f"${float(results['gross_revenue']):,.2f}", True),
+            ("💰 Gross Revenue", format_currency(results['gross_revenue'], decimal_places=True, thousands_separator=True), True),
         ])
         
         # Net Revenue (only show if not hourly)
