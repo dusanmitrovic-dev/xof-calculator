@@ -1151,7 +1151,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         # Compensation field
         compensation_value = {
             "commission": format_currency(percentage, decimal_places=2) + "%",
-            "hourly": f"${hourly_rate:,.2f}/h",
+            "hourly": format_currency(hourly_rate, decimal_places=2, thousands_separator=True),
             "both": f"{percentage:.2f}% + ${hourly_rate:,.2f}/h"
         }[compensation_type]
         
