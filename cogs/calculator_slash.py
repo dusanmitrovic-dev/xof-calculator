@@ -1139,6 +1139,14 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         
         # Build fields dynamically based on compensation type
         fields = []
+
+        def format_currency(value, decimal_places=False, thousands_separator=False):
+            if decimal_places:
+                formatted_value = f"{float(value):,.{decimal_places}f}"
+            else:
+                formatted_value = f"{float(value):,}{settings.DECIMAL_PLACES}" if thousands_separator else f"{float(value)}"
+            
+            return f"${formatted_value}"
         
         # Compensation field
         compensation_value = {
@@ -1210,11 +1218,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         # results["employee_cut"] = f"${float(results['employee_cut']):,.2f}"
         # results["total_cut"] = f"${float(results['total_cut']):,.2f}"
         # results["models"] = models_list
-
-        def format_currency(value):
-            # return f"${float(value):,.2f}"
-            print(value)
-            return f"${float(value)}"
 
         results.update({
             "date": current_date,

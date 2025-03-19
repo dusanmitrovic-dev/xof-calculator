@@ -24,6 +24,8 @@ DEFAULT_EARNINGS: Dict[str, List[Dict[str, Any]]] = {}
 DEFAULT_DISPLAY_SETTINGS: Dict[str, Dict[str, bool]] = {} 
 DEFAULT_COMMISSION_SETTINGS: Dict[str, Dict[str, float]] = {}
 
+# Formatting
 DATE_FORMAT = "%d/%m/%Y"
+DECIMAL_PLACES = 2
 
 os.makedirs(DATA_DIRECTORY, exist_ok=True)
