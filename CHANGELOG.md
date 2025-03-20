@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.148.0] - 2025-03-20
+### Changed
+- Update earnings file handling to use guild-specific paths.
+
 ## [0.147.0] - 2025-03-20
 ### Changed
 - Include Sale ID in entry display for improved tracking.

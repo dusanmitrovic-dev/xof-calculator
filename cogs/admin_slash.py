@@ -435,73 +435,73 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             logger.error(f"Failed to save display settings for guild {guild_id}")
             await interaction.response.send_message("❌ Failed to update settings. Please try again.", ephemeral=ephemeral)
 
-    @app_commands.default_permissions(administrator=True)
-    @app_commands.command(
-        name="export-earnings-csv",
-        description="Export all earnings data as CSV"
-    )
-    async def export_earnings_csv(self, interaction: discord.Interaction):
-        """
-        Admin-only command to export earnings data as CSV
+    # @app_commands.default_permissions(administrator=True)
+    # @app_commands.command(
+    #     name="export-earnings-csv",
+    #     description="Export all earnings data as CSV"
+    # )
+    # async def export_earnings_csv(self, interaction: discord.Interaction):
+    #     """
+    #     Admin-only command to export earnings data as CSV
         
-        Usage: /export-earnings-csv
-        """
-        if not interaction.user.guild_permissions.administrator:
-            await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=True)
-            return
+    #     Usage: /export-earnings-csv
+    #     """
+    #     if not interaction.user.guild_permissions.administrator:
+    #         await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=True)
+    #         return
         
-        earnings_data = await file_handlers.load_json(settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS)
+    #     earnings_data = await file_handlers.load_json(settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS) # WARN: line logic changed
         
-        # Create CSV content
-        csv_content = "User,Date,Total Cut,Gross Revenue,Period,Shift,Role,Models\n"
-        for user, entries in earnings_data.items():
-            for entry in entries:
-                csv_content += f'"{user}",{entry["date"]},{entry["total_cut"]},{entry["gross_revenue"]},'
-                csv_content += f'{entry["period"]},{entry["shift"]},{entry["role"]},"{entry.get("models", "")}"\n'
+    #     # Create CSV content
+    #     csv_content = "User,Date,Total Cut,Gross Revenue,Period,Shift,Role,Models\n"
+    #     for user, entries in earnings_data.items():
+    #         for entry in entries:
+    #             csv_content += f'"{user}",{entry["date"]},{entry["total_cut"]},{entry["gross_revenue"]},'
+    #             csv_content += f'{entry["period"]},{entry["shift"]},{entry["role"]},"{entry.get("models", "")}"\n'
         
-        # Create file object
-        csv_file = discord.File(
-            io.BytesIO(csv_content.encode('utf-8')),
-            filename="full_earnings_export.csv"
-        )
+    #     # Create file object
+    #     csv_file = discord.File(
+    #         io.BytesIO(csv_content.encode('utf-8')),
+    #         filename="full_earnings_export.csv"
+    #     )
         
-        await interaction.response.send_message(
-            " Full earnings export (CSV):",
-            file=csv_file,
-            ephemeral=True
-        )
+    #     await interaction.response.send_message(
+    #         " Full earnings export (CSV):",
+    #         file=csv_file,
+    #         ephemeral=True
+    #     )
 
-    @app_commands.default_permissions(administrator=True)
-    @app_commands.command(
-        name="export-earnings-json",
-        description="Export all earnings data as JSON"
-    )
-    async def export_earnings_json(self, interaction: discord.Interaction):
-        """
-        Admin-only command to export earnings data as JSON
+    # @app_commands.default_permissions(administrator=True)
+    # @app_commands.command(
+    #     name="export-earnings-json",
+    #     description="Export all earnings data as JSON"
+    # )
+    # async def export_earnings_json(self, interaction: discord.Interaction):
+    #     """
+    #     Admin-only command to export earnings data as JSON
         
-        Usage: /export-earnings-json
-        """
-        if not interaction.user.guild_permissions.administrator:
-            await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=True)
-            return
+    #     Usage: /export-earnings-json
+    #     """
+    #     if not interaction.user.guild_permissions.administrator:
+    #         await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=True)
+    #         return
         
-        earnings_data = await file_handlers.load_json(settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS)
+    #     earnings_data = await file_handlers.load_json(settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS) # WARN: line logic changed
         
-        # Create JSON content
-        json_content = json.dumps(earnings_data, indent=4)
+    #     # Create JSON content
+    #     json_content = json.dumps(earnings_data, indent=4)
         
-        # Create file object
-        json_file = discord.File(
-            io.BytesIO(json_content.encode('utf-8')),
-            filename="full_earnings_export.json"
-        )
+    #     # Create file object
+    #     json_file = discord.File(
+    #         io.BytesIO(json_content.encode('utf-8')),
+    #         filename="full_earnings_export.json"
+    #     )
         
-        await interaction.response.send_message(
-            " Full earnings export (JSON):",
-            file=json_file,
-            ephemeral=True
-        )
+    #     await interaction.response.send_message(
+    #         " Full earnings export (JSON):",
+    #         file=json_file,
+    #         ephemeral=True
+    #     )
 
     # Role Management
     @app_commands.default_permissions(administrator=True)
@@ -1033,7 +1033,8 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             failed_count = 0
 
             for bak_file in backup_files:
-                if os.path.basename(bak_file) == settings.EARNINGS_FILE + ".bak":
+                # if os.path.basename(bak_file) == settings.EARNINGS_FILE + ".bak": # TODO: remove
+                if os.path.basename(bak_file) == settings.get_earnings_file_for_guild(interaction.guild.id) + ".bak":
                     continue
 
                 try:
@@ -1142,7 +1143,8 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         )
 
     async def reset_earnings(self, interaction: discord.Interaction):
-        await file_handlers.save_json(settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS)
+        # await file_handlers.save_json(settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS) # TODO: remove
+        await file_handlers.save_json(settings.get_earnings_file_for_guild(interaction.guild.id), settings.DEFAULT_EARNINGS)
     
     async def reset_models(self, interaction: discord.Interaction): 
         await file_handlers.save_json(settings.MODELS_DATA_FILE, settings.DEFAULT_MODELS_DATA)
@@ -1289,9 +1291,11 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
 
         async def restore_action(interaction: discord.Interaction):
-            backup_file = os.path.join(settings.DATA_DIRECTORY, f"{settings.EARNINGS_FILE}.bak")
+            # backup_file = os.path.join(settings.DATA_DIRECTORY, f"{settings.EARNINGS_FILE}.bak") # TODO: remove
+            backup_file = os.path.join(settings.DATA_DIRECTORY, f"{settings.get_earnings_file_for_guild(interaction.guild.id)}.bak")
             if os.path.exists(backup_file):
-                shutil.copy2(backup_file, os.path.join(settings.DATA_DIRECTORY, settings.EARNINGS_FILE))
+                # shutil.copy2(backup_file, os.path.join(settings.DATA_DIRECTORY, settings.EARNINGS_FILE)) # TODO: remove
+                shutil.copy2(backup_file, os.path.join(settings.DATA_DIRECTORY, settings.get_earnings_file_for_guild(interaction.guild.id)))
                 await interaction.response.edit_message(content="✅ Earnings configuration backup restored successfully.", view=None)
             else:
                 await interaction.response.edit_message(content="❌ No earnings configuration backup found.", view=None)
