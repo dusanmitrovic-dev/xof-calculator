@@ -990,17 +990,19 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         if user:
             user_key = f"<@{user.id}>"
             if user_key in earnings_data:
+                original_length = len(earnings_data[user_key])
                 earnings_data[user_key] = [entry for entry in earnings_data[user_key] if entry["id"] != sale_id]
-                if len(earnings_data[user_key]) < len(entries):
-                    removed_entries.append(f"{user.display_name} (@{user.name})")
+                if len(earnings_data[user_key]) < original_length:
+                    removed_entries.append(f"`{user.display_name} (@{user.name})`")
         else:
             for user_key, entries in earnings_data.items():
+                original_length = len(entries)
                 earnings_data[user_key] = [entry for entry in entries if entry["id"] != sale_id]
-                if len(entries) != len(earnings_data[user_key]):
+                if original_length != len(earnings_data[user_key]):
                     user_id = int(re.match(r'<@(\d+)>', user_key).group(1))
                     user_obj = interaction.guild.get_member(user_id)
                     if user_obj:
-                        removed_entries.append(f"{user_obj.display_name} (@{user_obj.name})")
+                        removed_entries.append(f"`{user_obj.display_name} (@{user_obj.name})`")
 
         if not removed_entries:
             return (False, f"❌ No sale with ID '{sale_id}' found.")
@@ -1018,6 +1020,26 @@ class AdminSlashCommands(commands.Cog, name="admin"):
     @app_commands.describe(sale_id="The ID of the sale to remove", user="Optional user to remove the sale from")
     async def remove_sale(self, interaction: discord.Interaction, sale_id: str, user: Optional[discord.User] = None):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+        guild_id = str(interaction.guild.id)
+        earnings_data = await file_handlers.load_json(settings.get_earnings_file_for_guild(interaction.guild.id), settings.DEFAULT_EARNINGS)
+        entries_with_id = 0
+        user_keys_with_id = []
+
+        if user:
+            user_key = f"<@{user.id}>"
+            if user_key in earnings_data:
+                entries_with_id = sum(1 for entry in earnings_data[user_key] if entry["id"] == sale_id)
+                user_keys_with_id.append(f"`{user.display_name} (@{user.name})`")
+        else:
+            for user_key, entries in earnings_data.items():
+                user_id = int(re.match(r'<@(\d+)>', user_key).group(1))
+                user_obj = interaction.guild.get_member(user_id)
+                if user_obj:
+                    entries_with_id += sum(1 for entry in entries if entry["id"] == sale_id)
+                    user_keys_with_id.append(f"`{user_obj.display_name} (@{user_obj.name})`")
+
+        entry_count_text = "entries" if entries_with_id > 1 else "entry"
+
         view = discord.ui.View()
         view.add_item(discord.ui.Button(label="Confirm", style=discord.ButtonStyle.danger, custom_id="confirm_remove_sale"))
         view.add_item(discord.ui.Button(label="Cancel", style=discord.ButtonStyle.success, custom_id="cancel_remove_sale"))
@@ -1035,20 +1057,8 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         view.children[0].callback = confirm_callback
         view.children[1].callback = cancel_callback
 
-        guild_id = str(interaction.guild.id)
-        earnings_data = await file_handlers.load_json(settings.get_earnings_file_for_guild(interaction.guild.id), settings.DEFAULT_EARNINGS)
-        entries_with_id = 0
-
-        if user:
-            user_key = f"<@{user.id}>"
-            if user_key in earnings_data:
-                entries_with_id = sum(1 for entry in earnings_data[user_key] if entry["id"] == sale_id)
-        else:
-            entries_with_id = sum(1 for entries in earnings_data.values() for entry in entries if entry["id"] == sale_id)
-
-        entry_count_text = "entries" if entries_with_id > 1 else "entry"
         await interaction.response.send_message(
-            f"‼🚨‼ Are you sure you want to remove the sale with ID `{sale_id}`? This will remove `{entries_with_id}` {entry_count_text}.",
+            f"‼🚨‼ Are you sure you want to remove the sale with ID `{sale_id}`? This will remove `{entries_with_id}` {entry_count_text} for {', '.join(user_keys_with_id)}.",
             view=view,
             ephemeral=ephemeral
         )

@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.150.0] - 2025-03-20
+### Changed
+- Enhance removal confirmation message to include user details and streamline entry count logic.
+
 ## [0.149.0] - 2025-03-20
 ### Changed
 - Add command to remove earnings entry by ID and User with confirmation.
