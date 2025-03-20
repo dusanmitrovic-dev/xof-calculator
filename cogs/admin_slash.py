@@ -1031,7 +1031,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
                                 user_id = int(re.search(r'<@(\d+)>', user_key).group(1))
                                 user_obj = interaction.guild.get_member(user_id)
                                 if user_obj:
-                                    removed_entries[f"{user.display_name} (@{user.name})"] = removed_count
+                                    removed_entries[f"{user_obj.display_name} (@{user_obj.name})"] = removed_count
                                     total_removed += removed_count
 
             if not removed_entries:

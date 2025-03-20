@@ -1387,7 +1387,8 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             # Create entry text
             entry_text = f"```diff\n+ Entry #{idx}\n"
 
-            entry_text += f"🔑 Sale ID: {entry_id}\n"
+            if settings.DISPLAY_UUID:
+                entry_text += f"🔑 Sale ID: {entry_id}\n"
             
             # Add username if all_data is True and user_id is available
             if all_data and 'user_id' in entry:
