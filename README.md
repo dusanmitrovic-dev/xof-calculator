@@ -383,6 +383,16 @@
 - [x] (v0.142.0) Decimal handling in bonus rule parsing, avoid unnecessary conversions
 - [x] (v0.143.0) Simplify revenue calculations by removing quantization
 - [x] (v0.143.0) Avoid total cut rounding up values? on second decimal
+- [x] (v0.144.0) Update currency formatting to use settings for decimal places.
+- [x] (v0.144.0) Add unique IDs to calculator entries.
+- [x] (v0.144.0) Improve hours worked formatting using currency function.
+- [x] (v0.144.0) Ensure hourly rate displays `/h` suffix.
+- [x] (v0.144.0) Format commission values with `%` suffix.
+- [x] (v0.144.0) Use thousands separator in compensation outputs.
+- [x] (v0.144.0) Standardize decimal places in revenue calculations.
+- [x] (v0.144.0) Enhance net and gross revenue formatting.
+- [x] (v0.144.0) Improve combined compensation formatting.
+- [x] (v0.144.0) Refactor `calculator_slash` currency function for better precision.
 - [ ] Option to set default zip exports in settings
 - [ ] Display hourly cut in employee cut?
 - [ ] Add functionality to select column names to display in `view-earnings`

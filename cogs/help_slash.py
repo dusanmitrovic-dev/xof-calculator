@@ -92,8 +92,6 @@ class HelpSlashCommands(commands.Cog):
             misc_admin_commands = "\n".join([
                 "`/toggle-ephemeral` - Toggle whether command responses are ephemeral",
                 "`/toggle-average` - Toggle performance averages in calculation embeds",
-                "`/export-earnings-csv` - Export earnings data as CSV",
-                "`/export-earnings-json` - Export earnings data as JSON",
                 "`/clear-earnings` - Clear all earnings data"
             ])
             embed.add_field(name="Miscellaneous Admin Commands", value=misc_admin_commands, inline=False)
@@ -102,7 +100,7 @@ class HelpSlashCommands(commands.Cog):
             report_commands = "\n".join([
                 "`/view-earnings` - View your earnings"
             ])
-            embed.add_field(name="📌 Report Commands 📌", value=report_commands, inline=False)
+            embed.add_field(name="Report Commands", value=report_commands, inline=False)
 
         await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
 

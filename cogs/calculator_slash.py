@@ -7,6 +7,7 @@ import asyncio
 import zipfile
 import logging
 import uuid
+import time
 import json
 import io
 import re
@@ -172,7 +173,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             elif format_type == "png":
                 self._generate_png(df, user, buffer, user_earnings, all_data)
             elif format_type == "svg":
-                self._generate_svg(df, user, buffer, user_earnings, all_data) # TODO: It displays User earnings instead of Full for Zip?
+                self._generate_svg(df, user, buffer, user_earnings, all_data) # TODO: It displays User earnings instead of Full for Zip? # WARN: DOUBLE CHECK!!
             elif format_type == "html":
                 self._generate_html(df, user, buffer, user_earnings, all_data)
             elif format_type == "markdown":
@@ -1267,11 +1268,13 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         if "hours_worked" in results:
             hours_worked = float(results["hours_worked"].replace('h', ''). replace('$', '').replace(',', ''))
 
-        unique_id = str(uuid.uuid4())
+        # unique_id = str(uuid.uuid4()) # TODO: remove
+        unique_id = str(int(time.time() * 1000)) # NOTE: * 1000 to include (milliseconds * 100)
+        # unique_id = str(uuid.uuid1()) # TODO: remove
 
         # Add new entry
         new_entry = {
-            "id": unique_id, # NOTE: Added entry ID
+            "id": unique_id, # NOTE: Added entry ID # WARN: think about possible combination between uuid and timestamp
             "date": results["date"],
             "total_cut": float(results["total_cut"].replace('$', '').replace(',', '')),
             "gross_revenue": float(results["gross_revenue"].replace('$', '').replace(',', '')),
@@ -1355,7 +1358,8 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         for name, value, inline in fields:
             embed.add_field(name=name, value=value, inline=inline)
 
-        embed.set_footer(text=f"Sale ID: {unique_id}")
+        if settings.DISPLAY_UUID:
+            embed.set_footer(text=f"Sale ID: {unique_id}")
         
         # Send the final result to everyone
         await interaction.channel.send(embed=embed)

@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+## [0.144.0] - 2025-03-20
+### Refactored
+- Updated currency formatting to use settings for decimal places,
+- Added unique IDs to entries in `calculator_slash`,
+- Improved formatting for hours worked, hourly rate, commission, and revenue calculations,
+- Standardized thousands separator usage in all currency-related outputs,
+- Ensured consistent percentage and hourly rate formatting (`/h` suffix, `%` for commission),
+- Refactored compensation formatting for better readability.
+
 ## [0.143.0] - 2025-03-18
 ### Fixed
 - Simplify revenue calculations by removing quantization. 

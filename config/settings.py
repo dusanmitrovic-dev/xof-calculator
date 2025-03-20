@@ -26,6 +26,7 @@ DEFAULT_COMMISSION_SETTINGS: Dict[str, Dict[str, float]] = {}
 
 # Formatting
 DATE_FORMAT = "%d/%m/%Y"
+DISPLAY_UUID = True
 DECIMAL_PLACES = 2
 
 os.makedirs(DATA_DIRECTORY, exist_ok=True)
