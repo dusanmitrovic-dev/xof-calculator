@@ -277,7 +277,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             # 1. Title Section
             # ======================
             title_style = styles["Title"]
-            report_title = "XOF Agency Full Earnings Report" if all_data else f"XOF Agency Earnings Report for {user.display_name}"
+            report_title = "Agency Full Earnings Report" if all_data else f"Agency Earnings Report for {user.display_name}"
             elements.append(Paragraph(report_title, title_style))
             elements.append(Spacer(1, 12))
 
@@ -285,6 +285,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             # 2. Summary Section
             # ======================
             elements.append(Paragraph("Summary", styles["Heading2"]))
+            elements.append(Spacer(1, 6))
 
             summary_data = [
                 ["Metric", "Value"],
@@ -319,8 +320,11 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             # 3. Detailed Table (Original Version)
             # ======================
             elements.append(Paragraph("Detailed Earnings", styles["Heading2"]))
+            elements.append(Spacer(1, 12))
             headers = ["#", "User", "Date", "Role", "Shift", "Hours", "Gross Revenue", "Earnings"] if all_data else ["#", "Date", "Role", "Shift", "Hours", "Gross Revenue", "Earnings"]
             data = [headers]
+            
+            # col_widths = [30, 120, 80, 60, 50, 70, 70] if all_data else [30, 80, 60, 50, 70, 70]
             
             for i, entry in enumerate(user_earnings, 1):
                 row = [
@@ -331,7 +335,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                     entry['shift'].capitalize(),
                     f"{float(entry['hours_worked']):.1f}",
                     f"${float(entry['gross_revenue']):.2f}",
-                    # f"${float(entry['total_cut']):.2f}" # TODO: remove
                     f"{format_currency(float(entry['total_cut']), 'USD', locale='en_US')}"
                 ] if all_data else [
                     str(i),
@@ -354,7 +357,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                 ('BOTTOMPADDING', (0,0), (-1,0), 12),
                 ('BACKGROUND', (0,1), (-1,-1), colors.beige),
                 ('GRID', (0,0), (-1,-1), 1, colors.black),
-                ('ALIGN', (4,1), (-1,-1), 'RIGHT'),
+                ('ALIGN', (4,1), (-1,-1), 'CENTER'),
                 ('FONTSIZE', (0,1), (-1,-1), 9),
                 ('FONTSIZE', (0,1), (-1,-1), 9),  # More readable body text
                 ('PADDING', (0,0), (-1,-1), 3),    # Cell padding
@@ -418,7 +421,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                     ax2.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m/%y'))
                     plt.xticks(rotation=45)
                     # Legend inside plot
-                    ax2.legend(loc='upper center', bbox_to_anchor=(0.5, -0.35),
+                    ax2.legend(loc='upper center', bbox_to_anchor=(0.5, -0.45),
                         ncol=3, frameon=True, shadow=True)
                     ax2.grid(True, linestyle='--', alpha=0.7)
                     plt.tight_layout()
@@ -581,7 +584,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
 
     def _generate_html(self, df, user, buffer, user_earnings, all_data=False):
         """Generate HTML format export"""
-        report_title = "XOF Agency Full Earnings Report" if all_data else f"XOF Agency Earnings Report for {user.display_name}"
+        report_title = "Agency Full Earnings Report" if all_data else f"Agency Earnings Report for {user.display_name}"
         user_column = ""
         
         if all_data:
@@ -733,7 +736,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             user_earnings: List of user earnings entries
             all_data: Boolean indicating if this is a full report or user-specific
         """
-        report_title = "XOF Agency Full Earnings Report" if all_data else f"XOF Agency Earnings Report for {user.display_name}"
+        report_title = "Agency Full Earnings Report" if all_data else f"Agency Earnings Report for {user.display_name}"
         current_date = datetime.now()
 
         # Filter out future dates
@@ -822,7 +825,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             user_earnings: List of user earnings entries
             all_data: Boolean indicating if this is a full report or user-specific
         """
-        report_title = "XOF Agency Full Earnings Report" if all_data else f"XOF Agency Earnings Report for {user.display_name}"
+        report_title = "Agency Full Earnings Report" if all_data else f"Agency Earnings Report for {user.display_name}"
 
         # Validate dates - filter out future dates
         current_date = datetime.now()
@@ -1366,7 +1369,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             embed.add_field(name=name, value=value, inline=inline)
 
         if settings.DISPLAY_UUID:
-            embed.set_footer(text=f"Sale ID: `{unique_id}`")
+            embed.set_footer(text=f"Sale ID: {unique_id}")
         
         # Send the final result to everyone
         await interaction.channel.send(embed=embed)
