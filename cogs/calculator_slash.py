@@ -304,7 +304,12 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                 ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
                 ('BOTTOMPADDING', (0,0), (-1,0), 12),
                 ('BACKGROUND', (0,1), (-1,-1), colors.beige),
-                ('GRID', (0,0), (-1,-1), 1, colors.black)
+                ('GRID', (0,0), (-1,-1), 1, colors.black),
+                ('FONTSIZE', (0,1), (-1,-1), 9),  # More readable body text
+                ('PADDING', (0,0), (-1,-1), 3),    # Cell padding
+                ('VALIGN', (0,0), (-1,-1), 'MIDDLE'), # Vertical alignment
+                # For summary table add:
+                ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.whitesmoke, colors.beige])
             ]))
             elements.append(summary_table)
             elements.append(Spacer(1, 24))
@@ -348,7 +353,10 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                 ('BACKGROUND', (0,1), (-1,-1), colors.beige),
                 ('GRID', (0,0), (-1,-1), 1, colors.black),
                 ('ALIGN', (4,1), (-1,-1), 'RIGHT'),
-                ('FONTSIZE', (0,0), (-1,-1), 8),
+                ('FONTSIZE', (0,1), (-1,-1), 9),
+                ('FONTSIZE', (0,1), (-1,-1), 9),  # More readable body text
+                ('PADDING', (0,0), (-1,-1), 3),    # Cell padding
+                ('VALIGN', (0,0), (-1,-1), 'MIDDLE'), # Vertical alignment
             ]))
             elements.append(detail_table)
             elements.append(Spacer(1, 24))
