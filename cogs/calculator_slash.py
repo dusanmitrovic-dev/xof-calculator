@@ -270,6 +270,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             doc = SimpleDocTemplate(buffer, pagesize=letter)
             elements = []
             styles = getSampleStyleSheet()
+            PAGE_WIDTH = 468  # Standard letter width in points
 
             # ======================
             # 1. Title Section
@@ -283,6 +284,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             # 2. Summary Section
             # ======================
             elements.append(Paragraph("Summary", styles["Heading2"]))
+
             summary_data = [
                 ["Metric", "Value"],
                 ["Total Gross Revenue", f"${df['gross_revenue'].sum():.2f}"],
@@ -293,21 +295,22 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             if all_data:
                 summary_data.insert(1, ["Total Users", f"{len(df['user_id'].unique())}"])
             
-            summary_table = Table(summary_data, colWidths=[250, 150])
+            # Full-width summary table
+            summary_table = Table(summary_data, colWidths=[PAGE_WIDTH*0.75, PAGE_WIDTH*0.25])
             summary_table.setStyle(TableStyle([
-                ('BACKGROUND', (0,0), (1,0), colors.grey),
-                ('TEXTCOLOR', (0,0), (1,0), colors.whitesmoke),
-                ('ALIGN', (0,0), (1,-1), 'LEFT'),
-                ('FONTNAME', (0,0), (1,0), 'Helvetica-Bold'),
-                ('BOTTOMPADDING', (0,0), (1,0), 12),
-                ('BACKGROUND', (0,1), (1,-1), colors.beige),
-                ('GRID', (0,0), (1,-1), 1, colors.black)
+                ('BACKGROUND', (0,0), (-1,0), colors.grey),
+                ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+                ('ALIGN', (0,0), (-1,-1), 'LEFT'),
+                ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+                ('BOTTOMPADDING', (0,0), (-1,0), 12),
+                ('BACKGROUND', (0,1), (-1,-1), colors.beige),
+                ('GRID', (0,0), (-1,-1), 1, colors.black)
             ]))
             elements.append(summary_table)
             elements.append(Spacer(1, 24))
 
             # ======================
-            # 3. Detailed Table
+            # 3. Detailed Table (Original Version)
             # ======================
             elements.append(Paragraph("Detailed Earnings", styles["Heading2"]))
             headers = ["#", "User", "Date", "Role", "Shift", "Hours", "Gross Revenue", "Earnings"] if all_data else ["#", "Date", "Role", "Shift", "Hours", "Gross Revenue", "Earnings"]
@@ -315,7 +318,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             
             for i, entry in enumerate(user_earnings, 1):
                 row = [
-                    i,
+                    str(i),
                     f"{entry.get('display_name', '')} (@{entry.get('username', '')})",
                     entry['date'],
                     entry['role'],
@@ -324,7 +327,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                     f"${float(entry['gross_revenue']):.2f}",
                     f"${float(entry['total_cut']):.2f}"
                 ] if all_data else [
-                    i,
+                    str(i),
                     entry['date'],
                     entry['role'],
                     entry['shift'].capitalize(),
@@ -334,7 +337,8 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                 ]
                 data.append(row)
 
-            detail_table = Table(data)
+            # Original table formatting
+            detail_table = Table(data, colWidths=([40] + [None]*len(headers[1:])) if all_data else None)
             detail_table.setStyle(TableStyle([
                 ('BACKGROUND', (0,0), (-1,0), colors.grey),
                 ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
@@ -344,6 +348,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                 ('BACKGROUND', (0,1), (-1,-1), colors.beige),
                 ('GRID', (0,0), (-1,-1), 1, colors.black),
                 ('ALIGN', (4,1), (-1,-1), 'RIGHT'),
+                ('FONTSIZE', (0,0), (-1,-1), 8),
             ]))
             elements.append(detail_table)
             elements.append(Spacer(1, 24))
@@ -356,14 +361,9 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             elements.append(Spacer(1, 12))
 
             if all_data:
-                # Process data with robust user ID handling
                 processed_df = pd.DataFrame(user_earnings)
-                
-                # Convert and extract user IDs
                 processed_df['user_id'] = processed_df['user_id'].astype(str)
                 processed_df['user_id'] = processed_df['user_id'].str.extract(r'(\d+)').fillna('0').astype(np.int64)
-                
-                # Get member info and dates
                 processed_df['date'] = pd.to_datetime(processed_df['date'], dayfirst=True)
                 processed_df['member'] = processed_df['user_id'].apply(
                     lambda x: interaction.guild.get_member(int(x)) if interaction and x != 0 else None
@@ -389,13 +389,11 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                     plt.savefig(chart_buffer1, format='png', dpi=150, bbox_inches='tight')
                     plt.close(fig1)
                 
-                # 4b. User Comparison Chart # TODO: Use same chart as png users chart instead
+                # 4b. User Comparison Chart with internal legend
                 chart_buffer2 = io.BytesIO()
                 with plt.rc_context():
-                    fig2, ax2 = plt.subplots(figsize=(7, 3.5))
+                    fig2, ax2 = plt.subplots(figsize=(7, 4))  # Slightly taller for legend
                     valid_members = processed_df[processed_df['member'].notnull()]
-                    
-                    # Sort members by display name
                     sorted_members = sorted(
                         valid_members['member'].unique(),
                         key=lambda m: m.display_name.lower()
@@ -409,19 +407,19 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                     ax2.set_title("Users Revenue Comparison")
                     ax2.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m/%y'))
                     plt.xticks(rotation=45)
-                    ax2.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+                    # Legend inside plot
+                    ax2.legend(loc='upper left', bbox_to_anchor=(0, 1), frameon=True, 
+                            framealpha=0.9, edgecolor='black')
                     ax2.grid(True, linestyle='--', alpha=0.7)
                     plt.tight_layout()
                     plt.savefig(chart_buffer2, format='png', dpi=150, bbox_inches='tight')
                     plt.close(fig2)
 
-                # Add both charts to PDF
                 elements.append(Image(chart_buffer1, width=450, height=200))
                 elements.append(Spacer(1, 12))
-                elements.append(Image(chart_buffer2, width=450, height=200))
+                elements.append(Image(chart_buffer2, width=450, height=250))
             
             else:
-                # Single User Chart
                 chart_buffer = io.BytesIO()
                 with plt.rc_context():
                     fig, ax = plt.subplots(figsize=(7, 4))
@@ -451,11 +449,10 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                 valid_members = [m for m in processed_df['member'].unique() if m is not None]
                 
                 for member in valid_members:
-                    # elements.append(PageBreak())
                     elements.append(Paragraph(f"{member.display_name} (@{member.name})", styles["Heading3"]))
                     
                     user_data = processed_df[processed_df['member'] == member]
-                    dates = user_data['date'].dt.to_pydatetime() # TODO:  FutureWarning: The behavior of DatetimeProperties.to_pydatetime is deprecated, in a future version this will return a Series containing python datetime objects instead of an ndar
+                    dates = user_data['date'].dt.to_pydatetime()
                     gross = user_data['gross_revenue'].astype(float)
                     earnings = user_data['total_cut'].astype(float)
 
@@ -476,11 +473,9 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                     elements.append(Image(user_buffer, width=450, height=250))
                     elements.append(Spacer(1, 12))
 
-            # Finalize document
             doc.build(elements)
 
         except Exception as e:
-            # Error handling
             error_buffer = io.BytesIO()
             doc = SimpleDocTemplate(error_buffer, pagesize=letter)
             elements = [
