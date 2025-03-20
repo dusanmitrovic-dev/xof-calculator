@@ -979,111 +979,165 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         await interaction.response.send_message("‼️🚨‼ Are you sure you want to clear all earnings data?", view=view, ephemeral=ephemeral)
 
     
-    async def remove_sale_by_id(self, interaction: discord.Interaction, sale_ids: list[str], user: Optional[discord.User] = None):
-        """Helper function to remove earnings entries by multiple IDs, optionally for a specific user."""
+    async def remove_sale_by_id(self, interaction: discord.Interaction, sale_ids: Optional[list[str]] = None, user: Optional[discord.User] = None):
+        """Helper function to remove earnings entries by IDs or all entries for a user."""
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
         guild_id = str(interaction.guild.id)
 
         earnings_data = await file_handlers.load_json(settings.get_earnings_file_for_guild(interaction.guild.id), settings.DEFAULT_EARNINGS)
-
         removed_entries = []
-        sale_ids = list(set(sale_ids))  # Remove duplicates
-        if user:
-            user_key = f"<@{user.id}>"
-            if user_key in earnings_data:
-                original_length = len(earnings_data[user_key])
-                earnings_data[user_key] = [entry for entry in earnings_data[user_key] if entry["id"] not in sale_ids]
-                if len(earnings_data[user_key]) < original_length:
-                    removed_entries.append(f"`{user.display_name} (@{user.name})`")
-        else:
-            for user_key, entries in earnings_data.items():
-                original_length = len(entries)
-                earnings_data[user_key] = [entry for entry in entries if entry["id"] not in sale_ids]
-                if original_length != len(earnings_data[user_key]):
-                    user_id = int(re.match(r'<@(\d+)>', user_key).group(1))
-                    user_obj = interaction.guild.get_member(user_id)
-                    if user_obj:
-                        removed_entries.append(f"`{user_obj.display_name} (@{user_obj.name})`")
 
-        if not removed_entries:
-            ids_str = ", ".join(f"'{s_id}'" for s_id in sale_ids)
-            return (False, f"❌ No sales found with IDs {ids_str}.")
+        # Validate input combination
+        if sale_ids is None and user is None:
+            return (False, "❌ Must provide either sale IDs or a user to remove all their sales.")
 
-        success = await file_handlers.save_json(settings.get_earnings_file_for_guild(interaction.guild.id), earnings_data)
+        try:
+            if sale_ids is None:
+                # Remove all entries for specified user
+                user_key = f"<@{user.id}>"
+                if user_key in earnings_data:
+                    original_length = len(earnings_data[user_key])
+                    if original_length > 0:
+                        earnings_data[user_key] = []
+                        removed_entries.append(f"`{user.display_name} (@{user.name})`")
+            else:
+                # Remove specific IDs
+                sale_ids = list(set(sale_ids))  # Deduplicate
+                if user:
+                    # Remove from specific user
+                    user_key = f"<@{user.id}>"
+                    if user_key in earnings_data:
+                        original_length = len(earnings_data[user_key])
+                        earnings_data[user_key] = [entry for entry in earnings_data[user_key] 
+                                                if entry["id"] not in sale_ids]
+                        if len(earnings_data[user_key]) < original_length:
+                            removed_entries.append(f"`{user.display_name} (@{user.name})`")
+                else:
+                    # Remove from all users
+                    for user_key, entries in list(earnings_data.items()):
+                        original_length = len(entries)
+                        earnings_data[user_key] = [entry for entry in entries 
+                                                if entry["id"] not in sale_ids]
+                        if len(earnings_data[user_key]) < original_length:
+                            user_id = int(re.search(r'<@(\d+)>', user_key).group(1))
+                            user_obj = interaction.guild.get_member(user_id)
+                            if user_obj:
+                                removed_entries.append(f"`{user_obj.display_name} (@{user_obj.name})`")
 
-        if success:
-            user_text = "users" if len(removed_entries) > 1 else "user"
-            ids_text = ", ".join(f"`{s_id}`" for s_id in sale_ids)
-            sale_text = "sales" if len(sale_ids) > 1 else "sale"
-            return (True, f"✅ {sale_text.capitalize()} with IDs {ids_text} removed for {user_text}: {', '.join(removed_entries)}.")
-        else:
-            return (False, "❌ Failed to save earnings data. Please try again later.")
+            if not removed_entries:
+                if sale_ids:
+                    ids_str = ", ".join(f"'{s_id}'" for s_id in sale_ids)
+                    return (False, f"❌ No sales found with IDs {ids_str}.")
+                return (False, f"❌ No sales found for `{user.display_name} (@{user.name})`.")
+
+            success = await file_handlers.save_json(settings.get_earnings_file_for_guild(interaction.guild.id), earnings_data)
+
+            if success:
+                if sale_ids is None:
+                    return (True, f"✅ All sales removed for {removed_entries[0]}.")
+                
+                user_text = "users" if len(removed_entries) > 1 else "user"
+                ids_text = ", ".join(f"`{s_id}`" for s_id in sale_ids)
+                sale_text = "sales" if len(sale_ids) > 1 else "sale"
+                return (True, f"✅ {sale_text.capitalize()} with IDs {ids_text} removed for {user_text}: {', '.join(removed_entries)}.")
+            return (False, "❌ Failed to save earnings data.")
+        
+        except Exception as e:
+            return (False, f"❌ Error processing request: {str(e)}")
 
     @app_commands.default_permissions(administrator=True)
-    @app_commands.command(name="remove-sale", description="Remove earnings entries by IDs")
-    @app_commands.describe(sale_ids="Comma-separated list of sale IDs to remove", user="Optional user to remove the sales from")
-    async def remove_sale(self, interaction: discord.Interaction, sale_ids: str, user: Optional[discord.User] = None):
+    @app_commands.command(name="remove-sale", description="Remove sales by IDs or all sales for a user")
+    @app_commands.describe(
+        sale_ids="Comma-separated sale IDs (leave empty with user to remove all)",
+        user="Optional user to target (required for removing all sales)"
+    )
+    async def remove_sale(self, interaction: discord.Interaction, sale_ids: Optional[str] = None, user: Optional[discord.User] = None):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
-        guild_id = str(interaction.guild.id)
         
-        # Process and validate sale_ids
-        sale_id_list = [s_id.strip() for s_id in sale_ids.split(',') if s_id.strip()]
-        if not sale_id_list:
-            await interaction.response.send_message("❌ No sale IDs provided.", ephemeral=ephemeral)
+        # Validate input
+        if sale_ids is None and user is None:
+            await interaction.response.send_message("❌ Must provide either sale IDs or a user.", ephemeral=ephemeral)
             return
-        sale_id_list = list(set(sale_id_list))  # Remove duplicates
+
+        # Process sale IDs if provided
+        sale_id_list = None
+        if sale_ids:
+            sale_id_list = [s_id.strip() for s_id in sale_ids.split(',') if s_id.strip()]
+            if not sale_id_list:
+                await interaction.response.send_message("❌ Invalid sale IDs format.", ephemeral=ephemeral)
+                return
+            sale_id_list = list(set(sale_id_list))  # Deduplicate
 
         earnings_data = await file_handlers.load_json(settings.get_earnings_file_for_guild(interaction.guild.id), settings.DEFAULT_EARNINGS)
         entries_with_id = 0
         user_keys_with_id = []
 
-        if user:
-            user_key = f"<@{user.id}>"
-            if user_key in earnings_data:
-                entries_with_id = sum(1 for entry in earnings_data[user_key] if entry["id"] in sale_id_list)
+        try:
+            if sale_id_list is None:
+                # Count all entries for user
+                user_key = f"<@{user.id}>"
+                user_entries = earnings_data.get(user_key, [])
+                entries_with_id = len(user_entries)
                 if entries_with_id > 0:
                     user_keys_with_id.append(f"`{user.display_name} (@{user.name})`")
-        else:
-            for user_key, entries in earnings_data.items():
-                count = sum(1 for entry in entries if entry["id"] in sale_id_list)
-                entries_with_id += count
-                if count > 0:
-                    user_id = int(re.match(r'<@(\d+)>', user_key).group(1))
-                    user_obj = interaction.guild.get_member(user_id)
-                    if user_obj:
-                        user_keys_with_id.append(f"`{user_obj.display_name} (@{user_obj.name})`")
+            else:
+                # Count matching entries
+                if user:
+                    user_key = f"<@{user.id}>"
+                    entries = earnings_data.get(user_key, [])
+                    entries_with_id = sum(1 for entry in entries if entry["id"] in sale_id_list)
+                    if entries_with_id > 0:
+                        user_keys_with_id.append(f"`{user.display_name} (@{user.name})`")
+                else:
+                    for user_key, entries in earnings_data.items():
+                        count = sum(1 for entry in entries if entry["id"] in sale_id_list)
+                        entries_with_id += count
+                        if count > 0:
+                            user_id = int(re.search(r'<@(\d+)>', user_key).group(1))
+                            user_obj = interaction.guild.get_member(user_id)
+                            if user_obj:
+                                user_keys_with_id.append(f"`{user_obj.display_name} (@{user_obj.name})`")
 
-        if entries_with_id == 0:
-            ids_str = ", ".join(f"`{s_id}`" for s_id in sale_id_list)
-            await interaction.response.send_message(f"❌ No sales found with IDs {ids_str}.", ephemeral=ephemeral)
-            return
+            if entries_with_id == 0:
+                if sale_id_list:
+                    ids_str = ", ".join(f"`{s_id}`" for s_id in sale_id_list)
+                    msg = f"❌ No sales found with IDs {ids_str}."
+                else:
+                    msg = f"❌ No sales found for `{user.display_name} (@{user.name})`."
+                await interaction.response.send_message(msg, ephemeral=ephemeral)
+                return
 
-        entry_count_text = "entries" if entries_with_id > 1 else "entry"
-        sale_text = "sales" if len(sale_id_list) > 1 else "sale"
-        ids_text = ", ".join(f"`{s_id}`" for s_id in sale_id_list)
+            # Build confirmation message
+            view = discord.ui.View()
+            view.add_item(discord.ui.Button(label="Confirm", style=discord.ButtonStyle.danger, custom_id="confirm_remove_sale"))
+            view.add_item(discord.ui.Button(label="Cancel", style=discord.ButtonStyle.success, custom_id="cancel_remove_sale"))
 
-        view = discord.ui.View()
-        view.add_item(discord.ui.Button(label="Confirm", style=discord.ButtonStyle.danger, custom_id="confirm_remove_sale"))
-        view.add_item(discord.ui.Button(label="Cancel", style=discord.ButtonStyle.success, custom_id="cancel_remove_sale"))
+            if sale_id_list:
+                sale_text = f"sales with IDs {', '.join(f'`{s_id}`' for s_id in sale_id_list)}"
+            else:
+                sale_text = f"ALL sales for {user.mention}"
 
-        async def confirm_callback(interaction):
-            try:
-                success, message = await self.remove_sale_by_id(interaction, sale_id_list, user)
-                await interaction.response.edit_message(content=message, view=None)
-            except Exception as e:
-                await interaction.response.edit_message(content=f"❌ An error occurred: {str(e)}", view=None)
+            entry_count_text = "entries" if entries_with_id > 1 else "entry"
+            await interaction.response.send_message(
+                f"‼️🚨‼️ Confirm removal of {sale_text}?\n"
+                f"This will remove `{entries_with_id}` {entry_count_text} for: {', '.join(user_keys_with_id)}",
+                view=view,
+                ephemeral=ephemeral
+            )
 
-        async def cancel_callback(interaction):
-            await interaction.response.edit_message(content="❌ Canceled.", view=None)
+            # Button handlers
+            async def confirm_callback(interaction):
+                success, msg = await self.remove_sale_by_id(interaction, sale_id_list, user)
+                await interaction.response.edit_message(content=msg, view=None)
 
-        view.children[0].callback = confirm_callback
-        view.children[1].callback = cancel_callback
+            async def cancel_callback(interaction):
+                await interaction.response.edit_message(content="❌ Operation canceled.", view=None)
 
-        await interaction.response.send_message(
-            f"‼️🚨‼️ Are you sure you want to remove the {sale_text} with IDs {ids_text}? This will remove `{entries_with_id}` {entry_count_text} for {', '.join(user_keys_with_id)}.",
-            view=view,
-            ephemeral=ephemeral
-        )
+            view.children[0].callback = confirm_callback
+            view.children[1].callback = cancel_callback
+
+        except Exception as e:
+            await interaction.response.send_message(f"❌ Error: {str(e)}", ephemeral=ephemeral)
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="reset-config", description="Reset all configuration files")
