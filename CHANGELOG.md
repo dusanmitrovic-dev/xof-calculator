@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.145.0] - 2025-03-20
+### Refactored
+- Replace unique ID generation with a new method using timestamp and random digits.
+
 ## [0.144.0] - 2025-03-20
 ### Refactored
 - Updated currency formatting to use settings for decimal places,

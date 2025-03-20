@@ -6,7 +6,7 @@ import discord
 import asyncio
 import zipfile
 import logging
-import uuid
+import random
 import time
 import json
 import io
@@ -25,6 +25,7 @@ from discord.ui import Select, View, Button
 from discord.ext import commands
 from reportlab.lib import colors
 from utils import file_handlers
+from utils import generator_uuid
 from datetime import datetime
 from decimal import Decimal
 from config import settings
@@ -1268,9 +1269,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         if "hours_worked" in results:
             hours_worked = float(results["hours_worked"].replace('h', ''). replace('$', '').replace(',', ''))
 
-        # unique_id = str(uuid.uuid4()) # TODO: remove
-        unique_id = str(int(time.time() * 1000)) # NOTE: * 1000 to include (milliseconds * 100)
-        # unique_id = str(uuid.uuid1()) # TODO: remove
+        unique_id = generator_uuid.generate_id() # NOTE: uuid generation
 
         # Add new entry
         new_entry = {
@@ -1317,7 +1316,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                     performance = (current_gross / avg_gross) * 100 - 100
                     performance_text = f" (↑ {performance:.1f}% avg.)" if performance > 0 else f" (↓ {abs(performance):.1f}% avg.)"
                 else:
-                    performance_text = " (First entry for this period type)"
+                    performance_text = "" # NOTE: No historical data
             except Exception as e:
                 logger.error(f"Performance calculation error: {str(e)}")
                 performance_text = " (Historical data unavailable)"
