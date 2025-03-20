@@ -23,8 +23,9 @@ class AdminSlashCommands(commands.Cog, name="admin"):
 
     async def get_ephemeral_setting(self, guild_id):
         display_settings = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
-        guild_settings = display_settings.get(str(guild_id), {})
-        return guild_settings.get('ephemeral_responses', True)
+        guild_settings = display_settings.get(str(guild_id), settings.DEFAULT_DISPLAY_SETTINGS['defaults'])
+        return guild_settings.get('ephemeral_responses', 
+            settings.DEFAULT_DISPLAY_SETTINGS['defaults']['ephemeral_responses'])
 
     def validate_percentage(self, percentage: Optional[float]) -> bool:
         if percentage is None:
@@ -375,27 +376,123 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         
         await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
 
+    async def get_agency_name(self, guild_id):
+        settings_data = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
+        guild_settings = settings_data.get(str(guild_id), settings.DEFAULT_DISPLAY_SETTINGS['defaults'])
+        return guild_settings.get("agency_name",
+            settings.DEFAULT_DISPLAY_SETTINGS['defaults']['agency_name'])
+
+    async def get_show_ids(self, guild_id):
+        settings_data = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
+        guild_settings = settings_data.get(str(guild_id), settings.DEFAULT_DISPLAY_SETTINGS['defaults'])
+        return guild_settings.get("show_ids",
+            settings.DEFAULT_DISPLAY_SETTINGS['defaults']['show_ids'])
+
+    async def get_bot_name(self, guild_id):
+        settings_data = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
+        guild_settings = settings_data.get(str(guild_id), settings.DEFAULT_DISPLAY_SETTINGS['defaults'])
+        return guild_settings.get("bot_name",
+            settings.DEFAULT_DISPLAY_SETTINGS['defaults']['bot_name'])
+
+    # Add these new commands in the AdminSlashCommands class
+    @app_commands.command(name="set-agency-name", description="Set custom agency name for this server")
+    @app_commands.default_permissions(administrator=True)
+    @app_commands.describe(name="The custom agency name to display that bot will use")
+    async def set_agency_name(self, interaction: discord.Interaction, name: str):
+        """Set custom agency name"""
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+        
+        settings_data = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
+        guild_id = str(interaction.guild.id)
+        
+        if guild_id not in settings_data:
+            settings_data[guild_id] = {}
+        
+        settings_data[guild_id]["agency_name"] = name
+        success = await file_handlers.save_json(settings.DISPLAY_SETTINGS_FILE, settings_data)
+        
+        if success:
+            await interaction.response.send_message(f"✅ Agency name set to: {name}", ephemeral=ephemeral)
+        else:
+            await interaction.response.send_message("❌ Failed to save agency name", ephemeral=ephemeral)
+
+    @app_commands.command(name="toggle-id-display", description="Toggle display of IDs in reports")
+    @app_commands.default_permissions(administrator=True)
+    async def toggle_id_display(self, interaction: discord.Interaction):
+        """Toggle ID display"""
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+        
+        settings_data = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
+        guild_id = str(interaction.guild.id)
+        
+        current_setting = settings_data.get(guild_id, {}).get("show_ids", False)
+        new_setting = not current_setting
+        
+        if guild_id not in settings_data:
+            settings_data[guild_id] = {}
+        
+        settings_data[guild_id]["show_ids"] = new_setting
+        success = await file_handlers.save_json(settings.DISPLAY_SETTINGS_FILE, settings_data)
+        
+        if success:
+            status = f"**enabled**" if new_setting else f"**disabled**"
+            await interaction.response.send_message(f"✅ ID display {status}", ephemeral=ephemeral)
+        else:
+            await interaction.response.send_message("❌ Failed to toggle ID display", ephemeral=ephemeral)
+
+    @app_commands.command(name="set-bot-name", description="Set custom bot name for this server")
+    @app_commands.default_permissions(administrator=True)
+    @app_commands.describe(name="The custom name for the bot")
+    async def set_bot_name(self, interaction: discord.Interaction, name: str):
+        """Set custom bot name"""
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+        
+        settings_data = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
+        guild_id = str(interaction.guild.id)
+        
+        if guild_id not in settings_data:
+            settings_data[guild_id] = {}
+        
+        settings_data[guild_id]["bot_name"] = name
+        success = await file_handlers.save_json(settings.DISPLAY_SETTINGS_FILE, settings_data)
+        
+        if success:
+            await interaction.response.send_message(f"✅ Bot name set to: {name}", ephemeral=ephemeral)
+        else:
+            await interaction.response.send_message("❌ Failed to save bot name", ephemeral=ephemeral)
+
     
-    @app_commands.command(
-        name="view-display-settings",
-        description="View the current display settings"
-    )
+    @app_commands.command(name="view-display-settings", description="View the current display settings")
     @app_commands.default_permissions(administrator=True)
     async def view_display_settings(self, interaction: discord.Interaction):
         """View the current display settings"""
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
-        show_average = await self.get_average_setting(interaction.guild.id)
         
-        embed = discord.Embed(
-            title="Display Settings",
-            description=f"Ephemeral Messages: {ephemeral}\nShow Averages: {show_average}"
-        )
+        guild_id = interaction.guild.id
+        settings_data = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
+        guild_settings = settings_data.get(str(guild_id), {})
+
+        
+        
+        embed = discord.Embed(title="Display Settings", color=0x00ff00)
+        logger.info(f"Ephemeral Responses: {await self.get_ephemeral_setting(guild_id)}")
+        embed.add_field(name="Ephemeral Responses", value=await self.get_ephemeral_setting(guild_id), inline=False)
+        logger.info(f"Show Averages: {await self.get_average_setting(guild_id)}")
+        embed.add_field(name="Show Averages", value=await self.get_average_setting(guild_id), inline=False)
+        logger.info(f"Agency Name: {await self.get_agency_name(guild_id)}")
+        embed.add_field(name="Agency Name", value=await self.get_agency_name(guild_id), inline=False)
+        logger.info(f"Show IDs: {await self.get_show_ids(guild_id)}")
+        embed.add_field(name="Show IDs", value=await self.get_show_ids(guild_id), inline=False)
+        logger.info(f"Bot Name: {await self.get_bot_name(guild_id)}")
+        embed.add_field(name="Bot Name", value=await self.get_bot_name(guild_id), inline=False)
+        
         await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
 
     async def get_average_setting(self, guild_id):
         settings_data = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
-        guild_settings = settings_data.get(str(guild_id), {})
-        return guild_settings.get("show_average", False)
+        guild_settings = settings_data.get(str(guild_id), settings.DEFAULT_DISPLAY_SETTINGS['defaults'])
+        return guild_settings.get("show_average",
+            settings.DEFAULT_DISPLAY_SETTINGS['defaults']['show_average'])
 
     @app_commands.command(
         name="toggle-average",
@@ -1685,7 +1782,7 @@ class ConfirmButton(discord.ui.View):
     @discord.ui.button(label="Confirm", style=discord.ButtonStyle.red)
     async def confirm_button(self, interaction: discord.Interaction, button: discord.ui.Button):
         if interaction.user.id != self.user_id:
-            await interaction.response.send_message("You cannot use this button.", ephemeral=True)
+            await interaction.response.send_message("❌ You cannot use this button.", ephemeral=True)
             return
         
         await self.action_callback(interaction)
@@ -1694,10 +1791,10 @@ class ConfirmButton(discord.ui.View):
     @discord.ui.button(label="Cancel", style=discord.ButtonStyle.green)
     async def cancel_button(self, interaction: discord.Interaction, button: discord.ui.Button):
         if interaction.user.id != self.user_id:
-            await interaction.response.send_message("You cannot use this button.", ephemeral=True)
+            await interaction.response.send_message("❌ You cannot use this button.", ephemeral=True)
             return
         
-        await interaction.response.edit_message(content="Action cancelled.", view=None)
+        await interaction.response.edit_message(content="❌ Cancelled.", view=None)
         self.stop()
 
 async def setup(bot):

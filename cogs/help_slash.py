@@ -93,7 +93,7 @@ class HelpSlashCommands(commands.Cog):
                 "`/toggle-ephemeral` - Toggle whether command responses are ephemeral",
                 "`/toggle-average` - Toggle performance averages in calculation embeds",
                 "`/clear-earnings` - Clear all earnings data",
-                "`/remove-sale` - Remove an earnings entries by IDs , Users mentions or combined"
+                "`/remove-sale` - Remove earnings entries by IDs , Users mentions or combined"
             ])
             embed.add_field(name="Miscellaneous Admin Commands", value=misc_admin_commands, inline=False)
 

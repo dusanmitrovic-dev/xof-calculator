@@ -104,8 +104,34 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
 
     async def get_ephemeral_setting(self, guild_id):
         display_settings = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
-        guild_settings = display_settings.get(str(guild_id), {})
-        return guild_settings.get('ephemeral_responses', True)
+        guild_settings = display_settings.get(str(guild_id), settings.DEFAULT_DISPLAY_SETTINGS['defaults'])
+        return guild_settings.get('ephemeral_responses', 
+            settings.DEFAULT_DISPLAY_SETTINGS['defaults']['ephemeral_responses'])
+    
+    async def get_average_setting(self, guild_id):
+        settings_data = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
+        guild_settings = settings_data.get(str(guild_id), settings.DEFAULT_DISPLAY_SETTINGS['defaults'])
+        return guild_settings.get("show_average",
+            settings.DEFAULT_DISPLAY_SETTINGS['defaults']['show_average'])
+
+    async def get_agency_name(self, guild_id):
+        settings_data = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
+        guild_settings = settings_data.get(str(guild_id), settings.DEFAULT_DISPLAY_SETTINGS['defaults'])
+        return guild_settings.get("agency_name",
+            settings.DEFAULT_DISPLAY_SETTINGS['defaults']['agency_name'])
+
+    async def get_show_ids(self, guild_id):
+        settings_data = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
+        guild_settings = settings_data.get(str(guild_id), settings.DEFAULT_DISPLAY_SETTINGS['defaults'])
+        return guild_settings.get("show_ids",
+            settings.DEFAULT_DISPLAY_SETTINGS['defaults']['show_ids'])
+
+    async def get_bot_name(self, guild_id):
+        settings_data = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
+        guild_settings = settings_data.get(str(guild_id), settings.DEFAULT_DISPLAY_SETTINGS['defaults'])
+        print(guild_settings)
+        return guild_settings.get("bot_name",
+            settings.DEFAULT_DISPLAY_SETTINGS['defaults']['bot_name'])
 
     async def generate_export_file(self, user_earnings, interaction, user, export_format, zip_formats=None, all_data=False):
         """
@@ -1310,7 +1336,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         
         # Check if average display is enabled
         display_settings = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
-        show_average = display_settings.get(guild_id, {}).get("show_average", False)
+        show_average = display_settings.get(guild_id, {}).get("show_average", settings.DEFAULT_DISPLAY_SETTINGS['defaults'])
         
         # Create embed for public announcement
         embed = discord.Embed(title="📊 Earnings Calculation", color=0x009933)
@@ -1354,7 +1380,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         
         # Net Revenue (only show if not hourly)
         if results.get("compensation_type") != "hourly":
-            fields.append(("💵 Net Revenue", results.get("net_revenue", "N/A"), True))
+            fields.append(("💵 Net Revenue", f"{results.get('net_revenue', 'N/A')} (80%)", True))
         
         # Remaining fields
         fields.extend([
@@ -1368,7 +1394,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         for name, value, inline in fields:
             embed.add_field(name=name, value=value, inline=inline)
 
-        if settings.DISPLAY_UUID:
+        if await self.get_show_ids(interaction.guild.id):
             embed.set_footer(text=f"Sale ID: {unique_id}")
         
         # Send the final result to everyone
@@ -1396,7 +1422,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             # Create entry text
             entry_text = f"```diff\n+ Entry #{idx}\n"
 
-            if interaction.user.guild_permissions.administrator and settings.DISPLAY_UUID:
+            if interaction.user.guild_permissions.administrator and await self.get_show_ids(interaction.guild.id):
                 entry_text += f"🔑 Sale ID: {entry_id}\n"
             
             # Add username if all_data is True and user_id is available
@@ -1708,11 +1734,12 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                 )
                 return
             elif all_data and not interaction.user.guild_permissions.administrator:
-                await interaction.response.send_message(
-                    "❌ You need administrator permissions to view all earnings data.",
-                    ephemeral=ephemeral
-                )
-                return
+                if export != 'png':
+                    await interaction.response.send_message(
+                        "❌ You need administrator permissions to view all earnings data unless exporting as `PNG Chart`.",
+                        ephemeral=ephemeral
+                    )
+                    return
 
             await interaction.response.defer(ephemeral=ephemeral)
 
@@ -1843,7 +1870,14 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                 embeds = await self.create_table_embed(interaction, user_earnings, base_embed, all_data) if as_table \
                     else await self.create_list_embed(interaction, user_earnings, base_embed, all_data, period is None)
                 
-                await self.send_paginated_embeds(interaction, embeds, ephemeral=ephemeral)
+                if all_data and not interaction.user.guild_permissions.administrator:
+                    await interaction.followup.send(
+                        "🔍 You are comparing your revenue with others. 🔓 Admin exception granted.",
+                        ephemeral=ephemeral
+                    )
+                else:
+                    await self.send_paginated_embeds(interaction, embeds, ephemeral=ephemeral)
+                # await self.send_paginated_embeds(interaction, embeds, ephemeral=ephemeral)
                 
             else:
                 pass

@@ -23,12 +23,19 @@ DEFAULT_PERIOD_DATA: Dict[str, List[str]] = {}
 DEFAULT_MODELS_DATA: Dict[str, List[str]] = {}
 DEFAULT_BONUS_RULES: Dict[str, List[Dict[str, float]]] = {}
 DEFAULT_EARNINGS: Dict[str, List[Dict[str, Any]]] = {}
-DEFAULT_DISPLAY_SETTINGS: Dict[str, Dict[str, bool]] = {} 
+DEFAULT_DISPLAY_SETTINGS: Dict[str, Dict[str, bool]] = {
+    "defaults": {
+        "ephemeral_responses": True,
+        "show_average": True,
+        "agency_name": "Agency",
+        "show_ids": True,
+        "bot_name": "Shift Calculator"
+    }
+}
 DEFAULT_COMMISSION_SETTINGS: Dict[str, Dict[str, float]] = {}
 
 # Formatting
 DATE_FORMAT = "%d/%m/%Y"
-DISPLAY_UUID = True
 DECIMAL_PLACES = 2
 
 os.makedirs(DATA_DIRECTORY, exist_ok=True)
