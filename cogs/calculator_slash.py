@@ -416,8 +416,8 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                     ax2.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m/%y'))
                     plt.xticks(rotation=45)
                     # Legend inside plot
-                    ax2.legend(loc='upper left', bbox_to_anchor=(0, 1), frameon=True, 
-                            framealpha=0.9, edgecolor='black')
+                    ax2.legend(loc='upper center', bbox_to_anchor=(0.5, -0.35),
+                        ncol=3, frameon=True, shadow=True)
                     ax2.grid(True, linestyle='--', alpha=0.7)
                     plt.tight_layout()
                     plt.savefig(chart_buffer2, format='png', dpi=150, bbox_inches='tight')
