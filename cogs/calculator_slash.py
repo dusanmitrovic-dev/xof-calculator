@@ -33,7 +33,8 @@ from pathlib import Path
 
 SUPPORTED_EXPORTS = ["none", "txt", "csv", "json", "xlsx", "pdf", "png", "zip"]
 # All available formats
-ALL_ZIP_FORMATS = ['csv', 'json', 'xlsx', 'pdf', 'png', 'txt', 'html', 'markdown', 'svg'] # todo: Option to set default zip exports in settings
+# ALL_ZIP_FORMATS = ['csv', 'json', 'xlsx', 'pdf', 'png', 'txt', 'html', 'markdown', 'svg'] # TODO: remove
+ALL_ZIP_FORMATS = ['csv', 'json', 'xlsx', 'pdf', 'png', 'txt', 'html', 'markdown'] # TODO: Option to set default zip exports in settings
 MAX_ENTRIES = 5000000
 
 logger = logging.getLogger("xof_calculator.calculator")
@@ -173,8 +174,8 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                 self._generate_pdf(df, interaction, user, buffer, user_earnings, all_data)
             elif format_type == "png":
                 self._generate_png(df, user, buffer, user_earnings, all_data)
-            elif format_type == "svg":
-                self._generate_svg(df, user, buffer, user_earnings, all_data) # TODO: It displays User earnings instead of Full for Zip? # WARN: DOUBLE CHECK!!
+            # elif format_type == "svg": # TODO: remove
+            #     self._generate_svg(df, user, buffer, user_earnings, all_data) # TODO: It displays User earnings instead of Full for Zip? # WARN: DOUBLE CHECK!!
             elif format_type == "html":
                 self._generate_html(df, user, buffer, user_earnings, all_data)
             elif format_type == "markdown":
@@ -550,28 +551,28 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             plt.close()
             buffer.seek(0)
 
-    def _generate_svg(self, df, user, buffer, user_earnings, all_data=False):
-        """Generate SVG format export"""
-        fig, ax = plt.subplots(figsize=(16, 9))
+    # def _generate_svg(self, df, user, buffer, user_earnings, all_data=False): # TODO: remove
+    #     """Generate SVG format export"""
+    #     fig, ax = plt.subplots(figsize=(16, 9))
 
-        if all_data:
-            # Line chart for multiple users
-            pivot = df.pivot_table(index='date', columns='display_name', values='total_cut', aggfunc='sum')
-            for user in pivot.columns:
-                ax.plot(pivot.index, pivot[user], marker='o', linestyle='-', label=user)
-            ax.set_title('Daily Gross Revenue by User')
-        else:
-            # Line chart for individual user
-            dates = [datetime.strptime(entry['date'], '%d/%m/%Y') for entry in user_earnings]
-            ax.plot_date(dates, [float(e['gross_revenue']) for e in user_earnings], 'b-o', label='Gross Revenue')
-            ax.plot_date(dates, [float(e['total_cut']) for e in user_earnings], 'r-o', label='Earnings')
-            ax.set_title('Revenue & Earnings Over Time')
+    #     if all_data:
+    #         # Line chart for multiple users
+    #         pivot = df.pivot_table(index='date', columns='display_name', values='total_cut', aggfunc='sum')
+    #         for user in pivot.columns:
+    #             ax.plot(pivot.index, pivot[user], marker='o', linestyle='-', label=user)
+    #         ax.set_title('Daily Gross Revenue by User')
+    #     else:
+    #         # Line chart for individual user
+    #         dates = [datetime.strptime(entry['date'], '%d/%m/%Y') for entry in user_earnings]
+    #         ax.plot_date(dates, [float(e['gross_revenue']) for e in user_earnings], 'b-o', label='Gross Revenue')
+    #         ax.plot_date(dates, [float(e['total_cut']) for e in user_earnings], 'r-o', label='Earnings')
+    #         ax.set_title('Revenue & Earnings Over Time')
 
-        ax.legend()
-        ax.grid(True, linestyle='--', alpha=0.7)
-        plt.xticks(rotation=45)
-        plt.savefig(buffer, format='svg')
-        plt.close(fig)
+    #     ax.legend()
+    #     ax.grid(True, linestyle='--', alpha=0.7)
+    #     plt.xticks(rotation=45)
+    #     plt.savefig(buffer, format='svg')
+    #     plt.close(fig)
 
     def _generate_html(self, df, user, buffer, user_earnings, all_data=False):
         """Generate HTML format export"""
@@ -1648,7 +1649,8 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         range_from="Starting date (dd/mm/yyyy)",
         range_to="Ending date (dd/mm/yyyy)",
         send_to_message="Message to send to the selected users or roles",
-        zip_formats="Available formats: txt, csv, json, xlsx, pdf, png, markdown, html, svg",
+        # zip_formats="Available formats: txt, csv, json, xlsx, pdf, png, markdown, html, svg", # TODO: remove
+        zip_formats="Available formats: txt, csv, json, xlsx, pdf, png, markdown, html", 
         all_data="[Admin] Use all earnings data, not just specific user's"
     )
     @app_commands.choices(
@@ -1662,7 +1664,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             app_commands.Choice(name="PNG Chart", value="png"),
             app_commands.Choice(name="Markdown", value="markdown"),
             app_commands.Choice(name="HTML", value="html"),
-            app_commands.Choice(name="SVG", value="svg"),
+            # app_commands.Choice(name="SVG", value="svg"), # TODO: remove
             app_commands.Choice(name="ZIP Archive", value="zip")
         ]
     )

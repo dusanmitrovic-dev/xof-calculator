@@ -399,6 +399,7 @@
 - [x] (v0.148.0) Update earnings file handling to use guild-specific paths
 - [x] (v0.149.0) Add command to remove earnings entry by ID and User with confirmation
 - [x] (v0.151.0) Update remove sale command to handle multiple sale IDs and improve user feedback
+- [x] (v0.152.0) Remove unused `SVG` export functionality
 - [ ] Option to set default zip exports in settings
 - [ ] Display hourly cut in employee cut?
 - [ ] Add functionality to select column names to display in `view-earnings`
