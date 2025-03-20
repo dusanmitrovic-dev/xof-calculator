@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.149.0] - 2025-03-20
+### Changed
+- Add command to remove earnings entry by ID and User with confirmation.
+
 ## [0.148.0] - 2025-03-20
 ### Changed
 - Update earnings file handling to use guild-specific paths.

@@ -1,4 +1,5 @@
 import os
+import re
 import io
 import json
 import glob
@@ -976,6 +977,81 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         view.children[0].callback = confirm_callback
         view.children[1].callback = cancel_callback
         await interaction.response.send_message("‼️🚨‼ Are you sure you want to clear all earnings data?", view=view, ephemeral=ephemeral)
+
+    
+    async def remove_sale_by_id(self, interaction: discord.Interaction, sale_id: str, user: Optional[discord.User] = None):
+        """Helper function to remove an earnings entry by ID, optionally for a specific user."""
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+        guild_id = str(interaction.guild.id)
+
+        earnings_data = await file_handlers.load_json(settings.get_earnings_file_for_guild(interaction.guild.id), settings.DEFAULT_EARNINGS)
+
+        removed_entries = []
+        if user:
+            user_key = f"<@{user.id}>"
+            if user_key in earnings_data:
+                earnings_data[user_key] = [entry for entry in earnings_data[user_key] if entry["id"] != sale_id]
+                if len(earnings_data[user_key]) < len(entries):
+                    removed_entries.append(f"{user.display_name} (@{user.name})")
+        else:
+            for user_key, entries in earnings_data.items():
+                earnings_data[user_key] = [entry for entry in entries if entry["id"] != sale_id]
+                if len(entries) != len(earnings_data[user_key]):
+                    user_id = int(re.match(r'<@(\d+)>', user_key).group(1))
+                    user_obj = interaction.guild.get_member(user_id)
+                    if user_obj:
+                        removed_entries.append(f"{user_obj.display_name} (@{user_obj.name})")
+
+        if not removed_entries:
+            return (False, f"❌ No sale with ID '{sale_id}' found.")
+
+        success = await file_handlers.save_json(settings.get_earnings_file_for_guild(interaction.guild.id), earnings_data)
+
+        if success:
+            user_text = "users" if len(removed_entries) > 1 else "user"
+            return (True, f"✅ Sale with ID `{sale_id}` removed for {user_text}: {', '.join(removed_entries)}.")
+        else:
+            return (False, "❌ Failed to save earnings data. Please try again later.")
+
+    @app_commands.default_permissions(administrator=True)
+    @app_commands.command(name="remove-sale", description="Remove an earnings entry by ID")
+    @app_commands.describe(sale_id="The ID of the sale to remove", user="Optional user to remove the sale from")
+    async def remove_sale(self, interaction: discord.Interaction, sale_id: str, user: Optional[discord.User] = None):
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+        view = discord.ui.View()
+        view.add_item(discord.ui.Button(label="Confirm", style=discord.ButtonStyle.danger, custom_id="confirm_remove_sale"))
+        view.add_item(discord.ui.Button(label="Cancel", style=discord.ButtonStyle.success, custom_id="cancel_remove_sale"))
+
+        async def confirm_callback(interaction):
+            try:
+                success, message = await self.remove_sale_by_id(interaction, sale_id, user)
+                await interaction.response.edit_message(content=message, view=None)
+            except Exception as e:
+                await interaction.response.edit_message(content=f"❌ An error occurred: {str(e)}", view=None)
+
+        async def cancel_callback(interaction):
+            await interaction.response.edit_message(content="❌ Canceled.", view=None)
+
+        view.children[0].callback = confirm_callback
+        view.children[1].callback = cancel_callback
+
+        guild_id = str(interaction.guild.id)
+        earnings_data = await file_handlers.load_json(settings.get_earnings_file_for_guild(interaction.guild.id), settings.DEFAULT_EARNINGS)
+        entries_with_id = 0
+
+        if user:
+            user_key = f"<@{user.id}>"
+            if user_key in earnings_data:
+                entries_with_id = sum(1 for entry in earnings_data[user_key] if entry["id"] == sale_id)
+        else:
+            entries_with_id = sum(1 for entries in earnings_data.values() for entry in entries if entry["id"] == sale_id)
+
+        entry_count_text = "entries" if entries_with_id > 1 else "entry"
+        await interaction.response.send_message(
+            f"‼🚨‼ Are you sure you want to remove the sale with ID `{sale_id}`? This will remove `{entries_with_id}` {entry_count_text}.",
+            view=view,
+            ephemeral=ephemeral
+        )
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="reset-config", description="Reset all configuration files")

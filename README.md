@@ -397,6 +397,7 @@
 - [x] (v0.146.0) Update earnings data handling to use guild-specific files
 - [x] (v0.147.0) Include Sale ID in entry display for improved tracking
 - [x] (v0.148.0) Update earnings file handling to use guild-specific paths
+- [x] (v0.149.0) Add command to remove earnings entry by ID and User with confirmation
 - [ ] Option to set default zip exports in settings
 - [ ] Display hourly cut in employee cut?
 - [ ] Add functionality to select column names to display in `view-earnings`
