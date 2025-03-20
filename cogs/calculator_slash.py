@@ -1797,9 +1797,15 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                     ephemeral=ephemeral
                 )
 
+            summary_for_text = None
+            if not all_data:
+                summary_for_text = f"{interaction.user.display_name}"
+            else:
+                summary_for_text = f"(All Users)"
+
             # Create embed
             embed = discord.Embed(
-                title=f"📊 Earnings Summary - {interaction.user.display_name}",
+                title=f"📊 Earnings Summary - {summary_for_text}",
                 color=0x2ECC71,
                 timestamp=interaction.created_at
             )
@@ -1820,8 +1826,8 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             embed.add_field(name="Total Gross", value=f"```\n${total_gross:.2f}\n```", inline=True)
             embed.add_field(name="Total Cut", value=f"```\n${total_cut_sum:.2f}\n```", inline=True)
 
-            if not all_data:
-                await interaction.followup.send(embed=embed, ephemeral=ephemeral)
+            # if not all_data: # TODO: remove
+            await interaction.followup.send(embed=embed, ephemeral=ephemeral)
 
             if display_entries:
                 base_embed = discord.Embed(
