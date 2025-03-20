@@ -1671,7 +1671,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         user: Optional[discord.User] = None,
         entries: Optional[int] = MAX_ENTRIES,
         export: Optional[str] = "none",
-        display_entries: Optional[bool] = False,
+        display_entries: Optional[bool] = True,
         as_table: Optional[bool] = False,
         period: Optional[str] = None,
         send_to: Optional[str] = None,
@@ -1806,8 +1806,8 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                 total_cut = float(entry['total_cut'])
                 total_gross += gross_revenue
                 total_cut_sum += total_cut
-            embed.add_field(name="Total Gross", value=f"```\n{total_gross:.2f}\n```", inline=True)
-            embed.add_field(name="Total Cut", value=f"```\n{total_cut_sum:.2f}\n```", inline=True)
+            embed.add_field(name="Total Gross", value=f"```\n${total_gross:.2f}\n```", inline=True)
+            embed.add_field(name="Total Cut", value=f"```\n${total_cut_sum:.2f}\n```", inline=True)
 
             if not all_data:
                 await interaction.followup.send(embed=embed, ephemeral=ephemeral)
