@@ -1652,11 +1652,11 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         export="Export format",
         display_entries="Whether entries will be displayed or not",
         as_table="Display earnings in a table format",
-        send_to="Users/Roles to send report to (mention them)",
+        send_to="[Admin] Users/Roles to send report to (mention them)",
         period="Period to view (weekly, monthly, etc)",
         range_from="Starting date (dd/mm/yyyy)",
         range_to="Ending date (dd/mm/yyyy)",
-        send_to_message="Message to send to the selected users or roles",
+        send_to_message="[Admin] Message to send to the selected users or roles",
         # zip_formats="Available formats: txt, csv, json, xlsx, pdf, png, markdown, html, svg", # TODO: remove
         zip_formats="Available formats: txt, csv, json, xlsx, pdf, png, markdown, html", 
         all_data="[Admin] Use all earnings data, not just specific user's"
@@ -1696,6 +1696,10 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
         
         try:
+            if (send_to or send_to_message) and not interaction.user.guild_permissions.administrator:
+                await interaction.response.send_message("❌ Administrator permissions required to send reports.", ephemeral=ephemeral)
+                return
+
             # Permission check
             if user and not interaction.user.guild_permissions.administrator:
                 await interaction.response.send_message(
