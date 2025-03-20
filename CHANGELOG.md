@@ -2,12 +2,16 @@
 
 ## [Unreleased]
 
+## [0.146.0] - 2025-03-20
+### Changed
+- Update earnings data handling to use guild-specific files.
+
 ## [0.145.0] - 2025-03-20
-### Refactored
+### Changed
 - Replace unique ID generation with a new method using timestamp and random digits.
 
 ## [0.144.0] - 2025-03-20
-### Refactored
+### Changed
 - Updated currency formatting to use settings for decimal places,
 - Added unique IDs to entries in `calculator_slash`,
 - Improved formatting for hours worked, hourly rate, commission, and revenue calculations,

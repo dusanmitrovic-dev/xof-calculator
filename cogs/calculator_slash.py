@@ -1260,7 +1260,8 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         models_list = results["models"]
         
         # Load earnings data
-        earnings_data = await file_handlers.load_json(settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS)
+        # earnings_data = await file_handlers.load_json(settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS) # TODO: remove
+        earnings_data = await file_handlers.load_json(settings.get_earnings_file_for_guild(interaction.guild.id), settings.DEFAULT_EARNINGS)
         if sender not in earnings_data:
             earnings_data[sender] = []
         
@@ -1291,7 +1292,8 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         logger.info(f"Final calculation for {interaction.user.name} ({interaction.user.id}): Gross=${results['gross_revenue']}, Total Cut=${results['total_cut']}, Period={results['period']}, Shift={results['shift']}, Role={results['role']}{hours_worked_text}")
         
         # Save updated earnings data
-        success = await file_handlers.save_json(settings.EARNINGS_FILE, earnings_data)
+        # success = await file_handlers.save_json(settings.EARNINGS_FILE, earnings_data) # TODO: remove
+        success = await file_handlers.save_json(settings.get_earnings_file_for_guild(interaction.guild.id), earnings_data)
         if not success:
             logger.error(f"Failed to save earnings data for {sender}")
             await interaction.followup.send("⚠ Calculation failed to save data. Please try again.", ephemeral=True)
@@ -1380,7 +1382,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         for idx, entry in enumerate(user_earnings, start=1):
             gross_revenue = float(entry['gross_revenue'])
             total_cut = float(entry['total_cut'])
-            total_cut_percent = (total_cut / gross_revenue * 100 if gross_revenue != 0 else 0.0)
             
             # Create entry text
             entry_text = f"```diff\n+ Entry #{idx}\n"
@@ -1397,7 +1398,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                 entry_text += f"⌛ Period:  {entry.get('period', 'N/A')}\n"
             entry_text += f"🎯 Role:    {entry.get('role', 'N/A').capitalize()}\n"
             entry_text += f"💰 Gross:   ${gross_revenue:.2f}\n"
-            entry_text += f"💸 Cut:     ${total_cut:.2f} ({total_cut_percent:.1f}%)\n"
+            entry_text += f"💸 Cut:     ${total_cut:.2f}\n"
             entry_text += "```"
             
             # Check if we need a new embed due to field limits
@@ -1701,7 +1702,8 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             entries = min(max(entries, 1), MAX_ENTRIES)
 
             # Load and filter data
-            earnings_data = await file_handlers.load_json(settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS)
+            # earnings_data = await file_handlers.load_json(settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS) # TODO: remove
+            earnings_data = await file_handlers.load_json(settings.get_earnings_file_for_guild(interaction.guild.id), settings.DEFAULT_EARNINGS) 
             user_earnings = None
 
             if not all_data:
@@ -1760,6 +1762,8 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                 key=lambda x: datetime.strptime(x['date'], "%d/%m/%Y"),
                 reverse=True
             )[:entries]
+
+            user_earnings.sort(key=lambda x: int(x['id'].split('-')[0]), reverse=True)
 
             if not user_earnings:
                 return await interaction.followup.send(

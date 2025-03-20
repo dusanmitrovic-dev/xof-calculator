@@ -394,6 +394,7 @@
 - [x] (v0.144.0) Improve combined compensation formatting
 - [x] (v0.144.0) Refactor `calculator_slash` currency function for better precision
 - [x] (v0.145.0) Replace unique ID generation with a new method using timestamp and random digits
+- [x] (v0.146.0) Update earnings data handling to use guild-specific files
 - [ ] Option to set default zip exports in settings
 - [ ] Display hourly cut in employee cut?
 - [ ] Add functionality to select column names to display in `view-earnings`
