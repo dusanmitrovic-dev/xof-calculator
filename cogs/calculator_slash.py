@@ -1382,9 +1382,12 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         for idx, entry in enumerate(user_earnings, start=1):
             gross_revenue = float(entry['gross_revenue'])
             total_cut = float(entry['total_cut'])
+            entry_id = entry['id']
             
             # Create entry text
             entry_text = f"```diff\n+ Entry #{idx}\n"
+
+            entry_text += f"🔑 Sale ID: {entry_id}\n"
             
             # Add username if all_data is True and user_id is available
             if all_data and 'user_id' in entry:
