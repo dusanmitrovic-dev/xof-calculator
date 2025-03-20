@@ -20,6 +20,7 @@ from reportlab.lib.styles import getSampleStyleSheet
 from openpyxl.chart.label import DataLabelList
 from typing import Union, Optional, List, Dict
 from reportlab.lib.pagesizes import letter
+from babel.numbers import format_currency
 from discord import ui, app_commands
 from discord.ui import Select, View, Button
 from discord.ext import commands
@@ -330,7 +331,8 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                     entry['shift'].capitalize(),
                     f"{float(entry['hours_worked']):.1f}",
                     f"${float(entry['gross_revenue']):.2f}",
-                    f"${float(entry['total_cut']):.2f}"
+                    # f"${float(entry['total_cut']):.2f}" # TODO: remove
+                    f"{format_currency(float(entry['total_cut']), 'USD', locale='en_US')}"
                 ] if all_data else [
                     str(i),
                     entry['date'],
@@ -1364,7 +1366,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             embed.add_field(name=name, value=value, inline=inline)
 
         if settings.DISPLAY_UUID:
-            embed.set_footer(text=f"Sale ID: {unique_id}")
+            embed.set_footer(text=f"Sale ID: `{unique_id}`")
         
         # Send the final result to everyone
         await interaction.channel.send(embed=embed)
