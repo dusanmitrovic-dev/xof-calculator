@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.151.0] - 2025-03-20
+### Changed
+- Update remove sale command to handle multiple sale IDs and improve user feedback.
+
 ## [0.150.0] - 2025-03-20
 ### Changed
 - Enhance removal confirmation message to include user details and streamline entry count logic.

@@ -979,25 +979,26 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         await interaction.response.send_message("‼️🚨‼ Are you sure you want to clear all earnings data?", view=view, ephemeral=ephemeral)
 
     
-    async def remove_sale_by_id(self, interaction: discord.Interaction, sale_id: str, user: Optional[discord.User] = None):
-        """Helper function to remove an earnings entry by ID, optionally for a specific user."""
+    async def remove_sale_by_id(self, interaction: discord.Interaction, sale_ids: list[str], user: Optional[discord.User] = None):
+        """Helper function to remove earnings entries by multiple IDs, optionally for a specific user."""
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
         guild_id = str(interaction.guild.id)
 
         earnings_data = await file_handlers.load_json(settings.get_earnings_file_for_guild(interaction.guild.id), settings.DEFAULT_EARNINGS)
 
         removed_entries = []
+        sale_ids = list(set(sale_ids))  # Remove duplicates
         if user:
             user_key = f"<@{user.id}>"
             if user_key in earnings_data:
                 original_length = len(earnings_data[user_key])
-                earnings_data[user_key] = [entry for entry in earnings_data[user_key] if entry["id"] != sale_id]
+                earnings_data[user_key] = [entry for entry in earnings_data[user_key] if entry["id"] not in sale_ids]
                 if len(earnings_data[user_key]) < original_length:
                     removed_entries.append(f"`{user.display_name} (@{user.name})`")
         else:
             for user_key, entries in earnings_data.items():
                 original_length = len(entries)
-                earnings_data[user_key] = [entry for entry in entries if entry["id"] != sale_id]
+                earnings_data[user_key] = [entry for entry in entries if entry["id"] not in sale_ids]
                 if original_length != len(earnings_data[user_key]):
                     user_id = int(re.match(r'<@(\d+)>', user_key).group(1))
                     user_obj = interaction.guild.get_member(user_id)
@@ -1005,22 +1006,33 @@ class AdminSlashCommands(commands.Cog, name="admin"):
                         removed_entries.append(f"`{user_obj.display_name} (@{user_obj.name})`")
 
         if not removed_entries:
-            return (False, f"❌ No sale with ID '{sale_id}' found.")
+            ids_str = ", ".join(f"'{s_id}'" for s_id in sale_ids)
+            return (False, f"❌ No sales found with IDs {ids_str}.")
 
         success = await file_handlers.save_json(settings.get_earnings_file_for_guild(interaction.guild.id), earnings_data)
 
         if success:
             user_text = "users" if len(removed_entries) > 1 else "user"
-            return (True, f"✅ Sale with ID `{sale_id}` removed for {user_text}: {', '.join(removed_entries)}.")
+            ids_text = ", ".join(f"`{s_id}`" for s_id in sale_ids)
+            sale_text = "sales" if len(sale_ids) > 1 else "sale"
+            return (True, f"✅ {sale_text.capitalize()} with IDs {ids_text} removed for {user_text}: {', '.join(removed_entries)}.")
         else:
             return (False, "❌ Failed to save earnings data. Please try again later.")
 
     @app_commands.default_permissions(administrator=True)
-    @app_commands.command(name="remove-sale", description="Remove an earnings entry by ID")
-    @app_commands.describe(sale_id="The ID of the sale to remove", user="Optional user to remove the sale from")
-    async def remove_sale(self, interaction: discord.Interaction, sale_id: str, user: Optional[discord.User] = None):
+    @app_commands.command(name="remove-sale", description="Remove earnings entries by IDs")
+    @app_commands.describe(sale_ids="Comma-separated list of sale IDs to remove", user="Optional user to remove the sales from")
+    async def remove_sale(self, interaction: discord.Interaction, sale_ids: str, user: Optional[discord.User] = None):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
         guild_id = str(interaction.guild.id)
+        
+        # Process and validate sale_ids
+        sale_id_list = [s_id.strip() for s_id in sale_ids.split(',') if s_id.strip()]
+        if not sale_id_list:
+            await interaction.response.send_message("❌ No sale IDs provided.", ephemeral=ephemeral)
+            return
+        sale_id_list = list(set(sale_id_list))  # Remove duplicates
+
         earnings_data = await file_handlers.load_json(settings.get_earnings_file_for_guild(interaction.guild.id), settings.DEFAULT_EARNINGS)
         entries_with_id = 0
         user_keys_with_id = []
@@ -1028,17 +1040,27 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         if user:
             user_key = f"<@{user.id}>"
             if user_key in earnings_data:
-                entries_with_id = sum(1 for entry in earnings_data[user_key] if entry["id"] == sale_id)
-                user_keys_with_id.append(f"`{user.display_name} (@{user.name})`")
+                entries_with_id = sum(1 for entry in earnings_data[user_key] if entry["id"] in sale_id_list)
+                if entries_with_id > 0:
+                    user_keys_with_id.append(f"`{user.display_name} (@{user.name})`")
         else:
             for user_key, entries in earnings_data.items():
-                user_id = int(re.match(r'<@(\d+)>', user_key).group(1))
-                user_obj = interaction.guild.get_member(user_id)
-                if user_obj:
-                    entries_with_id += sum(1 for entry in entries if entry["id"] == sale_id)
-                    user_keys_with_id.append(f"`{user_obj.display_name} (@{user_obj.name})`")
+                count = sum(1 for entry in entries if entry["id"] in sale_id_list)
+                entries_with_id += count
+                if count > 0:
+                    user_id = int(re.match(r'<@(\d+)>', user_key).group(1))
+                    user_obj = interaction.guild.get_member(user_id)
+                    if user_obj:
+                        user_keys_with_id.append(f"`{user_obj.display_name} (@{user_obj.name})`")
+
+        if entries_with_id == 0:
+            ids_str = ", ".join(f"`{s_id}`" for s_id in sale_id_list)
+            await interaction.response.send_message(f"❌ No sales found with IDs {ids_str}.", ephemeral=ephemeral)
+            return
 
         entry_count_text = "entries" if entries_with_id > 1 else "entry"
+        sale_text = "sales" if len(sale_id_list) > 1 else "sale"
+        ids_text = ", ".join(f"`{s_id}`" for s_id in sale_id_list)
 
         view = discord.ui.View()
         view.add_item(discord.ui.Button(label="Confirm", style=discord.ButtonStyle.danger, custom_id="confirm_remove_sale"))
@@ -1046,7 +1068,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
 
         async def confirm_callback(interaction):
             try:
-                success, message = await self.remove_sale_by_id(interaction, sale_id, user)
+                success, message = await self.remove_sale_by_id(interaction, sale_id_list, user)
                 await interaction.response.edit_message(content=message, view=None)
             except Exception as e:
                 await interaction.response.edit_message(content=f"❌ An error occurred: {str(e)}", view=None)
@@ -1058,7 +1080,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         view.children[1].callback = cancel_callback
 
         await interaction.response.send_message(
-            f"‼🚨‼ Are you sure you want to remove the sale with ID `{sale_id}`? This will remove `{entries_with_id}` {entry_count_text} for {', '.join(user_keys_with_id)}.",
+            f"‼️🚨‼️ Are you sure you want to remove the {sale_text} with IDs {ids_text}? This will remove `{entries_with_id}` {entry_count_text} for {', '.join(user_keys_with_id)}.",
             view=view,
             ephemeral=ephemeral
         )
