@@ -1004,7 +1004,10 @@ class AdminSlashCommands(commands.Cog, name="admin"):
                         count = len(earnings_data[user_key])
                         if count > 0:
                             earnings_data[user_key] = []
-                            removed_entries[f"{user.display_name} (@{user.name})"] = count
+                            removed_entries[user_key] = {
+                                'count': count,
+                                'user_obj': user
+                            }
                             total_removed += count
             else:
                 # Remove specific IDs from specified users (or all users if None)
@@ -1019,7 +1022,10 @@ class AdminSlashCommands(commands.Cog, name="admin"):
                         earnings_data[user_key] = [e for e in entries if e["id"] not in sale_ids]
                         removed_count = original_count - len(earnings_data[user_key])
                         if removed_count > 0:
-                            removed_entries[f"{user.display_name} (@{user.name})"] = removed_count
+                            removed_entries[user_key] = {
+                                'count': removed_count,
+                                'user_obj': user
+                            }
                             total_removed += removed_count
                     else:
                         # Process all users
@@ -1028,11 +1034,11 @@ class AdminSlashCommands(commands.Cog, name="admin"):
                             earnings_data[user_key] = [e for e in entries if e["id"] not in sale_ids]
                             removed_count = original_count - len(earnings_data[user_key])
                             if removed_count > 0:
-                                user_id = int(re.search(r'<@(\d+)>', user_key).group(1))
-                                user_obj = interaction.guild.get_member(user_id)
-                                if user_obj:
-                                    removed_entries[f"{user_obj.display_name} (@{user_obj.name})"] = removed_count
-                                    total_removed += removed_count
+                                removed_entries[user_key] = {
+                                    'count': removed_count,
+                                    'user_obj': None
+                                }
+                                total_removed += removed_count
 
             if not removed_entries:
                 return (False, "❌ No matching sales found for the specified criteria.")
@@ -1045,7 +1051,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             if not success:
                 return (False, "❌ Failed to save earnings data.")
 
-            # Build success message
+            # Build success message with proper user resolution
             message = []
             if sale_ids:
                 id_list = ", ".join(f"`{s_id}`" for s_id in sale_ids)
@@ -1054,8 +1060,13 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             else:
                 message.append("✅ All sales removed for:")
 
-            for name, count in removed_entries.items():
-                message.append(f"- `{name}`: {count} entries")
+            for user_key, data in removed_entries.items():
+                user_obj = data['user_obj'] or interaction.guild.get_member(int(re.search(r'\d+', user_key).group()))
+                if user_obj:
+                    name = f"{user_obj.display_name} (@{user_obj.name})"
+                else:
+                    name = f"Unknown ({user_key})"
+                message.append(f"- `{name}`: {data['count']} entries")
 
             message.append(f"\nTotal removed: {total_removed} entries")
             return (True, "\n".join(message))
@@ -1095,7 +1106,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             user_ids = re.findall(r'<@!?(\d+)>', users)
             if not user_ids:
                 await interaction.response.send_message(
-                    "❌ Invalid user mentions format.",
+                    "❌ Invalid user mentions format. Use @mentions.",
                     ephemeral=ephemeral
                 )
                 return
@@ -1142,25 +1153,31 @@ class AdminSlashCommands(commands.Cog, name="admin"):
                         entries = earnings_data.get(user_key, [])
                         count = sum(1 for e in entries if e["id"] in sale_id_list)
                         if count > 0:
-                            user_counts[f"{user.display_name} (@{user.name})"] = count
+                            user_counts[user_key] = {
+                                'count': count,
+                                'user_obj': user
+                            }
                             total_entries += count
                 else:
                     # Count across all users
                     for user_key, entries in earnings_data.items():
                         count = sum(1 for e in entries if e["id"] in sale_id_list)
                         if count > 0:
-                            user_id = int(re.search(r'<@(\d+)>', user_key).group(1))
-                            user = interaction.guild.get_member(user_id)
-                            if user:
-                                user_counts[f"{user.display_name} (@{user.name})"] = count
-                                total_entries += count
+                            user_counts[user_key] = {
+                                'count': count,
+                                'user_obj': interaction.guild.get_member(int(re.search(r'\d+', user_key).group()))
+                            }
+                            total_entries += count
             else:
                 # Count all entries for specified users
                 for user in user_objs:
                     user_key = f"<@{user.id}>"
                     count = len(earnings_data.get(user_key, []))
                     if count > 0:
-                        user_counts[f"{user.display_name} (@{user.name})"] = count
+                        user_counts[user_key] = {
+                            'count': count,
+                            'user_obj': user
+                        }
                         total_entries += count
 
             if not user_counts:
@@ -1189,8 +1206,13 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             else:
                 message.append("ALL SALES for:")
             
-            for name, count in user_counts.items():
-                message.append(f"- `{name}`: {count} entries")
+            for user_key, data in user_counts.items():
+                user_obj = data['user_obj']
+                if user_obj:
+                    name = f"{user_obj.display_name} (@{user_obj.name})"
+                else:
+                    name = f"Unknown ({user_key})"
+                message.append(f"- `{name}`: {data['count']} entries")
             
             message.append(f"\nTotal entries to remove: {total_entries}")
             
