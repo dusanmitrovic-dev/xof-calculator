@@ -400,7 +400,15 @@
 - [x] (v0.149.0) Add command to remove earnings entry by ID and User with confirmation
 - [x] (v0.151.0) Update remove sale command to handle multiple sale IDs and improve user feedback
 - [x] (v0.152.0) Remove unused `SVG` export functionality
-- [ ] Option to set default zip exports in settings
+- [x] (v0.154.0) Convert buffer generation methods to async for improved performance
+- [x] (v0.154.0) Enhance display settings management and improve admin command handling
+- [x] (v0.154.0) Clarify admin permissions in report sending and update help command descriptions
+- [x] (v0.154.0) Update earnings summary title to reflect user context and clean up commented code
+- [x] (v0.154.0) Simplify report title and update footer formatting for consistency
+- [x] (v0.154.0) Format total cut as currency and update footer styling for sale ID
+- [x] (v0.154.0) Improve legend positioning and styling for improved chart clarity
+- [x] (v0.154.0) Improve table readability with enhanced font size, padding, and vertical alignment
+- [ ] Option to set default zip exports in setting
 - [ ] Display hourly cut in employee cut?
 - [ ] Add functionality to select column names to display in `view-earnings`
 - [ ] Pip freeze > requirements.txt
