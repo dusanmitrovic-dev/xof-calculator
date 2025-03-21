@@ -5,7 +5,7 @@
 ## [0.154.0] - 2025-03-21
 ### Refactored
 - Converted buffer generation methods to async for improved performance
-- Enhanced display settings management and improved admin command handling
+- Enhanced display settings management and improved admin command handling,
 - Clarified admin permissions in report sending and updated help command descriptions,
 - Updated earnings summary title to reflect user context and cleaned up commented code,
 - Simplified report title and updated footer formatting for consistency,
