@@ -8,7 +8,7 @@
 - Enhanced display settings management and improved admin command handling
 - Clarified admin permissions in report sending and updated help command descriptions
 - Updated earnings summary title to reflect user context and cleaned up commented code
-- Simplified report title and updated footer formatting for consistency
+- Simplified report title and updated footer formatting for consistency,
 - Formatted total cut as currency and updated footer styling for sale ID,
 - Improved legend positioning and styling for better chart clarity,
 - Enhanced table readability with improved font size, padding, and vertical alignment.
