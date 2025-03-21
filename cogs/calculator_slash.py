@@ -164,17 +164,17 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         if export_format == "zip":
             with zipfile.ZipFile(buffer, 'w') as zip_file:
                 for fmt in zip_formats:
-                    fmt_buffer = self._generate_format_buffer(df, interaction, user, fmt, user_earnings, all_data)
+                    fmt_buffer = await self._generate_format_buffer(df, interaction, user, fmt, user_earnings, all_data)
                     zip_file.writestr(f"{base_name}.{fmt}", fmt_buffer.getvalue())
                     fmt_buffer.close()
         else:
             # Handle single format export
-            buffer = self._generate_format_buffer(df, interaction, user, export_format, user_earnings, all_data)
+            buffer = await self._generate_format_buffer(df, interaction, user, export_format, user_earnings, all_data)
         
         buffer.seek(0)
         return discord.File(buffer, filename=f"{base_name}.{export_format}")
 
-    def _generate_format_buffer(self, df, interaction, user, format_type, user_earnings, all_data=False):
+    async def _generate_format_buffer(self, df, interaction, user, format_type, user_earnings, all_data=False):
         """
         Helper method to generate a specific format export buffer.
         
@@ -192,23 +192,23 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         
         try:
             if format_type == "csv":
-                self._generate_csv(df, buffer, all_data)
+                await self._generate_csv(df, buffer, all_data)
             elif format_type == "json":
-                self._generate_json(df, buffer, all_data)
+                await self._generate_json(df, buffer, all_data)
             elif format_type == "xlsx":
-                self._generate_excel(df, buffer, all_data)
+                await self._generate_excel(df, buffer, all_data)
             elif format_type == "pdf":
-                self._generate_pdf(df, interaction, user, buffer, user_earnings, all_data)
+                await self._generate_pdf(df, interaction, user, buffer, user_earnings, all_data)
             elif format_type == "png":
-                self._generate_png(df, user, buffer, user_earnings, all_data)
+                await self._generate_png(df, user, buffer, user_earnings, all_data)
             # elif format_type == "svg": # TODO: remove
             #     self._generate_svg(df, user, buffer, user_earnings, all_data) # TODO: It displays User earnings instead of Full for Zip? # WARN: DOUBLE CHECK!!
             elif format_type == "html":
-                self._generate_html(df, user, buffer, user_earnings, all_data)
+                await self._generate_html(df, interaction, user, buffer, user_earnings, all_data)
             elif format_type == "markdown":
-                self._generate_markdown(df, user, buffer, user_earnings, all_data)
+                await self._generate_markdown(df, interaction, user, buffer, user_earnings, all_data)
             else:  # txt
-                self._generate_txt(df, interaction, user, buffer, user_earnings, all_data)
+                await self._generate_txt(df, interaction, user, buffer, user_earnings, all_data)
         except Exception as e:
             # If there's an error, write the error to the buffer
             error_msg = f"Error generating {format_type} format: {str(e)}"
@@ -217,15 +217,15 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         buffer.seek(0)
         return buffer
 
-    def _generate_csv(self, df, buffer, all_data=False): 
+    async def _generate_csv(self, df, buffer, all_data=False): 
         """Generate CSV format export"""
         if all_data and 'display_name' in df.columns:
             df = df[['display_name', 'username', 'date', 'role', 'shift', 
-                    'hours_worked', 'gross_revenue', 'total_cut']]
+                    'hours_worked', 'gross_revenue', 'total_cut']].copy()
         df.fillna('null', inplace=True)
         df.to_csv(buffer, index=False)
 
-    def _generate_json(self, df, buffer, all_data=False):
+    async def _generate_json(self, df, buffer, all_data=False):
         """Generate JSON format export"""
             # Add user info to JSON output if needed
         if all_data and 'display_name' not in df.columns:
@@ -235,7 +235,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         json_data = df.to_json(orient='records', date_format='iso', indent=2)
         buffer.write(json_data.encode('utf-8'))
 
-    def _generate_excel(self, df, buffer, all_data=False):
+    async def _generate_excel(self, df, buffer, all_data=False):
         """Generate Excel format export with formatting."""
         with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
             # Reorder columns if showing user data
@@ -247,7 +247,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                         'hours_worked', 'gross_revenue', 'total_cut']]
 
             if 'models' in df.columns:
-                df.drop(columns=['models', 'shift'], inplace=True)
+                df = df.drop(columns=['models', 'shift']).copy()
                 
             # Main Earnings sheet
             df.fillna('null', inplace=True)
@@ -291,7 +291,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                             max_length = max(max_length, len(str(cell.value)))
                     worksheet.column_dimensions[column].width = max_length + 2
 
-    def _generate_pdf(self, df, interaction, user, buffer, user_earnings, all_data=False):
+    async def _generate_pdf(self, df, interaction, user, buffer, user_earnings, all_data=False):
         """Generate complete PDF report with aggregated charts and individual breakdowns"""
         try:
             doc = SimpleDocTemplate(buffer, pagesize=letter)
@@ -303,7 +303,8 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             # 1. Title Section
             # ======================
             title_style = styles["Title"]
-            report_title = "Agency Full Earnings Report" if all_data else f"Agency Earnings Report for {user.display_name}"
+            agency_name = await self.get_agency_name(interaction.guild.id)
+            report_title = f"{agency_name} Full Earnings Report" if all_data else f"{agency_name} Earnings Report for {user.display_name}"
             elements.append(Paragraph(report_title, title_style))
             elements.append(Spacer(1, 12))
 
@@ -527,7 +528,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             buffer.write(error_buffer.read())
             buffer.seek(0)
 
-    def _generate_png(self, df, user, buffer, user_earnings, all_data=False):
+    async def _generate_png(self, df, user, buffer, user_earnings, all_data=False):
         """Generate PNG format export"""
         try:
             with plt.rc_context():  # Isolate plot settings
@@ -608,9 +609,10 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
     #     plt.savefig(buffer, format='svg')
     #     plt.close(fig)
 
-    def _generate_html(self, df, user, buffer, user_earnings, all_data=False):
+    async def _generate_html(self, df, interaction, user, buffer, user_earnings, all_data=False):
         """Generate HTML format export"""
-        report_title = "Agency Full Earnings Report" if all_data else f"Agency Earnings Report for {user.display_name}"
+        agency_name = await self.get_agency_name(interaction.guild.id)
+        report_title = f"{agency_name} Full Earnings Report" if all_data else f"{agency_name} Earnings Report for {user.display_name}"
         user_column = ""
         
         if all_data:
@@ -752,7 +754,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         buffer.write(html_content.encode('utf-8'))
 
 
-    def _generate_markdown(self, df, user, buffer, user_earnings, all_data):
+    async def _generate_markdown(self, df, interaction, user, buffer, user_earnings, all_data):
         """Generate Markdown format export
 
         Args:
@@ -762,7 +764,8 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             user_earnings: List of user earnings entries
             all_data: Boolean indicating if this is a full report or user-specific
         """
-        report_title = "Agency Full Earnings Report" if all_data else f"Agency Earnings Report for {user.display_name}"
+        agency_name = await self.get_agency_name(interaction.guild.id)
+        report_title = f"{agency_name} Full Earnings Report" if all_data else f"{agency_name} Earnings Report for {user.display_name}"
         current_date = datetime.now()
 
         # Filter out future dates
@@ -840,7 +843,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         buffer.write(md_content.encode('utf-8'))
 
 
-    def _generate_txt(self, df, interaction, user, buffer, user_earnings, all_data=False):
+    async def _generate_txt(self, df, interaction, user, buffer, user_earnings, all_data=False):
         """Generate TXT format export
         
         Args:
@@ -851,7 +854,8 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             user_earnings: List of user earnings entries
             all_data: Boolean indicating if this is a full report or user-specific
         """
-        report_title = "Agency Full Earnings Report" if all_data else f"Agency Earnings Report for {user.display_name}"
+        agency_name = await self.get_agency_name(interaction.guild.id)
+        report_title = f"{agency_name} Full Earnings Report" if all_data else f"{agency_name} Earnings Report for {user.display_name}"
 
         # Validate dates - filter out future dates
         current_date = datetime.now()
