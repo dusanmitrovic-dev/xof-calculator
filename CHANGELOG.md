@@ -10,7 +10,7 @@
 - Updated earnings summary title to reflect user context and cleaned up commented code
 - Simplified report title and updated footer formatting for consistency
 - Formatted total cut as currency and updated footer styling for sale ID
-- Improved legend positioning and styling for better chart clarity
+- Improved legend positioning and styling for better chart clarity,
 - Enhanced table readability with improved font size, padding, and vertical alignment.
 
 ## [0.153.0] - 2025-03-20
