@@ -44,5 +44,4 @@ def get_earnings_file_name_without_ext():
     return EARNINGS_FILE_NAME_WITHOUT_EXT
 
 def get_earnings_file_for_guild(guild_id):
-    # return f"{EARNINGS_FILE_NAME_WITHOUT_EXT}_{guild_id}.json" # TODO: remove
-    return f"{EARNINGS_FILE_NAME_WITHOUT_EXT}.json"
+    return f"{EARNINGS_FILE_NAME_WITHOUT_EXT}_{guild_id}.json"

@@ -34,7 +34,7 @@ class AdminCommands(commands.Cog):
         role_id = str(role.id)
         
         # Load current role data
-        role_data = await file_handlers.load_json(ctx.guild.id, settings.ROLE_DATA_FILE, settings.DEFAULT_ROLE_DATA)
+        role_data = await file_handlers.load_json(settings.ROLE_DATA_FILE, settings.DEFAULT_ROLE_DATA)
         
         # Update role data
         if guild_id not in role_data:
@@ -42,7 +42,7 @@ class AdminCommands(commands.Cog):
         role_data[guild_id][role_id] = float(percentage_decimal)
         
         # Save updated data
-        success = await file_handlers.save_json(ctx.guild.id, settings.ROLE_DATA_FILE, role_data)
+        success = await file_handlers.save_json(settings.ROLE_DATA_FILE, role_data)
         
         if success:
             # Log successful operation
@@ -66,7 +66,7 @@ class AdminCommands(commands.Cog):
         role_id = str(role.id)
         
         # Load current role data
-        role_data = await file_handlers.load_json(ctx.guild.id, settings.ROLE_DATA_FILE, settings.DEFAULT_ROLE_DATA)
+        role_data = await file_handlers.load_json(settings.ROLE_DATA_FILE, settings.DEFAULT_ROLE_DATA)
         
         # Check if guild and role exist in data
         if guild_id not in role_data or role_id not in role_data[guild_id]:
@@ -78,7 +78,7 @@ class AdminCommands(commands.Cog):
         del role_data[guild_id][role_id]
         
         # Save updated data
-        success = await file_handlers.save_json(ctx.guild.id, settings.ROLE_DATA_FILE, role_data)
+        success = await file_handlers.save_json(settings.ROLE_DATA_FILE, role_data)
         
         if success:
             logger.info(f"Role {role.name} ({role_id}) removed from configuration by {ctx.author.name}")
@@ -105,7 +105,7 @@ class AdminCommands(commands.Cog):
         guild_id = str(ctx.guild.id)
         
         # Load current shift data
-        shift_data = await file_handlers.load_json(ctx.guild.id, settings.SHIFT_DATA_FILE, settings.DEFAULT_SHIFT_DATA)
+        shift_data = await file_handlers.load_json(settings.SHIFT_DATA_FILE, settings.DEFAULT_SHIFT_DATA)
         
         # Get existing shifts for this guild
         existing_shifts = shift_data.get(guild_id, [])
@@ -122,7 +122,7 @@ class AdminCommands(commands.Cog):
         shift_data[guild_id].append(shift)
         
         # Save updated data
-        success = await file_handlers.save_json(ctx.guild.id, settings.SHIFT_DATA_FILE, shift_data)
+        success = await file_handlers.save_json(settings.SHIFT_DATA_FILE, shift_data)
         
         if success:
             logger.info(f"Shift '{shift}' added by {ctx.author.name}")
@@ -149,7 +149,7 @@ class AdminCommands(commands.Cog):
         guild_id = str(ctx.guild.id)
         
         # Load current shift data
-        shift_data = await file_handlers.load_json(ctx.guild.id, settings.SHIFT_DATA_FILE, settings.DEFAULT_SHIFT_DATA)
+        shift_data = await file_handlers.load_json(settings.SHIFT_DATA_FILE, settings.DEFAULT_SHIFT_DATA)
         
         # Get existing shifts for this guild
         existing_shifts = shift_data.get(guild_id, [])
@@ -165,7 +165,7 @@ class AdminCommands(commands.Cog):
         shift_data[guild_id].remove(normalized_shift)
         
         # Save updated data
-        success = await file_handlers.save_json(ctx.guild.id, settings.SHIFT_DATA_FILE, shift_data)
+        success = await file_handlers.save_json(settings.SHIFT_DATA_FILE, shift_data)
         
         if success:
             logger.info(f"Shift '{normalized_shift}' removed by {ctx.author.name}")
@@ -192,7 +192,7 @@ class AdminCommands(commands.Cog):
         guild_id = str(ctx.guild.id)
         
         # Load current period data
-        period_data = await file_handlers.load_json(ctx.guild.id, settings.PERIOD_DATA_FILE, settings.DEFAULT_PERIOD_DATA)
+        period_data = await file_handlers.load_json(settings.PERIOD_DATA_FILE, settings.DEFAULT_PERIOD_DATA)
         
         # Get existing periods for this guild
         existing_periods = period_data.get(guild_id, [])
@@ -209,7 +209,7 @@ class AdminCommands(commands.Cog):
         period_data[guild_id].append(period)
         
         # Save updated data
-        success = await file_handlers.save_json(ctx.guild.id, settings.PERIOD_DATA_FILE, period_data)
+        success = await file_handlers.save_json(settings.PERIOD_DATA_FILE, period_data)
         
         if success:
             logger.info(f"Period '{period}' added by {ctx.author.name}")
@@ -236,7 +236,7 @@ class AdminCommands(commands.Cog):
         guild_id = str(ctx.guild.id)
         
         # Load current period data
-        period_data = await file_handlers.load_json(ctx.guild.id, settings.PERIOD_DATA_FILE, settings.DEFAULT_PERIOD_DATA)
+        period_data = await file_handlers.load_json(settings.PERIOD_DATA_FILE, settings.DEFAULT_PERIOD_DATA)
         
         # Get existing periods for this guild
         existing_periods = period_data.get(guild_id, [])
@@ -252,7 +252,7 @@ class AdminCommands(commands.Cog):
         period_data[guild_id].remove(normalized_period)
         
         # Save updated data
-        success = await file_handlers.save_json(ctx.guild.id, settings.PERIOD_DATA_FILE, period_data)
+        success = await file_handlers.save_json(settings.PERIOD_DATA_FILE, period_data)
         
         if success:
             logger.info(f"Period '{normalized_period}' removed by {ctx.author.name}")
@@ -289,7 +289,7 @@ class AdminCommands(commands.Cog):
             return
             
         # Load current bonus rules
-        bonus_rules = await file_handlers.load_json(ctx.guild.id, settings.BONUS_RULES_FILE, settings.DEFAULT_BONUS_RULES)
+        bonus_rules = await file_handlers.load_json(settings.BONUS_RULES_FILE, settings.DEFAULT_BONUS_RULES)
         
         # Initialize guild entry if needed
         if guild_id not in bonus_rules:
@@ -322,7 +322,7 @@ class AdminCommands(commands.Cog):
             
         # Add the new rule and save
         bonus_rules[guild_id].append(new_rule)
-        success = await file_handlers.save_json(ctx.guild.id, settings.BONUS_RULES_FILE, bonus_rules)
+        success = await file_handlers.save_json(settings.BONUS_RULES_FILE, bonus_rules)
         
         if success:
             logger.info(f"Bonus rule added by {ctx.author.name}: ${float(from_num):,.2f} to ${float(to_num):,.2f} → ${float(bonus_amount):,.2f} bonus")
@@ -353,7 +353,7 @@ class AdminCommands(commands.Cog):
             return
             
         # Load current bonus rules
-        bonus_rules = await file_handlers.load_json(ctx.guild.id, settings.BONUS_RULES_FILE, settings.DEFAULT_BONUS_RULES)
+        bonus_rules = await file_handlers.load_json(settings.BONUS_RULES_FILE, settings.DEFAULT_BONUS_RULES)
         
         # Get guild rules
         guild_rules = bonus_rules.get(guild_id, [])
@@ -379,7 +379,7 @@ class AdminCommands(commands.Cog):
             
         # Remove the rule and save
         bonus_rules[guild_id].remove(rule_to_remove)
-        success = await file_handlers.save_json(ctx.guild.id, settings.BONUS_RULES_FILE, bonus_rules)
+        success = await file_handlers.save_json(settings.BONUS_RULES_FILE, bonus_rules)
         
         if success:
             logger.info(f"Bonus rule removed by {ctx.author.name}: ${float(from_num):,.2f} to ${float(to_num):,.2f}")
@@ -406,7 +406,7 @@ class AdminCommands(commands.Cog):
         guild_id = str(ctx.guild.id)
         
         # Load role data
-        role_data = await file_handlers.load_json(ctx.guild.id, settings.ROLE_DATA_FILE, settings.DEFAULT_ROLE_DATA)
+        role_data = await file_handlers.load_json(settings.ROLE_DATA_FILE, settings.DEFAULT_ROLE_DATA)
         guild_roles = role_data.get(guild_id, {})
         
         if not guild_roles:
@@ -447,7 +447,7 @@ class AdminCommands(commands.Cog):
         guild_id = str(ctx.guild.id)
         
         # Load shift data
-        shift_data = await file_handlers.load_json(ctx.guild.id, settings.SHIFT_DATA_FILE, settings.DEFAULT_SHIFT_DATA)
+        shift_data = await file_handlers.load_json(settings.SHIFT_DATA_FILE, settings.DEFAULT_SHIFT_DATA)
         guild_shifts = shift_data.get(guild_id, [])
         
         if not guild_shifts:
@@ -485,7 +485,7 @@ class AdminCommands(commands.Cog):
         guild_id = str(ctx.guild.id)
         
         # Load period data
-        period_data = await file_handlers.load_json(ctx.guild.id, settings.PERIOD_DATA_FILE, settings.DEFAULT_PERIOD_DATA)
+        period_data = await file_handlers.load_json(settings.PERIOD_DATA_FILE, settings.DEFAULT_PERIOD_DATA)
         guild_periods = period_data.get(guild_id, [])
         
         if not guild_periods:
@@ -523,7 +523,7 @@ class AdminCommands(commands.Cog):
         guild_id = str(ctx.guild.id)
         
         # Load bonus data
-        bonus_rules = await file_handlers.load_json(ctx.guild.id, settings.BONUS_RULES_FILE, settings.DEFAULT_BONUS_RULES)
+        bonus_rules = await file_handlers.load_json(settings.BONUS_RULES_FILE, settings.DEFAULT_BONUS_RULES)
         guild_rules = bonus_rules.get(guild_id, [])
         
         if not guild_rules:
@@ -571,7 +571,7 @@ class AdminCommands(commands.Cog):
             return
             
         guild_id = str(ctx.guild.id)
-        model_data = await file_handlers.load_json(ctx.guild.id, settings.MODELS_DATA_FILE, settings.DEFAULT_MODELS_DATA)
+        model_data = await file_handlers.load_json(settings.MODELS_DATA_FILE, settings.DEFAULT_MODELS_DATA)
         existing_models = model_data.get(guild_id, [])
         
         # Check if model already exists (case-insensitive)
@@ -586,7 +586,7 @@ class AdminCommands(commands.Cog):
         model_data[guild_id].append(model)
         
         # Save updated data
-        success = await file_handlers.save_json(ctx.guild.id, settings.MODELS_DATA_FILE, model_data)
+        success = await file_handlers.save_json(settings.MODELS_DATA_FILE, model_data)
         
         if success:
             logger.info(f"Model '{model}' added by {ctx.author.name}")
@@ -613,7 +613,7 @@ class AdminCommands(commands.Cog):
         guild_id = str(ctx.guild.id)
         
         # Load current model data
-        model_data = await file_handlers.load_json(ctx.guild.id, settings.MODELS_DATA_FILE, settings.DEFAULT_MODELS_DATA)
+        model_data = await file_handlers.load_json(settings.MODELS_DATA_FILE, settings.DEFAULT_MODELS_DATA)
         
         # Get existing models for this guild
         existing_models = model_data.get(guild_id, [])
@@ -634,7 +634,7 @@ class AdminCommands(commands.Cog):
         model_data[guild_id].remove(normalized_model)
         
         # Save updated data
-        success = await file_handlers.save_json(ctx.guild.id, settings.MODELS_DATA_FILE, model_data)
+        success = await file_handlers.save_json(settings.MODELS_DATA_FILE, model_data)
         
         if success:
             logger.info(f"Model '{normalized_model}' removed by {ctx.author.name}")
@@ -656,7 +656,7 @@ class AdminCommands(commands.Cog):
         guild_id = str(ctx.guild.id)
         
         # Load model data
-        model_data = await file_handlers.load_json(ctx.guild.id, settings.MODELS_DATA_FILE, settings.DEFAULT_MODELS_DATA)
+        model_data = await file_handlers.load_json(settings.MODELS_DATA_FILE, settings.DEFAULT_MODELS_DATA)
         guild_models = model_data.get(guild_id, [])
         
         if not guild_models:

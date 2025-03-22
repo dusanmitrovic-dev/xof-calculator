@@ -22,7 +22,7 @@ async def get_file_lock(filename: str) -> asyncio.Lock:
         _file_locks[filename] = asyncio.Lock()
     return _file_locks[filename]
 
-async def load_json(guild_id: int, filename: str, default: Optional[Union[Dict, List]] = None) -> Union[Dict, List]:
+async def load_json(filename: str, default: Optional[Union[Dict, List]] = None) -> Union[Dict, List]:
     """
     Safely load a JSON file
     
@@ -35,11 +35,8 @@ async def load_json(guild_id: int, filename: str, default: Optional[Union[Dict, 
     """
     if default is None:
         default = {}
-         
-    # file_path = f"data/{filename}" # TODO: remove
-    guild_dir = os.path.join("data", str(guild_id))
-    file_path = os.path.join(guild_dir, filename)
-
+        
+    file_path = f"data/{filename}"
     lock = await get_file_lock(file_path)
     
     async with lock:
@@ -75,7 +72,7 @@ async def load_json(guild_id: int, filename: str, default: Optional[Union[Dict, 
             logger.error(f"Unexpected error loading {file_path}: {e}")
             return default
 
-async def save_json(guild_id: int, filename: str, data: Union[Dict, List], pretty: bool = True, make_backup: bool = True) -> bool:
+async def save_json(filename: str, data: Union[Dict, List], pretty: bool = True, make_backup: bool = True) -> bool:
     """
     Safely save data to a JSON file with atomic write operations
     
@@ -87,11 +84,7 @@ async def save_json(guild_id: int, filename: str, data: Union[Dict, List], prett
     Returns:
         True if successful, False otherwise
     """
-    # file_path = f"data/{filename}" # TODO: remove
-
-    guild_dir = os.path.join("data", str(guild_id))
-    file_path = os.path.join(guild_dir, filename)
-
+    file_path = f"data/{filename}"
     temp_path = f"{file_path}.tmp"
     backup_path = f"{file_path}.bak"
     lock = await get_file_lock(file_path)
