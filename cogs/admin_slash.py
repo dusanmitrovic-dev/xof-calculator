@@ -965,7 +965,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         # Load existing models
         try:
             model_data = await file_handlers.load_json(file_path, [])
-            # model_data = await file_handlers.load_json(settings.MODELS_DATA_FILE, settings.DEFAULT_MODELS_DATA) # TODO: remove
+        
         except Exception as e:
             logger.error(f"Error loading models: {str(e)}")
             await interaction.response.send_message("❌ Failed to load model data.", ephemeral=ephemeral)
