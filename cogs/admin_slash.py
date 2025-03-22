@@ -943,7 +943,6 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         
         # model_data.setdefault(guild_id, []).append(model) # TODO: remove
         model_data.append(model)
-        # success = await file_handlers.save_json(settings.MODELS_DATA_FILE, model_data) # TODO: remove
         success = await file_handlers.save_json(file_path, model_data)
         
         if success:
