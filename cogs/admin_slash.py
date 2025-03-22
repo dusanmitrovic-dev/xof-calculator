@@ -22,10 +22,15 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         self.bot = bot
 
     async def get_ephemeral_setting(self, guild_id):
-        display_settings = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
-        guild_settings = display_settings.get(str(guild_id), settings.DEFAULT_DISPLAY_SETTINGS['defaults'])
+        file_path = settings.get_guild_file(guild_id, settings.DISPLAY_SETTINGS_FILE)  # NOTE: Added
+        # display_settings = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS) # TODO: remove
+        display_settings = await file_handlers.load_json(file_path, settings.DEFAULT_DISPLAY_SETTINGS)
+        # guild_settings = display_settings.get(str(guild_id), settings.DEFAULT_DISPLAY_SETTINGS['defaults']) # TODO: remove
+        # guild_settings = display_settings.get(str(guild_id), settings.DEFAULT_DISPLAY_SETTINGS) # TODO: remove
+        guild_settings = display_settings
         return guild_settings.get('ephemeral_responses', 
-            settings.DEFAULT_DISPLAY_SETTINGS['defaults']['ephemeral_responses'])
+            settings.DEFAULT_DISPLAY_SETTINGS['ephemeral_responses'])
+            # settings.DEFAULT_DISPLAY_SETTINGS['defaults']['ephemeral_responses']) # TODO: remove
 
     def validate_percentage(self, percentage: Optional[float]) -> bool:
         if percentage is None:
@@ -982,6 +987,9 @@ class AdminSlashCommands(commands.Cog, name="admin"):
     @app_commands.describe(model="The name of the model to add")
     async def set_model(self, interaction: discord.Interaction, model: str):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+
+        guild_id = interaction.guild.id
+        file_path = settings.get_guild_models_path(guild_id)
         
         if not interaction.user.guild_permissions.administrator:
             await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=True)
@@ -994,15 +1002,20 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             return
             
         guild_id = str(interaction.guild.id)
-        model_data = await file_handlers.load_json(settings.MODELS_DATA_FILE, settings.DEFAULT_MODELS_DATA)
-        existing_models = model_data.get(guild_id, [])
+        # model_data = await file_handlers.load_json(settings.MODELS_DATA_FILE, settings.DEFAULT_MODELS_DATA) # TODO: remove
+        # model_data = await file_handlers.load_json(file_path, settings.DEFAULT_MODELS_DATA) # TODO: remove
+        model_data = await file_handlers.load_json(file_path, [])
+        # existing_models = model_data.get(guild_id, []) # TODO: remove
+        existing_models = model_data
         
         if model.lower() in [m.lower() for m in existing_models]:
             await interaction.response.send_message(f"❌ Model '{model}' already exists!", ephemeral=ephemeral)
             return
         
-        model_data.setdefault(guild_id, []).append(model)
-        success = await file_handlers.save_json(settings.MODELS_DATA_FILE, model_data)
+        # model_data.setdefault(guild_id, []).append(model) # TODO: remove
+        model_data.append(model)
+        # success = await file_handlers.save_json(settings.MODELS_DATA_FILE, model_data) # TODO: remove
+        success = await file_handlers.save_json(file_path, model_data)
         
         if success:
             await interaction.response.send_message(f"✅ Model '{model}' added!", ephemeral=ephemeral)
@@ -1019,18 +1032,32 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=True)
             return
         
-        guild_id = str(interaction.guild.id)
-        model_data = await file_handlers.load_json(settings.MODELS_DATA_FILE, settings.DEFAULT_MODELS_DATA)
-        existing_models = model_data.get(guild_id, [])
+        guild_id = interaction.guild.id
+        file_path = settings.get_guild_models_path(guild_id)
         
-        normalized_model = next((m for m in existing_models if m.lower() == model.lower()), None)
+        # Load existing models
+        try:
+            model_data = await file_handlers.load_json(file_path, [])
+            # model_data = await file_handlers.load_json(settings.MODELS_DATA_FILE, settings.DEFAULT_MODELS_DATA) # TODO: remove
+        except Exception as e:
+            logger.error(f"Error loading models: {str(e)}")
+            await interaction.response.send_message("❌ Failed to load model data.", ephemeral=ephemeral)
+            return
+
+        # Find and remove the model
+        normalized_model = next((m for m in model_data if m.lower() == model.lower()), None)
         if normalized_model is None:
             await interaction.response.send_message(f"❌ Model '{model}' doesn't exist!", ephemeral=ephemeral)
             return
         
-        model_data[guild_id].remove(normalized_model)
-        success = await file_handlers.save_json(settings.MODELS_DATA_FILE, model_data)
-        
+        try:
+            model_data.remove(normalized_model)
+            success = await file_handlers.save_json(file_path, model_data)
+            # success = await file_handlers.save_json(settings.MODELS_DATA_FILE, model_data) # TODO: remove
+        except Exception as e:
+            logger.error(f"Error saving models: {str(e)}")
+            success = False
+
         if success:
             await interaction.response.send_message(f"✅ Model '{normalized_model}' removed!", ephemeral=ephemeral)
         else:
@@ -1041,9 +1068,14 @@ class AdminSlashCommands(commands.Cog, name="admin"):
     async def list_models(self, interaction: discord.Interaction):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
 
-        guild_id = str(interaction.guild.id)
-        model_data = await file_handlers.load_json(settings.MODELS_DATA_FILE, settings.DEFAULT_MODELS_DATA)
-        guild_models = model_data.get(guild_id, [])
+        # guild_id = str(interaction.guild.id) # TODO: remove
+        # model_data = await file_handlers.load_json(settings.MODELS_DATA_FILE, settings.DEFAULT_MODELS_DATA)# TODO: remove
+        # guild_models = model_data.get(guild_id, []) # TODO: remove
+
+        guild_id = interaction.guild.id
+        file_path = settings.get_guild_file(guild_id, settings.MODELS_DATA_FILE)
+        
+        guild_models = await file_handlers.load_json(file_path, [])
         
         if not guild_models:
             await interaction.response.send_message("❌ No models configured.", ephemeral=ephemeral)
@@ -1521,8 +1553,21 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
 
         async def reset_action(interaction: discord.Interaction):
-            await self.reset_models(interaction)
-            await interaction.response.edit_message(content="✅ Model settings reset.", view=None)
+            guild_id = interaction.guild.id
+            file_path = settings.get_guild_models_path(guild_id)
+            
+            try:
+                # Reset to default empty list
+                success = await file_handlers.save_json(file_path, [])
+                # success = await file_handlers.save_json(settings.MODELS_DATA_FILE, settings.DEFAULT_MODELS_DATA) # TODO: remove
+            except Exception as e:
+                logger.error(f"Error resetting models: {str(e)}")
+                success = False
+
+            if success:
+                await interaction.response.edit_message(content="✅ Model settings reset.", view=None)
+            else:
+                await interaction.response.edit_message(content="❌ Failed to reset models.", view=None)
 
         view = ConfirmButton(reset_action, interaction.user.id)
         await interaction.response.send_message(
@@ -1679,12 +1724,21 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
 
         async def restore_action(interaction: discord.Interaction):
-            backup_file = os.path.join(settings.DATA_DIRECTORY, f"{settings.MODELS_DATA_FILE}.bak")
-            if os.path.exists(backup_file):
-                shutil.copy2(backup_file, os.path.join(settings.DATA_DIRECTORY, settings.MODELS_DATA_FILE))
-                await interaction.response.edit_message(content="✅ Models configuration backup restored successfully.", view=None)
-            else:
-                await interaction.response.edit_message(content="❌ No models configuration backup found.", view=None)
+            guild_id = interaction.guild.id
+            file_path = settings.get_guild_models_path(guild_id)
+            backup_file = f"{file_path}.bak"
+            
+            try:
+                if os.path.exists(backup_file):
+                    # Restore from guild-specific backup
+                    shutil.copy2(backup_file, file_path)
+                    # Old global backup path: os.path.join(settings.DATA_DIRECTORY, f"{settings.MODELS_DATA_FILE}.bak") # TODO: remove
+                    await interaction.response.edit_message(content="✅ Models configuration backup restored successfully.", view=None)
+                else:
+                    await interaction.response.edit_message(content="❌ No models configuration backup found.", view=None)
+            except Exception as e:
+                logger.error(f"Error restoring models backup: {str(e)}")
+                await interaction.response.edit_message(content="❌ Failed to restore backup.", view=None)
 
         view = ConfirmButton(restore_action, interaction.user.id)
         await interaction.response.send_message(
@@ -1739,38 +1793,31 @@ class AdminSlashCommands(commands.Cog, name="admin"):
     )
     @app_commands.default_permissions(administrator=True)
     async def toggle_ephemeral(self, interaction: discord.Interaction):
-        """Toggle ephemeral responses for admin commands"""
-        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+        guild_id = interaction.guild.id
+        file_path = settings.get_guild_file(guild_id, settings.DISPLAY_SETTINGS_FILE)
         
-        if not interaction.user.guild_permissions.administrator:
-            await interaction.response.send_message(
-                "❌ You need administrator permissions to use this command.",
-                ephemeral=True
-            )
-            return
-
-        display_settings = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
-        guild_id = str(interaction.guild.id)
-        current_setting = display_settings.get(guild_id, {}).get('ephemeral_responses', True)
-        new_setting = not current_setting
-
-        # Update settings
-        if guild_id not in display_settings:
-            display_settings[guild_id] = {}
-        display_settings[guild_id]['ephemeral_responses'] = new_setting
+        # Load current settings
+        current_settings = await file_handlers.load_json(
+            file_path, 
+            settings.DEFAULT_DISPLAY_SETTINGS
+        )
         
-        success = await file_handlers.save_json(settings.DISPLAY_SETTINGS_FILE, display_settings)
+        # Toggle setting
+        new_setting = not current_settings.get('ephemeral_responses', True)
+        current_settings['ephemeral_responses'] = new_setting
+        
+        # Save changes
+        success = await file_handlers.save_json(file_path, current_settings)
         
         if success:
-            status = "enabled" if new_setting else "disabled"
             await interaction.response.send_message(
-                f"✅ Ephemeral responses are now **{status}**.",
-                ephemeral=new_setting
+                f"✅ Ephemeral responses {'**enabled**' if new_setting else '**disabled**'}",
+                ephemeral=new_setting  # Use new setting for this response
             )
         else:
             await interaction.response.send_message(
-                "❌ Failed to update ephemeral settings. Please try again.",
-                ephemeral=current_setting
+                "❌ Failed to update settings",
+                ephemeral=True
             )
 
 class ConfirmButton(discord.ui.View):

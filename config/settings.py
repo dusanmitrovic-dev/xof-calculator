@@ -6,6 +6,10 @@ BOT_PREFIX = "!"
 VERSION = "1.0.0"
 
 DATA_DIRECTORY = "data"
+CONFIG_DIR = os.path.join(DATA_DIRECTORY, "config")
+os.makedirs(CONFIG_DIR, exist_ok=True)
+
+
 ROLE_DATA_FILE = "role_percentages.json"
 SHIFT_DATA_FILE = "shift_config.json"
 PERIOD_DATA_FILE = "period_config.json"
@@ -20,18 +24,18 @@ EARNINGS_FILE = EARNINGS_FILE_NAME_WITHOUT_EXT + ".json"
 DEFAULT_ROLE_DATA: Dict[str, Dict[str, float]] = {}
 DEFAULT_SHIFT_DATA: Dict[str, List[str]] = {}
 DEFAULT_PERIOD_DATA: Dict[str, List[str]] = {}
-DEFAULT_MODELS_DATA: Dict[str, List[str]] = {}
+# DEFAULT_MODELS_DATA: Dict[str, List[str]] = {} # TODO: remove
+DEFAULT_MODELS_DATA = []
 DEFAULT_BONUS_RULES: Dict[str, List[Dict[str, float]]] = {}
 DEFAULT_EARNINGS: Dict[str, List[Dict[str, Any]]] = {}
-DEFAULT_DISPLAY_SETTINGS: Dict[str, Dict[str, bool]] = {
-    "defaults": {
+DEFAULT_DISPLAY_SETTINGS = {
         "ephemeral_responses": True,
         "show_average": True,
         "agency_name": "Agency",
         "show_ids": True,
         "bot_name": "Shift Calculator"
-    }
 }
+
 DEFAULT_COMMISSION_SETTINGS: Dict[str, Dict[str, float]] = {}
 
 # Formatting
@@ -45,3 +49,26 @@ def get_earnings_file_name_without_ext():
 
 def get_earnings_file_for_guild(guild_id):
     return f"{EARNINGS_FILE_NAME_WITHOUT_EXT}_{guild_id}.json"
+
+def get_guild_path(guild_id: int) -> str:
+    """Return path to guild's config directory"""
+    path = os.path.join(CONFIG_DIR, str(guild_id))
+    os.makedirs(path, exist_ok=True)
+    return path
+
+def get_guild_file(guild_id: int, filename: str) -> str:
+    """Get full path to a guild-specific config file"""
+    print("PATH", get_guild_path(guild_id))
+    return os.path.join(get_guild_path(guild_id), filename)
+
+# NOTE: MODELS
+
+def get_guild_models_path(guild_id: int) -> str:
+    """Get path to guild's models config file"""
+    return get_guild_file(guild_id, MODELS_DATA_FILE)
+
+# NOTE: ROLES
+
+def get_guild_roles_path(guild_id: int) -> str:
+    """Get path to guild's roles config file"""
+    return get_guild_file(guild_id, ROLE_DATA_FILE)

@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.156.0] - 2025-03-22
+### Changed
+- Add models and display settings for guild-specific configurations.
+
 ## [0.155.0] - 2025-03-22
 ### Rollback
 - To `v0.154.1` due to bad multiple server file logic.
