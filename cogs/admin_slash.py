@@ -935,7 +935,6 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             
         guild_id = str(interaction.guild.id)
         model_data = await file_handlers.load_json(file_path, [])
-        # existing_models = model_data.get(guild_id, []) # TODO: remove
         existing_models = model_data
         
         if model.lower() in [m.lower() for m in existing_models]:
