@@ -1479,7 +1479,6 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             try:
                 # Reset to default empty list
                 success = await file_handlers.save_json(file_path, [])
-                # success = await file_handlers.save_json(settings.MODELS_DATA_FILE, settings.DEFAULT_MODELS_DATA) # TODO: remove
             except Exception as e:
                 logger.error(f"Error resetting models: {str(e)}")
                 success = False
