@@ -934,7 +934,6 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             return
             
         guild_id = str(interaction.guild.id)
-        # model_data = await file_handlers.load_json(settings.MODELS_DATA_FILE, settings.DEFAULT_MODELS_DATA) # TODO: remove
         # model_data = await file_handlers.load_json(file_path, settings.DEFAULT_MODELS_DATA) # TODO: remove
         model_data = await file_handlers.load_json(file_path, [])
         # existing_models = model_data.get(guild_id, []) # TODO: remove
