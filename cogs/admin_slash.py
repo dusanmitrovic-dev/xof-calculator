@@ -1621,7 +1621,6 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
 
         async def restore_action(interaction: discord.Interaction):
-            # backup_file = os.path.join(settings.DATA_DIRECTORY, f"{settings.EARNINGS_FILE}.bak") # TODO: remove
             backup_file = os.path.join(settings.DATA_DIRECTORY, f"{settings.get_earnings_file_for_guild(interaction.guild.id)}.bak")
             if os.path.exists(backup_file):
                 # shutil.copy2(backup_file, os.path.join(settings.DATA_DIRECTORY, settings.EARNINGS_FILE)) # TODO: remove
