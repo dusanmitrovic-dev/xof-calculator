@@ -980,7 +980,6 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         try:
             model_data.remove(normalized_model)
             success = await file_handlers.save_json(file_path, model_data)
-            # success = await file_handlers.save_json(settings.MODELS_DATA_FILE, model_data) # TODO: remove
         except Exception as e:
             logger.error(f"Error saving models: {str(e)}")
             success = False
