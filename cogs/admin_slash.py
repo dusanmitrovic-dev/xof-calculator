@@ -574,38 +574,6 @@ class AdminSlashCommands(commands.Cog, name="admin"):
     #         ephemeral=True
     #     )
 
-    # @app_commands.default_permissions(administrator=True)
-    # @app_commands.command(
-    #     name="export-earnings-json",
-    #     description="Export all earnings data as JSON"
-    # )
-    # async def export_earnings_json(self, interaction: discord.Interaction):
-    #     """
-    #     Admin-only command to export earnings data as JSON
-        
-    #     Usage: /export-earnings-json
-    #     """
-    #     if not interaction.user.guild_permissions.administrator:
-    #         await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=True)
-    #         return
-        
-    #     earnings_data = await file_handlers.load_json(settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS) # WARN: line logic changed
-        
-    #     # Create JSON content
-    #     json_content = json.dumps(earnings_data, indent=4)
-        
-    #     # Create file object
-    #     json_file = discord.File(
-    #         io.BytesIO(json_content.encode('utf-8')),
-    #         filename="full_earnings_export.json"
-    #     )
-        
-    #     await interaction.response.send_message(
-    #         " Full earnings export (JSON):",
-    #         file=json_file,
-    #         ephemeral=True
-    #     )
-
     # Role Management
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="set-role", description="Set a role's percentage cut")
