@@ -1623,7 +1623,6 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         async def restore_action(interaction: discord.Interaction):
             backup_file = os.path.join(settings.DATA_DIRECTORY, f"{settings.get_earnings_file_for_guild(interaction.guild.id)}.bak")
             if os.path.exists(backup_file):
-                # shutil.copy2(backup_file, os.path.join(settings.DATA_DIRECTORY, settings.EARNINGS_FILE)) # TODO: remove
                 shutil.copy2(backup_file, os.path.join(settings.DATA_DIRECTORY, settings.get_earnings_file_for_guild(interaction.guild.id)))
                 await interaction.response.edit_message(content="✅ Earnings configuration backup restored successfully.", view=None)
             else:
