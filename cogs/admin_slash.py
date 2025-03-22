@@ -1353,7 +1353,6 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             failed_count = 0
 
             for bak_file in backup_files:
-                # if os.path.basename(bak_file) == settings.EARNINGS_FILE + ".bak": # TODO: remove
                 if os.path.basename(bak_file) == settings.get_earnings_file_for_guild(interaction.guild.id) + ".bak":
                     continue
 
