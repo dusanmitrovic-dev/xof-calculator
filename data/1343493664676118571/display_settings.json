@@ -1,0 +1,12 @@
+{
+    "defaults": {
+        "ephemeral_responses": true,
+        "show_average": true,
+        "agency_name": "Agency",
+        "show_ids": true,
+        "bot_name": "Shift Calculator"
+    },
+    "1343493664676118571": {
+        "ephemeral_responses": false
+    }
+}

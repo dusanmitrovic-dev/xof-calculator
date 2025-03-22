@@ -12,7 +12,7 @@ class HelpSlashCommands(commands.Cog):
         self.bot = bot
 
     async def get_ephemeral_setting(self, guild_id):
-        display_settings = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
+        display_settings = await file_handlers.load_json(guild_id, settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
         guild_settings = display_settings.get(str(guild_id), {})
         return guild_settings.get('ephemeral_responses', True)
 

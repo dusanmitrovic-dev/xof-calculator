@@ -22,7 +22,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         self.bot = bot
 
     async def get_ephemeral_setting(self, guild_id):
-        display_settings = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
+        display_settings = await file_handlers.load_json(guild_id, settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
         guild_settings = display_settings.get(str(guild_id), settings.DEFAULT_DISPLAY_SETTINGS['defaults'])
         return guild_settings.get('ephemeral_responses', 
             settings.DEFAULT_DISPLAY_SETTINGS['defaults']['ephemeral_responses'])
@@ -62,7 +62,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             return
         
         # Load existing settings
-        commission_settings = await file_handlers.load_json(settings.COMMISSION_SETTINGS_FILE, {})
+        commission_settings = await file_handlers.load_json(interaction.guild.id, settings.COMMISSION_SETTINGS_FILE, {})
         
         # Ensure guild-specific settings exist
         guild_id = str(interaction.guild.id)
@@ -78,7 +78,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         commission_settings[guild_id]['roles'][str(role.id)] = role_settings
         
         # Save updated commission_settings
-        await file_handlers.save_json(settings.COMMISSION_SETTINGS_FILE, commission_settings)
+        await file_handlers.save_json(interaction.guild.id, settings.COMMISSION_SETTINGS_FILE, commission_settings)
         
         # Respond with confirmation
         response = f"✅ Set commission for {role.mention} to "
@@ -109,7 +109,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             return
         
         # Load existing settings
-        commission_settings = await file_handlers.load_json(settings.COMMISSION_SETTINGS_FILE, {})
+        commission_settings = await file_handlers.load_json(interaction.guild.id, settings.COMMISSION_SETTINGS_FILE, {})
         
         # Ensure guild-specific settings exist
         guild_id = str(interaction.guild.id)
@@ -125,7 +125,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         commission_settings[guild_id]['roles'][str(role.id)] = role_settings
         
         # Save updated settings
-        await file_handlers.save_json(settings.COMMISSION_SETTINGS_FILE, commission_settings)
+        await file_handlers.save_json(interaction.guild.id, settings.COMMISSION_SETTINGS_FILE, commission_settings)
         
         # Respond with confirmation
         response = f"✅ Set hourly rate for {role.mention} to "
@@ -157,7 +157,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             )
             return        
         # Load existing settings
-        commission_settings = await file_handlers.load_json(settings.COMMISSION_SETTINGS_FILE, {})
+        commission_settings = await file_handlers.load_json(interaction.guild.id, settings.COMMISSION_SETTINGS_FILE, {})
         
         # Ensure guild-specific settings exist
         guild_id = str(interaction.guild.id)
@@ -178,7 +178,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         commission_settings[guild_id]['users'][str(user.id)] = user_settings
         
         # Save updated settings
-        await file_handlers.save_json(settings.COMMISSION_SETTINGS_FILE, commission_settings)
+        await file_handlers.save_json(interaction.guild.id, settings.COMMISSION_SETTINGS_FILE, commission_settings)
         
         # Respond with confirmation
         response = f"✅ Set commission for {user.mention} to "
@@ -212,7 +212,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             return
         
         # Load existing settings
-        commission_settings = await file_handlers.load_json(settings.COMMISSION_SETTINGS_FILE, {})
+        commission_settings = await file_handlers.load_json(interaction.guild.id, settings.COMMISSION_SETTINGS_FILE, {})
         
         # Ensure guild-specific settings exist
         guild_id = str(interaction.guild.id)
@@ -230,7 +230,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         commission_settings[guild_id]['users'][str(user.id)] = user_settings
         
         # Save updated settings
-        await file_handlers.save_json(settings.COMMISSION_SETTINGS_FILE, commission_settings)
+        await file_handlers.save_json(interaction.guild.id, settings.COMMISSION_SETTINGS_FILE, commission_settings)
         
         # Respond with confirmation
         response = f"✅ Set hourly rate for {user.mention} to "
@@ -252,7 +252,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
 
         # Load existing settings
-        commission_settings = await file_handlers.load_json(settings.COMMISSION_SETTINGS_FILE, {})
+        commission_settings = await file_handlers.load_json(interaction.guild.id, settings.COMMISSION_SETTINGS_FILE, {})
         
         # Ensure guild-specific settings exist
         guild_id = str(interaction.guild.id)
@@ -277,7 +277,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         commission_settings[guild_id]['users'][str(user.id)] = user_settings
         
         # Save updated settings
-        await file_handlers.save_json(settings.COMMISSION_SETTINGS_FILE, commission_settings)
+        await file_handlers.save_json(interaction.guild.id, settings.COMMISSION_SETTINGS_FILE, commission_settings)
         
         # Respond with confirmation
         response = f"✅ Toggled role override for {user.mention} to {user_settings['override_role']}"
@@ -298,7 +298,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         """View compensation settings for a role or user"""
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
 
-        commission_settings = await file_handlers.load_json(settings.COMMISSION_SETTINGS_FILE, {})
+        commission_settings = await file_handlers.load_json(interaction.guild.id, settings.COMMISSION_SETTINGS_FILE, {})
         
         # Get guild-specific settings
         guild_id = str(interaction.guild.id)
@@ -377,19 +377,19 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
 
     async def get_agency_name(self, guild_id):
-        settings_data = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
+        settings_data = await file_handlers.load_json(guild_id, settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
         guild_settings = settings_data.get(str(guild_id), settings.DEFAULT_DISPLAY_SETTINGS['defaults'])
         return guild_settings.get("agency_name",
             settings.DEFAULT_DISPLAY_SETTINGS['defaults']['agency_name'])
 
     async def get_show_ids(self, guild_id):
-        settings_data = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
+        settings_data = await file_handlers.load_json(guild_id, settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
         guild_settings = settings_data.get(str(guild_id), settings.DEFAULT_DISPLAY_SETTINGS['defaults'])
         return guild_settings.get("show_ids",
             settings.DEFAULT_DISPLAY_SETTINGS['defaults']['show_ids'])
 
     async def get_bot_name(self, guild_id):
-        settings_data = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
+        settings_data = await file_handlers.load_json(guild_id, settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
         guild_settings = settings_data.get(str(guild_id), settings.DEFAULT_DISPLAY_SETTINGS['defaults'])
         return guild_settings.get("bot_name",
             settings.DEFAULT_DISPLAY_SETTINGS['defaults']['bot_name'])
@@ -402,14 +402,14 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         """Set custom agency name"""
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
         
-        settings_data = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
+        settings_data = await file_handlers.load_json(interaction.guild.id, settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
         guild_id = str(interaction.guild.id)
         
         if guild_id not in settings_data:
             settings_data[guild_id] = {}
         
         settings_data[guild_id]["agency_name"] = name
-        success = await file_handlers.save_json(settings.DISPLAY_SETTINGS_FILE, settings_data)
+        success = await file_handlers.save_json(interaction.guild.id, settings.DISPLAY_SETTINGS_FILE, settings_data)
         
         if success:
             await interaction.response.send_message(f"✅ Agency name set to: {name}", ephemeral=ephemeral)
@@ -422,7 +422,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         """Toggle ID display"""
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
         
-        settings_data = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
+        settings_data = await file_handlers.load_json(interaction.guild.id, settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
         guild_id = str(interaction.guild.id)
         
         current_setting = settings_data.get(guild_id, {}).get("show_ids", False)
@@ -432,7 +432,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             settings_data[guild_id] = {}
         
         settings_data[guild_id]["show_ids"] = new_setting
-        success = await file_handlers.save_json(settings.DISPLAY_SETTINGS_FILE, settings_data)
+        success = await file_handlers.save_json(interaction.guild.id, settings.DISPLAY_SETTINGS_FILE, settings_data)
         
         if success:
             status = f"**enabled**" if new_setting else f"**disabled**"
@@ -447,14 +447,14 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         """Set custom bot name"""
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
         
-        settings_data = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
+        settings_data = await file_handlers.load_json(interaction.guild.id, settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
         guild_id = str(interaction.guild.id)
         
         if guild_id not in settings_data:
             settings_data[guild_id] = {}
         
         settings_data[guild_id]["bot_name"] = name
-        success = await file_handlers.save_json(settings.DISPLAY_SETTINGS_FILE, settings_data)
+        success = await file_handlers.save_json(interaction.guild.id, settings.DISPLAY_SETTINGS_FILE, settings_data)
         
         if success:
             await interaction.response.send_message(f"✅ Bot name set to: {name}", ephemeral=ephemeral)
@@ -469,7 +469,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
         
         guild_id = interaction.guild.id
-        settings_data = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
+        settings_data = await file_handlers.load_json(interaction.guild.id, settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
         guild_settings = settings_data.get(str(guild_id), {})
 
         
@@ -489,7 +489,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
 
     async def get_average_setting(self, guild_id):
-        settings_data = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
+        settings_data = await file_handlers.load_json(guild_id, settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
         guild_settings = settings_data.get(str(guild_id), settings.DEFAULT_DISPLAY_SETTINGS['defaults'])
         return guild_settings.get("show_average",
             settings.DEFAULT_DISPLAY_SETTINGS['defaults']['show_average'])
@@ -511,7 +511,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         guild_id = str(interaction.guild_id)
         
         # Load settings data
-        settings_data = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
+        settings_data = await file_handlers.load_json(interaction.guild.id, settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
         
         # Initialize guild settings if they don't exist
         if guild_id not in settings_data:
@@ -523,7 +523,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         new_setting = settings_data[guild_id]["show_average"]
         
         # Save updated settings
-        success = await file_handlers.save_json(settings.DISPLAY_SETTINGS_FILE, settings_data)
+        success = await file_handlers.save_json(interaction.guild.id, settings.DISPLAY_SETTINGS_FILE, settings_data)
         
         if success:
             status = "enabled" if new_setting else "disabled"
@@ -548,7 +548,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
     #         await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=True)
     #         return
         
-    #     earnings_data = await file_handlers.load_json(settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS) # WARN: line logic changed
+    #     earnings_data = await file_handlers.load_json(interaction.guild.id, settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS) # WARN: line logic changed
         
     #     # Create CSV content
     #     csv_content = "User,Date,Total Cut,Gross Revenue,Period,Shift,Role,Models\n"
@@ -584,7 +584,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
     #         await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=True)
     #         return
         
-    #     earnings_data = await file_handlers.load_json(settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS) # WARN: line logic changed
+    #     earnings_data = await file_handlers.load_json(interaction.guild.id, settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS) # WARN: line logic changed
         
     #     # Create JSON content
     #     json_content = json.dumps(earnings_data, indent=4)
@@ -624,13 +624,13 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             guild_id = str(interaction.guild.id)
             role_id = str(role.id)
             
-            role_data = await file_handlers.load_json(settings.ROLE_DATA_FILE, settings.DEFAULT_ROLE_DATA)
+            role_data = await file_handlers.load_json(interaction.guild.id, settings.ROLE_DATA_FILE, settings.DEFAULT_ROLE_DATA)
             
             if guild_id not in role_data:
                 role_data[guild_id] = {}
             role_data[guild_id][role_id] = float(percentage_decimal)
             
-            success = await file_handlers.save_json(settings.ROLE_DATA_FILE, role_data)
+            success = await file_handlers.save_json(interaction.guild.id, settings.ROLE_DATA_FILE, role_data)
             
             if success:
                 logger.info(f"Role {role.name} ({role_id}) percentage set to {percentage_decimal}% by {interaction.user.name}")
@@ -658,7 +658,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             guild_id = str(interaction.guild.id)
             role_id = str(role.id)
             
-            role_data = await file_handlers.load_json(settings.ROLE_DATA_FILE, settings.DEFAULT_ROLE_DATA)
+            role_data = await file_handlers.load_json(interaction.guild.id, settings.ROLE_DATA_FILE, settings.DEFAULT_ROLE_DATA)
             
             if guild_id not in role_data or role_id not in role_data[guild_id]:
                 logger.warning(f"Role {role.name} ({role_id}) not found in configuration")
@@ -666,7 +666,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
                 return
             
             del role_data[guild_id][role_id]
-            success = await file_handlers.save_json(settings.ROLE_DATA_FILE, role_data)
+            success = await file_handlers.save_json(interaction.guild.id, settings.ROLE_DATA_FILE, role_data)
             
             if success:
                 logger.info(f"Role {role.name} ({role_id}) removed from configuration")
@@ -697,7 +697,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
                 return
                 
             guild_id = str(interaction.guild.id)
-            shift_data = await file_handlers.load_json(settings.SHIFT_DATA_FILE, settings.DEFAULT_SHIFT_DATA)
+            shift_data = await file_handlers.load_json(interaction.guild.id, settings.SHIFT_DATA_FILE, settings.DEFAULT_SHIFT_DATA)
             existing_shifts = shift_data.get(guild_id, [])
             
             if validators.validate_shift(shift, existing_shifts) is not None:
@@ -705,7 +705,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
                 return
             
             shift_data.setdefault(guild_id, []).append(shift)
-            success = await file_handlers.save_json(settings.SHIFT_DATA_FILE, shift_data)
+            success = await file_handlers.save_json(interaction.guild.id, settings.SHIFT_DATA_FILE, shift_data)
             
             if success:
                 await interaction.response.send_message(f"✅ Shift '{shift}' added!", ephemeral=ephemeral)
@@ -727,7 +727,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         
         try:
             guild_id = str(interaction.guild.id)
-            shift_data = await file_handlers.load_json(settings.SHIFT_DATA_FILE, settings.DEFAULT_SHIFT_DATA)
+            shift_data = await file_handlers.load_json(interaction.guild.id, settings.SHIFT_DATA_FILE, settings.DEFAULT_SHIFT_DATA)
             existing_shifts = shift_data.get(guild_id, [])
             
             normalized_shift = validators.validate_shift(shift, existing_shifts)
@@ -736,7 +736,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
                 return
             
             shift_data[guild_id].remove(normalized_shift)
-            success = await file_handlers.save_json(settings.SHIFT_DATA_FILE, shift_data)
+            success = await file_handlers.save_json(interaction.guild.id, settings.SHIFT_DATA_FILE, shift_data)
             
             if success:
                 await interaction.response.send_message(f"✅ Shift '{normalized_shift}' removed!", ephemeral=ephemeral)
@@ -763,7 +763,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
                 return
                 
             guild_id = str(interaction.guild.id)
-            period_data = await file_handlers.load_json(settings.PERIOD_DATA_FILE, settings.DEFAULT_PERIOD_DATA)
+            period_data = await file_handlers.load_json(interaction.guild.id, settings.PERIOD_DATA_FILE, settings.DEFAULT_PERIOD_DATA)
             existing_periods = period_data.get(guild_id, [])
             
             if validators.validate_period(period, existing_periods) is not None:
@@ -771,7 +771,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
                 return
             
             period_data.setdefault(guild_id, []).append(period)
-            success = await file_handlers.save_json(settings.PERIOD_DATA_FILE, period_data)
+            success = await file_handlers.save_json(interaction.guild.id, settings.PERIOD_DATA_FILE, period_data)
             
             if success:
                 await interaction.response.send_message(f"✅ Period '{period}' added!", ephemeral=ephemeral)
@@ -792,7 +792,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             return
         
         guild_id = str(interaction.guild.id)
-        period_data = await file_handlers.load_json(settings.PERIOD_DATA_FILE, settings.DEFAULT_PERIOD_DATA)
+        period_data = await file_handlers.load_json(interaction.guild.id, settings.PERIOD_DATA_FILE, settings.DEFAULT_PERIOD_DATA)
         existing_periods = period_data.get(guild_id, [])
         
         normalized_period = validators.validate_period(period, existing_periods)
@@ -801,7 +801,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             return
         
         period_data[guild_id].remove(normalized_period)
-        success = await file_handlers.save_json(settings.PERIOD_DATA_FILE, period_data)
+        success = await file_handlers.save_json(interaction.guild.id, settings.PERIOD_DATA_FILE, period_data)
         
         if success:
             await interaction.response.send_message(f"✅ Period '{normalized_period}' removed!", ephemeral=ephemeral)
@@ -836,7 +836,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             return
             
         guild_id = str(interaction.guild.id)
-        bonus_rules = await file_handlers.load_json(settings.BONUS_RULES_FILE, settings.DEFAULT_BONUS_RULES)
+        bonus_rules = await file_handlers.load_json(interaction.guild.id, settings.BONUS_RULES_FILE, settings.DEFAULT_BONUS_RULES)
         
         new_rule = {"from": float(from_num), "to": float(to_num), "amount": float(bonus_amount)}
         current_rules = bonus_rules.setdefault(guild_id, [])
@@ -846,7 +846,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             return
             
         current_rules.append(new_rule)
-        success = await file_handlers.save_json(settings.BONUS_RULES_FILE, bonus_rules)
+        success = await file_handlers.save_json(interaction.guild.id, settings.BONUS_RULES_FILE, bonus_rules)
         
         if success:
             await interaction.response.send_message(f"✅ Bonus rule added: ${float(from_num):,.2f}-${float(to_num):,.2f} → ${float(bonus_amount):,.2f}!", ephemeral=ephemeral)
@@ -874,7 +874,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             return
             
         guild_id = str(interaction.guild.id)
-        bonus_rules = await file_handlers.load_json(settings.BONUS_RULES_FILE, settings.DEFAULT_BONUS_RULES)
+        bonus_rules = await file_handlers.load_json(interaction.guild.id, settings.BONUS_RULES_FILE, settings.DEFAULT_BONUS_RULES)
         guild_rules = bonus_rules.get(guild_id, [])
         
         rule_to_remove = next(
@@ -888,7 +888,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             return
             
         bonus_rules[guild_id].remove(rule_to_remove)
-        success = await file_handlers.save_json(settings.BONUS_RULES_FILE, bonus_rules)
+        success = await file_handlers.save_json(interaction.guild.id, settings.BONUS_RULES_FILE, bonus_rules)
         
         if success:
             await interaction.response.send_message(f"✅ Bonus rule removed: ${float(from_num):,.2f}-${float(to_num):,.2f}", ephemeral=ephemeral)
@@ -902,7 +902,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
 
         guild_id = str(interaction.guild.id)
-        role_data = await file_handlers.load_json(settings.ROLE_DATA_FILE, settings.DEFAULT_ROLE_DATA)
+        role_data = await file_handlers.load_json(interaction.guild.id, settings.ROLE_DATA_FILE, settings.DEFAULT_ROLE_DATA)
         guild_roles = role_data.get(guild_id, {})
         
         if not guild_roles:
@@ -924,7 +924,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
 
         guild_id = str(interaction.guild.id)
-        shift_data = await file_handlers.load_json(settings.SHIFT_DATA_FILE, settings.DEFAULT_SHIFT_DATA)
+        shift_data = await file_handlers.load_json(interaction.guild.id, settings.SHIFT_DATA_FILE, settings.DEFAULT_SHIFT_DATA)
         guild_shifts = shift_data.get(guild_id, [])
         
         if not guild_shifts:
@@ -941,7 +941,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
 
         guild_id = str(interaction.guild.id)
-        period_data = await file_handlers.load_json(settings.PERIOD_DATA_FILE, settings.DEFAULT_PERIOD_DATA)
+        period_data = await file_handlers.load_json(interaction.guild.id, settings.PERIOD_DATA_FILE, settings.DEFAULT_PERIOD_DATA)
         guild_periods = period_data.get(guild_id, [])
         
         if not guild_periods:
@@ -958,7 +958,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
 
         guild_id = str(interaction.guild.id)
-        bonus_rules = await file_handlers.load_json(settings.BONUS_RULES_FILE, settings.DEFAULT_BONUS_RULES)
+        bonus_rules = await file_handlers.load_json(interaction.guild.id, settings.BONUS_RULES_FILE, settings.DEFAULT_BONUS_RULES)
         guild_rules = bonus_rules.get(guild_id, [])
         
         if not guild_rules:
@@ -994,7 +994,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             return
             
         guild_id = str(interaction.guild.id)
-        model_data = await file_handlers.load_json(settings.MODELS_DATA_FILE, settings.DEFAULT_MODELS_DATA)
+        model_data = await file_handlers.load_json(interaction.guild.id, settings.MODELS_DATA_FILE, settings.DEFAULT_MODELS_DATA)
         existing_models = model_data.get(guild_id, [])
         
         if model.lower() in [m.lower() for m in existing_models]:
@@ -1002,7 +1002,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             return
         
         model_data.setdefault(guild_id, []).append(model)
-        success = await file_handlers.save_json(settings.MODELS_DATA_FILE, model_data)
+        success = await file_handlers.save_json(interaction.guild.id, settings.MODELS_DATA_FILE, model_data)
         
         if success:
             await interaction.response.send_message(f"✅ Model '{model}' added!", ephemeral=ephemeral)
@@ -1020,7 +1020,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             return
         
         guild_id = str(interaction.guild.id)
-        model_data = await file_handlers.load_json(settings.MODELS_DATA_FILE, settings.DEFAULT_MODELS_DATA)
+        model_data = await file_handlers.load_json(interaction.guild.id, settings.MODELS_DATA_FILE, settings.DEFAULT_MODELS_DATA)
         existing_models = model_data.get(guild_id, [])
         
         normalized_model = next((m for m in existing_models if m.lower() == model.lower()), None)
@@ -1029,7 +1029,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             return
         
         model_data[guild_id].remove(normalized_model)
-        success = await file_handlers.save_json(settings.MODELS_DATA_FILE, model_data)
+        success = await file_handlers.save_json(interaction.guild.id, settings.MODELS_DATA_FILE, model_data)
         
         if success:
             await interaction.response.send_message(f"✅ Model '{normalized_model}' removed!", ephemeral=ephemeral)
@@ -1042,7 +1042,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
 
         guild_id = str(interaction.guild.id)
-        model_data = await file_handlers.load_json(settings.MODELS_DATA_FILE, settings.DEFAULT_MODELS_DATA)
+        model_data = await file_handlers.load_json(interaction.guild.id, settings.MODELS_DATA_FILE, settings.DEFAULT_MODELS_DATA)
         guild_models = model_data.get(guild_id, [])
         
         if not guild_models:
@@ -1084,7 +1084,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
     ):
         """Helper function to remove sales by IDs or all sales for multiple users."""
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
-        earnings_data = await file_handlers.load_json(
+        earnings_data = await file_handlers.load_json(interaction.guild.id, 
             settings.get_earnings_file_for_guild(interaction.guild.id),
             settings.DEFAULT_EARNINGS
         )
@@ -1140,7 +1140,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             if not removed_entries:
                 return (False, "❌ No matching sales found for the specified criteria.")
 
-            success = await file_handlers.save_json(
+            success = await file_handlers.save_json(interaction.guild.id, 
                 settings.get_earnings_file_for_guild(interaction.guild.id),
                 earnings_data
             )
@@ -1233,7 +1233,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             sale_id_list = list(set(sale_id_list))
 
         # Count affected entries
-        earnings_data = await file_handlers.load_json(
+        earnings_data = await file_handlers.load_json(interaction.guild.id, 
             settings.get_earnings_file_for_guild(interaction.guild.id),
             settings.DEFAULT_EARNINGS
         )
@@ -1431,7 +1431,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         )
 
     async def reset_shift(self, interaction: discord.Interaction):
-        await file_handlers.save_json(settings.SHIFT_DATA_FILE, settings.DEFAULT_SHIFT_DATA)
+        await file_handlers.save_json(interaction.guild.id, settings.SHIFT_DATA_FILE, {})
 
     # Reset Individual Config Files
     @app_commands.default_permissions(administrator=True)
@@ -1452,7 +1452,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         )
 
     async def reset_period(self, interaction: discord.Interaction):
-        await file_handlers.save_json(settings.PERIOD_DATA_FILE, settings.DEFAULT_PERIOD_DATA)
+        await file_handlers.save_json(interaction.guild.id, settings.PERIOD_DATA_FILE, {})
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="reset-period-config", description="Reset period configuration")
@@ -1471,7 +1471,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         )
 
     async def reset_role(self, interaction: discord.Interaction):
-        await file_handlers.save_json(settings.ROLE_DATA_FILE, settings.DEFAULT_ROLE_DATA)
+        await file_handlers.save_json(interaction.guild.id, settings.ROLE_DATA_FILE, {})
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="reset-role-config", description="Reset role configuration")
@@ -1490,7 +1490,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         )
 
     async def reset_bonus_rules(self, interaction: discord.Interaction):
-        await file_handlers.save_json(settings.BONUS_RULES_FILE, settings.DEFAULT_BONUS_RULES)
+        await file_handlers.save_json(interaction.guild.id, settings.BONUS_RULES_FILE, {})
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="reset-bonus-config", description="Reset bonus rules configuration")
@@ -1509,11 +1509,11 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         )
 
     async def reset_earnings(self, interaction: discord.Interaction):
-        # await file_handlers.save_json(settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS) # TODO: remove
-        await file_handlers.save_json(settings.get_earnings_file_for_guild(interaction.guild.id), settings.DEFAULT_EARNINGS)
+        # await file_handlers.save_json(interaction.guild.id, settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS) # TODO: remove
+        await file_handlers.save_json(interaction.guild.id, settings.get_earnings_file_for_guild(interaction.guild.id), settings.DEFAULT_EARNINGS)
     
     async def reset_models(self, interaction: discord.Interaction): 
-        await file_handlers.save_json(settings.MODELS_DATA_FILE, settings.DEFAULT_MODELS_DATA)
+        await file_handlers.save_json(interaction.guild.id, settings.MODELS_DATA_FILE, {})
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="reset-models-config", description="Reset models configuration")
@@ -1532,7 +1532,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         )
 
     async def reset_compensation(self, interaction: discord.Interaction):
-        await file_handlers.save_json(settings.COMMISSION_SETTINGS_FILE, settings.DEFAULT_COMMISSION_SETTINGS)
+        await file_handlers.save_json(interaction.guild.id, settings.COMMISSION_SETTINGS_FILE, settings.DEFAULT_COMMISSION_SETTINGS)
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="reset-compensation-config", description="Reset compensation configuration")
@@ -1551,7 +1551,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         )
 
     async def reset_display(self, interaction: discord.Interaction):
-        await file_handlers.save_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
+        await file_handlers.save_json(interaction.guild.id, settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="reset-display-config", description="Reset display configuration")
@@ -1576,9 +1576,11 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
 
         async def restore_action(interaction: discord.Interaction):
-            backup_file = os.path.join(settings.DATA_DIRECTORY, f"{settings.SHIFT_DATA_FILE}.bak")
+            guild_dir = os.path.join("data", str(interaction.guild.id))  # Guild directory
+            backup_file = os.path.join(guild_dir, f"{settings.SHIFT_DATA_FILE}.bak")
+            # backup_file = os.path.join(settings.DATA_DIRECTORY + f"/{interaction.guild.id}/", f"{settings.SHIFT_DATA_FILE}.bak") # TODO: remove
             if os.path.exists(backup_file):
-                shutil.copy2(backup_file, os.path.join(settings.DATA_DIRECTORY, settings.SHIFT_DATA_FILE))
+                shutil.copy2(backup_file, os.path.join(guild_dir, settings.SHIFT_DATA_FILE))
                 await interaction.response.edit_message(content="✅ Shift configuration backup restored successfully.", view=None)
             else:
                 await interaction.response.edit_message(content="❌ No shift configuration backup found.", view=None)
@@ -1597,9 +1599,11 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
 
         async def restore_action(interaction: discord.Interaction):
-            backup_file = os.path.join(settings.DATA_DIRECTORY, f"{settings.PERIOD_DATA_FILE}.bak")
+            guild_dir = os.path.join("data", str(interaction.guild.id))  # Guild directory
+            backup_file = os.path.join(guild_dir, f"{settings.PERIOD_DATA_FILE}.bak")
+            # backup_file = os.path.join(settings.DATA_DIRECTORY + f"/{interaction.guild.id}/", f"{settings.PERIOD_DATA_FILE}.bak") # TODO: remove
             if os.path.exists(backup_file):
-                shutil.copy2(backup_file, os.path.join(settings.DATA_DIRECTORY, settings.PERIOD_DATA_FILE))
+                shutil.copy2(backup_file, os.path.join(guild_dir, settings.PERIOD_DATA_FILE))
                 await interaction.response.edit_message(content="✅ Period configuration backup restored successfully.", view=None)
             else:
                 await interaction.response.edit_message(content="❌ No period configuration backup found.", view=None)
@@ -1617,9 +1621,11 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
 
         async def restore_action(interaction: discord.Interaction):
-            backup_file = os.path.join(settings.DATA_DIRECTORY, f"{settings.ROLE_DATA_FILE}.bak")
+            guild_dir = os.path.join("data", str(interaction.guild.id))  # Guild directory
+            backup_file = os.path.join(guild_dir, f"{settings.ROLE_DATA_FILE}.bak")
+            # backup_file = os.path.join(settings.DATA_DIRECTORY + f"/{interaction.guild.id}/", f"{settings.ROLE_DATA_FILE}.bak") # TODO: remove
             if os.path.exists(backup_file):
-                shutil.copy2(backup_file, os.path.join(settings.DATA_DIRECTORY, settings.ROLE_DATA_FILE))
+                shutil.copy2(backup_file, os.path.join(guild_dir, settings.ROLE_DATA_FILE))
                 await interaction.response.edit_message(content="✅ Role configuration backup restored successfully.", view=None)
             else:
                 await interaction.response.edit_message(content="❌ No role configuration backup found.", view=None)
@@ -1637,9 +1643,11 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
 
         async def restore_action(interaction: discord.Interaction):
-            backup_file = os.path.join(settings.DATA_DIRECTORY, f"{settings.BONUS_RULES_FILE}.bak")
+            guild_dir = os.path.join("data", str(interaction.guild.id))  # Guild directory
+            backup_file = os.path.join(guild_dir, f"{settings.BONUS_RULES_FILE}.bak")
+            # backup_file = os.path.join(settings.DATA_DIRECTORY + f"/{interaction.guild.id}/", f"{settings.BONUS_RULES_FILE}.bak") # TODO: remove
             if os.path.exists(backup_file):
-                shutil.copy2(backup_file, os.path.join(settings.DATA_DIRECTORY, settings.BONUS_RULES_FILE))
+                shutil.copy2(backup_file, os.path.join(guild_dir, settings.BONUS_RULES_FILE))
                 await interaction.response.edit_message(content="✅ Bonus rules configuration backup restored successfully.", view=None)
             else:
                 await interaction.response.edit_message(content="❌ No bonus rules configuration backup found.", view=None)
@@ -1657,11 +1665,13 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
 
         async def restore_action(interaction: discord.Interaction):
-            # backup_file = os.path.join(settings.DATA_DIRECTORY, f"{settings.EARNINGS_FILE}.bak") # TODO: remove
-            backup_file = os.path.join(settings.DATA_DIRECTORY, f"{settings.get_earnings_file_for_guild(interaction.guild.id)}.bak")
+            # backup_file = os.path.join(settings.DATA_DIRECTORY + f"/{interaction.guild.id}/", f"{settings.EARNINGS_FILE}.bak") # TODO: remove
+            guild_dir = os.path.join("data", str(interaction.guild.id))  # Guild directory
+            backup_file = os.path.join(guild_dir, f"{settings.get_earnings_file_for_guild(interaction.guild.id)}.bak")
+            # backup_file = os.path.join(settings.DATA_DIRECTORY + f"/{interaction.guild.id}/", f"{settings.get_earnings_file_for_guild(interaction.guild.id)}.bak") # TODO: remove
             if os.path.exists(backup_file):
-                # shutil.copy2(backup_file, os.path.join(settings.DATA_DIRECTORY, settings.EARNINGS_FILE)) # TODO: remove
-                shutil.copy2(backup_file, os.path.join(settings.DATA_DIRECTORY, settings.get_earnings_file_for_guild(interaction.guild.id)))
+                # shutil.copy2(backup_file, os.path.join(guild_dir, settings.EARNINGS_FILE)) # TODO: remove
+                shutil.copy2(backup_file, os.path.join(guild_dir, settings.get_earnings_file_for_guild(interaction.guild.id)))
                 await interaction.response.edit_message(content="✅ Earnings configuration backup restored successfully.", view=None)
             else:
                 await interaction.response.edit_message(content="❌ No earnings configuration backup found.", view=None)
@@ -1679,9 +1689,11 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
 
         async def restore_action(interaction: discord.Interaction):
-            backup_file = os.path.join(settings.DATA_DIRECTORY, f"{settings.MODELS_DATA_FILE}.bak")
+            guild_dir = os.path.join("data", str(interaction.guild.id))  # Guild directory
+            backup_file = os.path.join(guild_dir, f"{settings.MODELS_DATA_FILE}.bak")
+            # backup_file = os.path.join(settings.DATA_DIRECTORY + f"/{interaction.guild.id}/", f"{settings.MODELS_DATA_FILE}.bak") # TODO: remove
             if os.path.exists(backup_file):
-                shutil.copy2(backup_file, os.path.join(settings.DATA_DIRECTORY, settings.MODELS_DATA_FILE))
+                shutil.copy2(backup_file, os.path.join(guild_dir, settings.MODELS_DATA_FILE))
                 await interaction.response.edit_message(content="✅ Models configuration backup restored successfully.", view=None)
             else:
                 await interaction.response.edit_message(content="❌ No models configuration backup found.", view=None)
@@ -1699,9 +1711,9 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
 
         async def restore_action(interaction: discord.Interaction):
-            backup_file = os.path.join(settings.DATA_DIRECTORY, f"{settings.COMMISSION_SETTINGS_FILE}.bak")
+            backup_file = os.path.join(settings.DATA_DIRECTORY + f"/{interaction.guild.id}/", f"{settings.COMMISSION_SETTINGS_FILE}.bak")
             if os.path.exists(backup_file):
-                shutil.copy2(backup_file, os.path.join(settings.DATA_DIRECTORY, settings.COMMISSION_SETTINGS_FILE))
+                shutil.copy2(backup_file, os.path.join(guild_dir, settings.COMMISSION_SETTINGS_FILE))
                 await interaction.response.edit_message(content="✅ Compensation configuration backup restored successfully.", view=None)
             else:
                 await interaction.response.edit_message(content="❌ No compensation configuration backup found.", view=None)
@@ -1719,9 +1731,9 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
 
         async def restore_action(interaction: discord.Interaction):
-            backup_file = os.path.join(settings.DATA_DIRECTORY, f"{settings.DISPLAY_SETTINGS_FILE}.bak")
+            backup_file = os.path.join(settings.DATA_DIRECTORY + f"/{interaction.guild.id}/", f"{settings.DISPLAY_SETTINGS_FILE}.bak")
             if os.path.exists(backup_file):
-                shutil.copy2(backup_file, os.path.join(settings.DATA_DIRECTORY, settings.DISPLAY_SETTINGS_FILE))
+                shutil.copy2(backup_file, os.path.join(guild_dir, settings.DISPLAY_SETTINGS_FILE))
                 await interaction.response.edit_message(content="✅ Display configuration backup restored successfully.", view=None)
             else:
                 await interaction.response.edit_message(content="❌ No display configuration backup found.", view=None)
@@ -1749,7 +1761,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             )
             return
 
-        display_settings = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
+        display_settings = await file_handlers.load_json(interaction.guild.id, settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
         guild_id = str(interaction.guild.id)
         current_setting = display_settings.get(guild_id, {}).get('ephemeral_responses', True)
         new_setting = not current_setting
@@ -1759,7 +1771,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             display_settings[guild_id] = {}
         display_settings[guild_id]['ephemeral_responses'] = new_setting
         
-        success = await file_handlers.save_json(settings.DISPLAY_SETTINGS_FILE, display_settings)
+        success = await file_handlers.save_json(interaction.guild.id, settings.DISPLAY_SETTINGS_FILE, display_settings)
         
         if success:
             status = "enabled" if new_setting else "disabled"

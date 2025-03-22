@@ -103,31 +103,31 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         super().__init__()
 
     async def get_ephemeral_setting(self, guild_id):
-        display_settings = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
+        display_settings = await file_handlers.load_json(guild_id,settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
         guild_settings = display_settings.get(str(guild_id), settings.DEFAULT_DISPLAY_SETTINGS['defaults'])
         return guild_settings.get('ephemeral_responses', 
             settings.DEFAULT_DISPLAY_SETTINGS['defaults']['ephemeral_responses'])
     
     async def get_average_setting(self, guild_id):
-        settings_data = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
+        settings_data = await file_handlers.load_json(guild_id,settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
         guild_settings = settings_data.get(str(guild_id), settings.DEFAULT_DISPLAY_SETTINGS['defaults'])
         return guild_settings.get("show_average",
             settings.DEFAULT_DISPLAY_SETTINGS['defaults']['show_average'])
 
     async def get_agency_name(self, guild_id):
-        settings_data = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
+        settings_data = await file_handlers.load_json(guild_id,settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
         guild_settings = settings_data.get(str(guild_id), settings.DEFAULT_DISPLAY_SETTINGS['defaults'])
         return guild_settings.get("agency_name",
             settings.DEFAULT_DISPLAY_SETTINGS['defaults']['agency_name'])
 
     async def get_show_ids(self, guild_id):
-        settings_data = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
+        settings_data = await file_handlers.load_json(guild_id,settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
         guild_settings = settings_data.get(str(guild_id), settings.DEFAULT_DISPLAY_SETTINGS['defaults'])
         return guild_settings.get("show_ids",
             settings.DEFAULT_DISPLAY_SETTINGS['defaults']['show_ids'])
 
     async def get_bot_name(self, guild_id):
-        settings_data = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
+        settings_data = await file_handlers.load_json(guild_id,settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
         guild_settings = settings_data.get(str(guild_id), settings.DEFAULT_DISPLAY_SETTINGS['defaults'])
         print(guild_settings)
         return guild_settings.get("bot_name",
@@ -978,15 +978,17 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
 
     async def start_period_selection_with_hours(self, interaction: discord.Interaction, compensation_type: str, hours_worked: Decimal):
         """First step: Period selection with hours worked"""
+        ephemeral = await self.get_ephemeral_setting(interaction.guild_id)
+        
         guild_id = str(interaction.guild_id)
         
         # Load period data
-        period_data = await file_handlers.load_json(settings.PERIOD_DATA_FILE, settings.DEFAULT_PERIOD_DATA)
+        period_data = await file_handlers.load_json(interaction.guild.id,settings.PERIOD_DATA_FILE, settings.DEFAULT_PERIOD_DATA)
         valid_periods = period_data.get(guild_id, [])
         
         if not valid_periods:
             logger.warning(f"No periods configured for guild {guild_id}")
-            await interaction.response.send_message("❌ No periods configured! Admins: use /set-period.", ephemeral=True)
+            await interaction.response.send_message("❌ No periods configured! Admins: use /set-period.", ephemeral=ephemeral)
             return
         
         # Create period selection view, passing the compensation type and hours worked
@@ -995,6 +997,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
     
     async def show_shift_selection(self, interaction: discord.Interaction, period: str, compensation_type: str, hours_worked: Decimal):
         """Second step: Shift selection"""
+        ephemeral = await self.get_ephemeral_setting(interaction.guild_id)
 
         # Log period selection
         logger.info(f"User {interaction.user.name} ({interaction.user.id}) selected period: {period}")
@@ -1002,12 +1005,12 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         guild_id = str(interaction.guild_id)
         
         # Load shift data
-        shift_data = await file_handlers.load_json(settings.SHIFT_DATA_FILE, settings.DEFAULT_SHIFT_DATA)
+        shift_data = await file_handlers.load_json(interaction.guild.id,settings.SHIFT_DATA_FILE, settings.DEFAULT_SHIFT_DATA)
         valid_shifts = shift_data.get(guild_id, [])
         
         if not valid_shifts:
             logger.warning(f"No shifts configured for guild {guild_id}")
-            await interaction.response.send_message("❌ No shifts configured! Admins: use !set-shift.", ephemeral=True)
+            await interaction.response.send_message("❌ No shifts configured! Admins: use !set-shift.", ephemeral=ephemeral)
             return
         
         # Create shift selection view, passing the compensation type
@@ -1022,7 +1025,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         guild_id = str(interaction.guild_id)
         
         # Load role data
-        role_data = await file_handlers.load_json(settings.COMMISSION_SETTINGS_FILE, settings.DEFAULT_COMMISSION_SETTINGS)
+        role_data = await file_handlers.load_json(interaction.guild.id,settings.COMMISSION_SETTINGS_FILE, settings.DEFAULT_COMMISSION_SETTINGS)
         
         if guild_id not in role_data or not role_data[guild_id]:
             logger.warning(f"No roles configured for guild {guild_id}")
@@ -1057,18 +1060,20 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
     
     async def show_model_selection(self, interaction: discord.Interaction, period: str, shift: str, role: discord.Role, gross_revenue: Decimal, compensation_type: str, hours_worked: Decimal):
         """Fifth step: Model selection"""
+        ephemeral = await self.get_ephemeral_setting(interaction.guild_id)
+
         # Log revenue input
         logger.info(f"User {interaction.user.name} ({interaction.user.id}) entered gross revenue: ${gross_revenue}")
         
         guild_id = str(interaction.guild_id)
         # Load models data
-        models_data = await file_handlers.load_json(settings.MODELS_DATA_FILE, settings.DEFAULT_MODELS_DATA)
+        models_data = await file_handlers.load_json(interaction.guild.id,settings.MODELS_DATA_FILE, settings.DEFAULT_MODELS_DATA)
 
         valid_models = models_data.get(guild_id, [])
         
         if not valid_models:
             logger.warning(f"No models configured for guild {guild_id}")
-            await interaction.response.send_message("❌ No models configured! Admins: use !set-model.", ephemeral=True)
+            await interaction.response.send_message("❌ No models configured! Admins: use !set-model.", ephemeral=ephemeral)
             return
         
         # Create model selection view
@@ -1082,7 +1087,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         logger.info(f"guild_id: {guild_id}")
         
         # Get role percentage from configuration
-        role_data = await file_handlers.load_json(settings.COMMISSION_SETTINGS_FILE, settings.DEFAULT_COMMISSION_SETTINGS)
+        role_data = await file_handlers.load_json(interaction.guild.id,settings.COMMISSION_SETTINGS_FILE, settings.DEFAULT_COMMISSION_SETTINGS)
         
         # Check if guild_id exists in role_data
         if guild_id not in role_data:
@@ -1119,7 +1124,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             percentage = Decimal(str(user_config.get("commission_percentage", percentage)))
         
         # Load bonus rules
-        bonus_rules = await file_handlers.load_json(settings.BONUS_RULES_FILE, settings.DEFAULT_BONUS_RULES)
+        bonus_rules = await file_handlers.load_json(interaction.guild.id,settings.BONUS_RULES_FILE, settings.DEFAULT_BONUS_RULES)
         guild_bonus_rules = bonus_rules.get(guild_id, [])
         
         # Convert to proper Decimal objects for calculations
@@ -1289,6 +1294,8 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
 
     async def finalize_calculation(self, interaction: discord.Interaction, results: Dict):
         """Final step: Save and display results to everyone"""
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+
         guild_id = str(interaction.guild_id)
         
         # Save earnings data
@@ -1299,8 +1306,8 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         models_list = results["models"]
         
         # Load earnings data
-        # earnings_data = await file_handlers.load_json(settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS) # TODO: remove
-        earnings_data = await file_handlers.load_json(settings.get_earnings_file_for_guild(interaction.guild.id), settings.DEFAULT_EARNINGS)
+        # earnings_data = await file_handlers.load_json(interaction.guild.id,settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS) # TODO: remove
+        earnings_data = await file_handlers.load_json(interaction.guild.id,settings.get_earnings_file_for_guild(interaction.guild.id), settings.DEFAULT_EARNINGS)
         if sender not in earnings_data:
             earnings_data[sender] = []
         
@@ -1331,15 +1338,15 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         logger.info(f"Final calculation for {interaction.user.name} ({interaction.user.id}): Gross=${results['gross_revenue']}, Total Cut=${results['total_cut']}, Period={results['period']}, Shift={results['shift']}, Role={results['role']}{hours_worked_text}")
         
         # Save updated earnings data
-        # success = await file_handlers.save_json(settings.EARNINGS_FILE, earnings_data) # TODO: remove
-        success = await file_handlers.save_json(settings.get_earnings_file_for_guild(interaction.guild.id), earnings_data)
+        # success = await file_handlers.save_json(interaction.guild.id, settings.EARNINGS_FILE, earnings_data) # TODO: remove
+        success = await file_handlers.save_json(interaction.guild.id, settings.get_earnings_file_for_guild(interaction.guild.id), earnings_data)
         if not success:
             logger.error(f"Failed to save earnings data for {sender}")
-            await interaction.followup.send("⚠ Calculation failed to save data. Please try again.", ephemeral=True)
+            await interaction.followup.send("⚠ Calculation failed to save data. Please try again.", ephemeral=ephemeral)
             return
         
         # Check if average display is enabled
-        display_settings = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
+        display_settings = await file_handlers.load_json(interaction.guild.id,settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
         show_average = display_settings.get(guild_id, {}).get("show_average", settings.DEFAULT_DISPLAY_SETTINGS['defaults'])
         
         # Create embed for public announcement
@@ -1558,6 +1565,8 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
 
     async def send_paginated_embeds(self, interaction, embeds, ephemeral=True):
         """Sends multiple embeds as separate messages with page numbering."""
+        ephemeral = await self.get_ephemeral_setting(str(interaction.guild.id))
+
         if not embeds:
             await interaction.followup.send("No data to display.", ephemeral=ephemeral)
             return
@@ -1751,8 +1760,8 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             entries = min(max(entries, 1), MAX_ENTRIES)
 
             # Load and filter data
-            # earnings_data = await file_handlers.load_json(settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS) # TODO: remove
-            earnings_data = await file_handlers.load_json(settings.get_earnings_file_for_guild(interaction.guild.id), settings.DEFAULT_EARNINGS) 
+            # earnings_data = await file_handlers.load_json(interaction.guild.id,settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS) # TODO: remove
+            earnings_data = await file_handlers.load_json(interaction.guild.id,settings.get_earnings_file_for_guild(interaction.guild.id), settings.DEFAULT_EARNINGS) 
             user_earnings = None
 
             if not all_data:

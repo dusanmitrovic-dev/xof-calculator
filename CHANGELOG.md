@@ -2,8 +2,16 @@
 
 ## [Unreleased]
 
+## [0.154.2] - 2025-03-22
+### Changed
+- First attempt to for multiple server file organization. Requires rollback to `v0.154.1`
+
+## [0.154.1] - 2025-03-22
+### Changed
+- Modified `CHANGELOG.md` for better formatting
+
 ## [0.154.0] - 2025-03-21
-### Refactored
+### Changed
 - Converted buffer generation methods to async for improved performance,
 - Enhanced display settings management and improved admin command handling,
 - Clarified admin permissions in report sending and updated help command descriptions,
