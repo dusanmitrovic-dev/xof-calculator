@@ -941,7 +941,6 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             await interaction.response.send_message(f"❌ Model '{model}' already exists!", ephemeral=ephemeral)
             return
         
-        # model_data.setdefault(guild_id, []).append(model) # TODO: remove
         model_data.append(model)
         success = await file_handlers.save_json(file_path, model_data)
         
