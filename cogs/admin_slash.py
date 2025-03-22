@@ -1462,7 +1462,6 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         )
 
     async def reset_earnings(self, interaction: discord.Interaction):
-        # await file_handlers.save_json(settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS) # TODO: remove
         await file_handlers.save_json(settings.get_earnings_file_for_guild(interaction.guild.id), settings.DEFAULT_EARNINGS)
     
     async def reset_models(self, interaction: discord.Interaction): 
