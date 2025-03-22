@@ -994,8 +994,6 @@ class AdminSlashCommands(commands.Cog, name="admin"):
     async def list_models(self, interaction: discord.Interaction):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
 
-        # guild_models = model_data.get(guild_id, []) # TODO: remove
-
         guild_id = interaction.guild.id
         file_path = settings.get_guild_file(guild_id, settings.MODELS_DATA_FILE)
         
