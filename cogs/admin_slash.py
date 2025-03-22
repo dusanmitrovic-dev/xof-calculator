@@ -538,42 +538,6 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             logger.error(f"Failed to save display settings for guild {guild_id}")
             await interaction.response.send_message("❌ Failed to update settings. Please try again.", ephemeral=ephemeral)
 
-    # @app_commands.default_permissions(administrator=True)
-    # @app_commands.command(
-    #     name="export-earnings-csv",
-    #     description="Export all earnings data as CSV"
-    # )
-    # async def export_earnings_csv(self, interaction: discord.Interaction):
-    #     """
-    #     Admin-only command to export earnings data as CSV
-        
-    #     Usage: /export-earnings-csv
-    #     """
-    #     if not interaction.user.guild_permissions.administrator:
-    #         await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=True)
-    #         return
-        
-    #     earnings_data = await file_handlers.load_json(settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS) # WARN: line logic changed
-        
-    #     # Create CSV content
-    #     csv_content = "User,Date,Total Cut,Gross Revenue,Period,Shift,Role,Models\n"
-    #     for user, entries in earnings_data.items():
-    #         for entry in entries:
-    #             csv_content += f'"{user}",{entry["date"]},{entry["total_cut"]},{entry["gross_revenue"]},'
-    #             csv_content += f'{entry["period"]},{entry["shift"]},{entry["role"]},"{entry.get("models", "")}"\n'
-        
-    #     # Create file object
-    #     csv_file = discord.File(
-    #         io.BytesIO(csv_content.encode('utf-8')),
-    #         filename="full_earnings_export.csv"
-    #     )
-        
-    #     await interaction.response.send_message(
-    #         " Full earnings export (CSV):",
-    #         file=csv_file,
-    #         ephemeral=True
-    #     )
-
     # Role Management
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="set-role", description="Set a role's percentage cut")
