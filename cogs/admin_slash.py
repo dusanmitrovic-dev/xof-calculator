@@ -1506,17 +1506,19 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         )
 
     async def reset_bonus_rules(self, interaction: discord.Interaction):
-        await file_handlers.save_json(settings.BONUS_RULES_FILE, settings.DEFAULT_BONUS_RULES)
+        guild_id = interaction.guild.id
+        bonus_file = settings.get_guild_bonus_rules_path(guild_id)
+        await file_handlers.save_json(bonus_file, [])
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="reset-bonus-config", description="Reset bonus rules configuration")
     async def reset_bonus_config(self, interaction: discord.Interaction):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
-
+        
         async def reset_action(interaction: discord.Interaction):
             await self.reset_bonus_rules(interaction)
             await interaction.response.edit_message(content="✅ Bonus rules configuration reset.", view=None)
-
+        
         view = ConfirmButton(reset_action, interaction.user.id)
         await interaction.response.send_message(
             "⚠️ Are you sure you want to reset the bonus rules configuration?", 
