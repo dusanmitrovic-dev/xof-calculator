@@ -674,22 +674,19 @@ class AdminSlashCommands(commands.Cog, name="admin"):
     async def remove_shift(self, interaction: discord.Interaction, shift: str):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
         
-        if not interaction.user.guild_permissions.administrator:
-            await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=True)
-            return
-        
         try:
-            guild_id = str(interaction.guild.id)
-            shift_data = await file_handlers.load_json(settings.SHIFT_DATA_FILE, settings.DEFAULT_SHIFT_DATA)
-            existing_shifts = shift_data.get(guild_id, [])
+            guild_id = interaction.guild.id
+            shift_file = settings.get_guild_shifts_path(guild_id)
+            existing_shifts = await file_handlers.load_json(shift_file, [])
             
-            normalized_shift = validators.validate_shift(shift, existing_shifts)
+            # Case-insensitive search
+            normalized_shift = next((s for s in existing_shifts if s.lower() == shift.lower()), None)
             if normalized_shift is None:
                 await interaction.response.send_message(f"❌ Shift '{shift}' doesn't exist!", ephemeral=ephemeral)
                 return
             
-            shift_data[guild_id].remove(normalized_shift)
-            success = await file_handlers.save_json(settings.SHIFT_DATA_FILE, shift_data)
+            existing_shifts.remove(normalized_shift)
+            success = await file_handlers.save_json(shift_file, existing_shifts)
             
             if success:
                 await interaction.response.send_message(f"✅ Shift '{normalized_shift}' removed!", ephemeral=ephemeral)
