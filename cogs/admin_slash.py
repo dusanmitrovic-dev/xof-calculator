@@ -1577,49 +1577,27 @@ class AdminSlashCommands(commands.Cog, name="admin"):
 
     # Restore Backup Methods
     @app_commands.default_permissions(administrator=True)
-    @app_commands.command(name="restore-shift-backup", description="Restore the latest shift configuration backup")
-    async def restore_shift_backup(self, interaction: discord.Interaction):
+    @app_commands.command(name="restore-period-backup", description="Restore the latest period configuration backup")
+    async def restore_period_backup(self, interaction: discord.Interaction):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
         
         async def restore_action(interaction: discord.Interaction):
             guild_id = interaction.guild.id
-            shift_file = settings.get_guild_shifts_path(guild_id)
-            backup_file = f"{shift_file}.bak"
+            period_file = settings.get_guild_periods_path(guild_id)
+            backup_file = f"{period_file}.bak"
             
             if os.path.exists(backup_file):
-                # Clear current data first
-                # await file_handlers.save_json(shift_file, [])
-                shutil.copy2(backup_file, shift_file)
+                shutil.copy2(backup_file, period_file)
                 await interaction.response.edit_message(
-                    content="✅ Shift configuration backup restored successfully.", 
+                    content="✅ Period configuration backup restored successfully.", 
                     view=None
                 )
             else:
                 await interaction.response.edit_message(
-                    content="❌ No shift configuration backup found.", 
+                    content="❌ No period configuration backup found.", 
                     view=None
                 )
         
-        view = ConfirmButton(restore_action, interaction.user.id)
-        await interaction.response.send_message(
-            "⚠️ Are you sure you want to restore the shift configuration backup?", 
-            view=view, 
-            ephemeral=ephemeral
-        )
-
-    @app_commands.default_permissions(administrator=True)
-    @app_commands.command(name="restore-period-backup", description="Restore the latest period configuration backup")
-    async def restore_period_backup(self, interaction: discord.Interaction):
-        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
-
-        async def restore_action(interaction: discord.Interaction):
-            backup_file = os.path.join(settings.DATA_DIRECTORY, f"{settings.PERIOD_DATA_FILE}.bak")
-            if os.path.exists(backup_file):
-                shutil.copy2(backup_file, os.path.join(settings.DATA_DIRECTORY, settings.PERIOD_DATA_FILE))
-                await interaction.response.edit_message(content="✅ Period configuration backup restored successfully.", view=None)
-            else:
-                await interaction.response.edit_message(content="❌ No period configuration backup found.", view=None)
-
         view = ConfirmButton(restore_action, interaction.user.id)
         await interaction.response.send_message(
             "⚠️ Are you sure you want to restore the period configuration backup?", 

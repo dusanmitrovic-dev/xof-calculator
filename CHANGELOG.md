@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.159.0] - 2025-03-22
+### Changed
+- Update period settings for guild-specific configurations.
+
 ## [0.158.0] - 2025-03-22
 ### Changed
 - Update shift settings for guild-specific configurations.
