@@ -1440,17 +1440,19 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         )
 
     async def reset_period(self, interaction: discord.Interaction):
-        await file_handlers.save_json(settings.PERIOD_DATA_FILE, settings.DEFAULT_PERIOD_DATA)
+        guild_id = interaction.guild.id
+        period_file = settings.get_guild_periods_path(guild_id)
+        await file_handlers.save_json(period_file, [])
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="reset-period-config", description="Reset period configuration")
     async def reset_period_config(self, interaction: discord.Interaction):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
-
+        
         async def reset_action(interaction: discord.Interaction):
             await self.reset_period(interaction)
             await interaction.response.edit_message(content="✅ Period configuration reset.", view=None)
-
+        
         view = ConfirmButton(reset_action, interaction.user.id)
         await interaction.response.send_message(
             "⚠️ Are you sure you want to reset the period configuration?", 
