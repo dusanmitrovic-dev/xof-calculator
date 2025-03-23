@@ -1661,15 +1661,24 @@ class AdminSlashCommands(commands.Cog, name="admin"):
     @app_commands.command(name="restore-bonus-backup", description="Restore the latest bonus rules configuration backup")
     async def restore_bonus_backup(self, interaction: discord.Interaction):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
-
+        
         async def restore_action(interaction: discord.Interaction):
-            backup_file = os.path.join(settings.DATA_DIRECTORY, f"{settings.BONUS_RULES_FILE}.bak")
+            guild_id = interaction.guild.id
+            bonus_file = settings.get_guild_bonus_rules_path(guild_id)
+            backup_file = f"{bonus_file}.bak"
+            
             if os.path.exists(backup_file):
-                shutil.copy2(backup_file, os.path.join(settings.DATA_DIRECTORY, settings.BONUS_RULES_FILE))
-                await interaction.response.edit_message(content="✅ Bonus rules configuration backup restored successfully.", view=None)
+                shutil.copy2(backup_file, bonus_file)
+                await interaction.response.edit_message(
+                    content="✅ Bonus rules configuration backup restored successfully.", 
+                    view=None
+                )
             else:
-                await interaction.response.edit_message(content="❌ No bonus rules configuration backup found.", view=None)
-
+                await interaction.response.edit_message(
+                    content="❌ No bonus rules configuration backup found.", 
+                    view=None
+                )
+        
         view = ConfirmButton(restore_action, interaction.user.id)
         await interaction.response.send_message(
             "⚠️ Are you sure you want to restore the bonus rules configuration backup?", 
