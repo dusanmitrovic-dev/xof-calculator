@@ -408,6 +408,8 @@
 - [x] (v0.154.0) Format total cut as currency and update footer styling for sale ID
 - [x] (v0.154.0) Improve legend positioning and styling for improved chart clarity
 - [x] (v0.154.0) Improve table readability with enhanced font size, padding, and vertical alignment
+- [x] (v0.156.0) Update models and display settings for guild-specific configurations
+- [x] (v0.157.0) Update role settings for guild-specific configurations
 - [ ] Option to set default zip exports in setting
 - [ ] Display hourly cut in employee cut?
 - [ ] Add functionality to select column names to display in `view-earnings`

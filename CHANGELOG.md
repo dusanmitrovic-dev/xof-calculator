@@ -2,9 +2,13 @@
 
 ## [Unreleased]
 
+## [0.157.0] - 2025-03-22
+### Changed
+- Update role settings for guild-specific configurations.
+
 ## [0.156.0] - 2025-03-22
 ### Changed
-- Add models and display settings for guild-specific configurations.
+- Update models and display settings for guild-specific configurations.
 
 ## [0.155.0] - 2025-03-22
 ### Rollback

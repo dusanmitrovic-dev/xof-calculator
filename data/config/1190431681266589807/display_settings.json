@@ -1,5 +1,5 @@
 {
-    "ephemeral_responses": true,
+    "ephemeral_responses": false,
     "show_average": true,
     "agency_name": "Agency",
     "show_ids": true,
