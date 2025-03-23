@@ -414,6 +414,7 @@
 - [x] (v0.159.0) Update period settings for guild-specific configurations
 - [x] (v0.160.0) Update bonus settings for guild-specific configurations
 - [x] (v0.161.0) Update compensation settings for guild-specific configurations
+- [x] (v0.162.0) Update display settings, help command and reset restore full config for guild-specific configurations
 - [ ] Option to set default zip exports in setting
 - [ ] Display hourly cut in employee cut?
 - [ ] Add functionality to select column names to display in `view-earnings`

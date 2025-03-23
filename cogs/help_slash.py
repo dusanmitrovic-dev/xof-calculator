@@ -12,9 +12,17 @@ class HelpSlashCommands(commands.Cog):
         self.bot = bot
 
     async def get_ephemeral_setting(self, guild_id):
-        display_settings = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
-        guild_settings = display_settings.get(str(guild_id), {})
-        return guild_settings.get('ephemeral_responses', True)
+        file_path = settings.get_guild_file(guild_id, settings.DISPLAY_SETTINGS_FILE)
+        display_settings = await file_handlers.load_json(file_path, {
+                "ephemeral_responses": True,
+                "show_average": True,
+                "agency_name": "Agency",
+                "show_ids": True,
+                "bot_name": "Shift Calculator"
+        })
+        guild_settings = display_settings
+        return guild_settings.get('ephemeral_responses', 
+            settings.DEFAULT_DISPLAY_SETTINGS['ephemeral_responses'])
 
     @app_commands.command(name="help", description="Show available commands based on your permissions")
     async def help(self, interaction: discord.Interaction):
@@ -92,6 +100,8 @@ class HelpSlashCommands(commands.Cog):
             misc_admin_commands = "\n".join([
                 "`/toggle-ephemeral` - Toggle whether command responses are ephemeral",
                 "`/toggle-average` - Toggle performance averages in calculation embeds",
+                "`/set-agency-name` - Set the agency name",
+                "`/set-bot-name` - Set the bot name",
                 "`/clear-earnings` - Clear all earnings data",
                 "`/remove-sale` - Remove earnings entries by IDs , Users mentions or combined"
             ])

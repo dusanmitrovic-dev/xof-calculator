@@ -184,5 +184,6 @@ data/*.bak
 
 # Backup
 data/_backup
+data/_backup_002
 
-data/
+data/config/

@@ -24,7 +24,13 @@ class AdminSlashCommands(commands.Cog, name="admin"):
     async def get_ephemeral_setting(self, guild_id):
         file_path = settings.get_guild_file(guild_id, settings.DISPLAY_SETTINGS_FILE)  # NOTE: Added
         # display_settings = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS) # TODO: remove
-        display_settings = await file_handlers.load_json(file_path, settings.DEFAULT_DISPLAY_SETTINGS)
+        display_settings = await file_handlers.load_json(file_path, {
+                "ephemeral_responses": True,
+                "show_average": True,
+                "agency_name": "Agency",
+                "show_ids": True,
+                "bot_name": "Shift Calculator"
+        })
         # guild_settings = display_settings.get(str(guild_id), settings.DEFAULT_DISPLAY_SETTINGS['defaults']) # TODO: remove
         # guild_settings = display_settings.get(str(guild_id), settings.DEFAULT_DISPLAY_SETTINGS) # TODO: remove
         guild_settings = display_settings
@@ -287,11 +293,15 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         file_path = settings.get_guild_commission_path(interaction.guild.id)
         guild_settings = await file_handlers.load_json(file_path, {})
         
-        # Create an embed to display commission_settings
+        # Ensure 'roles' and 'users' keys exist
+        guild_settings.setdefault('roles', {})
+        guild_settings.setdefault('users', {})
+
+        # Create an embed to display commission settings
         embed = discord.Embed(title="Commission Settings", color=0x009933)
         
         if role:
-            # View specific role commission_settings
+            # View specific role commission settings
             role_settings = guild_settings['roles'].get(str(role.id), {})
             embed.description = f"Settings for Role: {role.mention}"
             embed.add_field(
@@ -305,7 +315,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
                 inline=True
             )
         elif user:
-            # View specific user commission_settings
+            # View specific user commission settings
             user_settings = guild_settings['users'].get(str(user.id), {})
             embed.description = f"Settings for User: {user.mention}"
             embed.add_field(
@@ -324,13 +334,13 @@ class AdminSlashCommands(commands.Cog, name="admin"):
                 inline=True
             )
         else:
-            # View all commission_settings summary
+            # View all commission settings summary
             embed.description = "Summary of Commission Settings"
 
             if not guild_settings['roles'] and not guild_settings['users']:
                 embed.add_field(name="", value="❌ No settings found", inline=False)
             
-            # Role commission_settings summary
+            # Role commission settings summary
             role_summary = []
             for role_id, role_data in guild_settings['roles'].items():
                 role = interaction.guild.get_role(int(role_id))
@@ -343,7 +353,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             if role_summary:
                 embed.add_field(name="Role Settings", value="\n".join(role_summary), inline=False)
             
-            # User commission_settings summary
+            # User commission settings summary
             user_summary = []
             for user_id, user_data in guild_settings['users'].items():
                 member = interaction.guild.get_member(int(user_id))
@@ -360,24 +370,38 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
 
     async def get_agency_name(self, guild_id):
-        settings_data = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
-        guild_settings = settings_data.get(str(guild_id), settings.DEFAULT_DISPLAY_SETTINGS['defaults'])
-        return guild_settings.get("agency_name",
-            settings.DEFAULT_DISPLAY_SETTINGS['defaults']['agency_name'])
+        file_path = settings.get_guild_display_path(guild_id)
+        settings_data = await file_handlers.load_json(file_path, {
+            "ephemeral_responses": True,
+            "show_average": True,
+            "agency_name": "Agency",
+            "show_ids": True,
+            "bot_name": "Shift Calculator"
+        })
+        return settings_data.get("agency_name", "Agency")
 
     async def get_show_ids(self, guild_id):
-        settings_data = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
-        guild_settings = settings_data.get(str(guild_id), settings.DEFAULT_DISPLAY_SETTINGS['defaults'])
-        return guild_settings.get("show_ids",
-            settings.DEFAULT_DISPLAY_SETTINGS['defaults']['show_ids'])
+        file_path = settings.get_guild_display_path(guild_id)
+        settings_data = await file_handlers.load_json(file_path, {
+            "ephemeral_responses": True,
+            "show_average": True,
+            "agency_name": "Agency",
+            "show_ids": True,
+            "bot_name": "Shift Calculator"
+        })
+        return settings_data.get("show_ids", True)
 
     async def get_bot_name(self, guild_id):
-        settings_data = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
-        guild_settings = settings_data.get(str(guild_id), settings.DEFAULT_DISPLAY_SETTINGS['defaults'])
-        return guild_settings.get("bot_name",
-            settings.DEFAULT_DISPLAY_SETTINGS['defaults']['bot_name'])
+        file_path = settings.get_guild_display_path(guild_id)
+        settings_data = await file_handlers.load_json(file_path, {
+            "ephemeral_responses": True,
+            "show_average": True,
+            "agency_name": "Agency",
+            "show_ids": True,
+            "bot_name": "Shift Calculator"
+        })
+        return settings_data.get("bot_name", "Shift Calculator")
 
-    # Add these new commands in the AdminSlashCommands class
     @app_commands.command(name="set-agency-name", description="Set custom agency name for this server")
     @app_commands.default_permissions(administrator=True)
     @app_commands.describe(name="The custom agency name to display that bot will use")
@@ -385,14 +409,17 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         """Set custom agency name"""
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
         
-        settings_data = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
-        guild_id = str(interaction.guild.id)
+        file_path = settings.get_guild_display_path(interaction.guild.id)
+        settings_data = await file_handlers.load_json(file_path, {
+            "ephemeral_responses": True,
+            "show_average": True,
+            "agency_name": "Agency",
+            "show_ids": True,
+            "bot_name": "Shift Calculator"
+        })
         
-        if guild_id not in settings_data:
-            settings_data[guild_id] = {}
-        
-        settings_data[guild_id]["agency_name"] = name
-        success = await file_handlers.save_json(settings.DISPLAY_SETTINGS_FILE, settings_data)
+        settings_data["agency_name"] = name
+        success = await file_handlers.save_json(file_path, settings_data)
         
         if success:
             await interaction.response.send_message(f"✅ Agency name set to: {name}", ephemeral=ephemeral)
@@ -405,17 +432,20 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         """Toggle ID display"""
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
         
-        settings_data = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
-        guild_id = str(interaction.guild.id)
+        file_path = settings.get_guild_display_path(interaction.guild.id)
+        settings_data = await file_handlers.load_json(file_path, {
+            "ephemeral_responses": True,
+            "show_average": True,
+            "agency_name": "Agency",
+            "show_ids": True,
+            "bot_name": "Shift Calculator"
+        })
         
-        current_setting = settings_data.get(guild_id, {}).get("show_ids", False)
+        current_setting = settings_data.get("show_ids", True)
         new_setting = not current_setting
         
-        if guild_id not in settings_data:
-            settings_data[guild_id] = {}
-        
-        settings_data[guild_id]["show_ids"] = new_setting
-        success = await file_handlers.save_json(settings.DISPLAY_SETTINGS_FILE, settings_data)
+        settings_data["show_ids"] = new_setting
+        success = await file_handlers.save_json(file_path, settings_data)
         
         if success:
             status = f"**enabled**" if new_setting else f"**disabled**"
@@ -430,14 +460,17 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         """Set custom bot name"""
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
         
-        settings_data = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
-        guild_id = str(interaction.guild.id)
+        file_path = settings.get_guild_display_path(interaction.guild.id)
+        settings_data = await file_handlers.load_json(file_path, {
+            "ephemeral_responses": True,
+            "show_average": True,
+            "agency_name": "Agency",
+            "show_ids": True,
+            "bot_name": "Shift Calculator"
+        })
         
-        if guild_id not in settings_data:
-            settings_data[guild_id] = {}
-        
-        settings_data[guild_id]["bot_name"] = name
-        success = await file_handlers.save_json(settings.DISPLAY_SETTINGS_FILE, settings_data)
+        settings_data["bot_name"] = name
+        success = await file_handlers.save_json(file_path, settings_data)
         
         if success:
             await interaction.response.send_message(f"✅ Bot name set to: {name}", ephemeral=ephemeral)
@@ -472,10 +505,15 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
 
     async def get_average_setting(self, guild_id):
-        settings_data = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
-        guild_settings = settings_data.get(str(guild_id), settings.DEFAULT_DISPLAY_SETTINGS['defaults'])
-        return guild_settings.get("show_average",
-            settings.DEFAULT_DISPLAY_SETTINGS['defaults']['show_average'])
+        guild_settings_file = settings.get_guild_display_path(guild_id)
+        guild_settings = await file_handlers.load_json(guild_settings_file, {
+            "ephemeral_responses": True,
+            "show_average": True,
+            "agency_name": "Agency",
+            "show_ids": True,
+            "bot_name": "Shift Calculator"
+        })
+        return guild_settings.get("show_average", True)
 
     @app_commands.command(
         name="toggle-average",
@@ -492,21 +530,23 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             return
         
         guild_id = str(interaction.guild_id)
+        guild_settings_file = settings.get_guild_display_path(guild_id)
         
         # Load settings data
-        settings_data = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
-        
-        # Initialize guild settings if they don't exist
-        if guild_id not in settings_data:
-            settings_data[guild_id] = {"show_average": False}
+        guild_settings = await file_handlers.load_json(guild_settings_file, {
+            "ephemeral_responses": True,
+            "show_average": True,
+            "agency_name": "Agency",
+            "show_ids": True,
+            "bot_name": "Shift Calculator"
+        })
         
         # Toggle the show_average setting
-        current_setting = settings_data[guild_id].get("show_average", False)
-        settings_data[guild_id]["show_average"] = not current_setting
-        new_setting = settings_data[guild_id]["show_average"]
+        new_setting = not guild_settings.get("show_average", True)
+        guild_settings["show_average"] = new_setting
         
         # Save updated settings
-        success = await file_handlers.save_json(settings.DISPLAY_SETTINGS_FILE, settings_data)
+        success = await file_handlers.save_json(guild_settings_file, guild_settings)
         
         if success:
             status = "enabled" if new_setting else "disabled"
@@ -1349,7 +1389,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             await self.reset_display(interaction)
             await self.reset_compensation(interaction)
             try:
-                await interaction.response.edit_message(content="✅ Configuration data has been reset.", view=None)
+                await interaction.response.edit_message(content="✅ Configuration data has been reset for this server.", view=None)
             except discord.NotFound:
                 logger.error("Ignoring exception in view %r for item %r", self, view, exc_info=True)
 
@@ -1358,7 +1398,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
 
         view.children[0].callback = confirm_callback
         view.children[1].callback = cancel_callback
-        await interaction.response.send_message(content="‼️🚨‼ Are you sure you want to reset all configuration data? Earnings data will not be affected (use: `/clear-earnings`).", view=view, ephemeral=ephemeral)
+        await interaction.response.send_message(content="‼️🚨‼ Are you sure you want to reset all configuration data for this server? Earnings data will not be affected (use: `/clear-earnings`).", view=view, ephemeral=ephemeral)
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="restore-latest-backup", description="Restore the latest backup")
@@ -1376,6 +1416,10 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             cogs_dir = os.path.dirname(os.path.abspath(__file__))
             parent_dir = os.path.dirname(cogs_dir)
             data_dir = os.path.join(parent_dir, "data")
+            data_dir = os.path.join(data_dir, "config", str(interaction.guild.id))
+            if not os.path.exists(data_dir):
+                await interaction.edit_original_response(content="❌ Server's data directory not found!", view=None)
+                return
 
             backup_files = glob.glob(os.path.join(data_dir, "*.bak"))
 
@@ -1564,7 +1608,15 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         )
 
     async def reset_display(self, interaction: discord.Interaction):
-        await file_handlers.save_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
+        guild_id = interaction.guild.id
+        file_path = settings.get_guild_display_path(guild_id)
+        await file_handlers.save_json(file_path, {
+                "ephemeral_responses": True,
+                "show_average": True,
+                "agency_name": "Agency",
+                "show_ids": True,
+                "bot_name": "Shift Calculator"
+        })
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="reset-display-config", description="Reset display configuration")
@@ -1747,9 +1799,13 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
 
         async def restore_action(interaction: discord.Interaction):
-            backup_file = os.path.join(settings.DATA_DIRECTORY, f"{settings.DISPLAY_SETTINGS_FILE}.bak")
+            guild_id = interaction.guild.id
+            file_path = settings.get_guild_display_path(guild_id)
+
+            backup_file = f"{file_path}.bak"
+
             if os.path.exists(backup_file):
-                shutil.copy2(backup_file, os.path.join(settings.DATA_DIRECTORY, settings.DISPLAY_SETTINGS_FILE))
+                shutil.copy2(backup_file, file_path)
                 await interaction.response.edit_message(content="✅ Display configuration backup restored successfully.", view=None)
             else:
                 await interaction.response.edit_message(content="❌ No display configuration backup found.", view=None)
@@ -1768,12 +1824,18 @@ class AdminSlashCommands(commands.Cog, name="admin"):
     @app_commands.default_permissions(administrator=True)
     async def toggle_ephemeral(self, interaction: discord.Interaction):
         guild_id = interaction.guild.id
-        file_path = settings.get_guild_file(guild_id, settings.DISPLAY_SETTINGS_FILE)
+        file_path = settings.get_guild_display_path(guild_id)
         
         # Load current settings
         current_settings = await file_handlers.load_json(
             file_path, 
-            settings.DEFAULT_DISPLAY_SETTINGS
+            {
+                "ephemeral_responses": True,
+                "show_average": True,
+                "agency_name": "Agency",
+                "show_ids": True,
+                "bot_name": "Shift Calculator"
+            }
         )
         
         # Toggle setting

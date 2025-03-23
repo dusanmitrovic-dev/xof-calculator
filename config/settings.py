@@ -99,3 +99,9 @@ def get_guild_bonus_rules_path(guild_id: int) -> str:
 def get_guild_commission_path(guild_id: int) -> str:
     """Get path to guild's commission settings"""
     return get_guild_file(guild_id, COMMISSION_SETTINGS_FILE)
+
+# NOTE: DISPLAY
+
+def get_guild_display_path(guild_id: int) -> str:
+    """Get path to guild's display settings"""
+    return get_guild_file(guild_id, DISPLAY_SETTINGS_FILE)
