@@ -184,3 +184,5 @@ data/*.bak
 
 # Backup
 data/_backup
+
+data/

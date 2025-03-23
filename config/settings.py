@@ -25,7 +25,8 @@ EARNINGS_FILE = EARNINGS_FILE_NAME_WITHOUT_EXT + ".json"
 DEFAULT_ROLE_DATA = {}
 # DEFAULT_SHIFT_DATA: Dict[str, List[str]] = {} # TODO: remove
 DEFAULT_SHIFT_DATA = []
-DEFAULT_PERIOD_DATA: Dict[str, List[str]] = {}
+# DEFAULT_PERIOD_DATA: Dict[str, List[str]] = {} # TODO: remove
+DEFAULT_PERIOD_DATA = []
 # DEFAULT_MODELS_DATA: Dict[str, List[str]] = {} # TODO: remove
 DEFAULT_MODELS_DATA = []
 DEFAULT_BONUS_RULES: Dict[str, List[Dict[str, float]]] = {}
@@ -92,3 +93,9 @@ def get_guild_periods_path(guild_id: int) -> str:
 def get_guild_bonus_rules_path(guild_id: int) -> str:
     """Get path to guild's bonus rules config file"""
     return get_guild_file(guild_id, BONUS_RULES_FILE)
+
+# NOTE: COMMISSION
+
+def get_guild_commission_path(guild_id: int) -> str:
+    """Get path to guild's commission settings"""
+    return get_guild_file(guild_id, COMMISSION_SETTINGS_FILE)

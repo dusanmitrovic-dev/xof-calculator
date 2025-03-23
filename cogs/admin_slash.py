@@ -67,23 +67,19 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             return
         
         # Load existing settings
-        commission_settings = await file_handlers.load_json(settings.COMMISSION_SETTINGS_FILE, {})
-        
-        # Ensure guild-specific settings exist
-        guild_id = str(interaction.guild.id)
-        if guild_id not in commission_settings:
-            commission_settings[guild_id] = {"roles": {}, "users": {}}
+        file_path = settings.get_guild_commission_path(interaction.guild.id)
+        commission_settings = await file_handlers.load_json(file_path, {})
         
         # Ensure 'roles' key exists
-        commission_settings[guild_id].setdefault('roles', {})
+        commission_settings.setdefault('roles', {})
         
         # Update role commission_settings
-        role_settings = commission_settings[guild_id]['roles'].get(str(role.id), {})
+        role_settings = commission_settings['roles'].get(str(role.id), {})
         role_settings['commission_percentage'] = percentage
-        commission_settings[guild_id]['roles'][str(role.id)] = role_settings
+        commission_settings['roles'][str(role.id)] = role_settings
         
         # Save updated commission_settings
-        await file_handlers.save_json(settings.COMMISSION_SETTINGS_FILE, commission_settings)
+        await file_handlers.save_json(file_path, commission_settings)
         
         # Respond with confirmation
         response = f"✅ Set commission for {role.mention} to "
@@ -114,23 +110,19 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             return
         
         # Load existing settings
-        commission_settings = await file_handlers.load_json(settings.COMMISSION_SETTINGS_FILE, {})
-        
-        # Ensure guild-specific settings exist
-        guild_id = str(interaction.guild.id)
-        if guild_id not in commission_settings:
-            commission_settings[guild_id] = {"roles": {}, "users": {}}
+        file_path = settings.get_guild_commission_path(interaction.guild.id)
+        commission_settings = await file_handlers.load_json(file_path, {})
         
         # Ensure 'roles' key exists
-        commission_settings[guild_id].setdefault('roles', {})
+        commission_settings.setdefault('roles', {})
         
         # Update role settings
-        role_settings = commission_settings[guild_id]['roles'].get(str(role.id), {})
+        role_settings = commission_settings['roles'].get(str(role.id), {})
         role_settings['hourly_rate'] = rate
-        commission_settings[guild_id]['roles'][str(role.id)] = role_settings
+        commission_settings['roles'][str(role.id)] = role_settings
         
         # Save updated settings
-        await file_handlers.save_json(settings.COMMISSION_SETTINGS_FILE, commission_settings)
+        await file_handlers.save_json(file_path, commission_settings)
         
         # Respond with confirmation
         response = f"✅ Set hourly rate for {role.mention} to "
@@ -160,30 +152,27 @@ class AdminSlashCommands(commands.Cog, name="admin"):
                 "❌ Invalid percentage. Must be between 0 and 100.", 
                 ephemeral=True
             )
-            return        
-        # Load existing settings
-        commission_settings = await file_handlers.load_json(settings.COMMISSION_SETTINGS_FILE, {})
+            return
         
-        # Ensure guild-specific settings exist
-        guild_id = str(interaction.guild.id)
-        if guild_id not in commission_settings:
-            commission_settings[guild_id] = {"roles": {}, "users": {}}
+        # Load existing settings
+        file_path = settings.get_guild_commission_path(interaction.guild.id)
+        commission_settings = await file_handlers.load_json(file_path, {})
         
         # Ensure 'users' key exists
-        commission_settings[guild_id].setdefault('users', {})
+        commission_settings.setdefault('users', {})
         
         # Update user settings
-        user_settings = commission_settings[guild_id]['users'].get(str(user.id), {})
+        user_settings = commission_settings['users'].get(str(user.id), {})
         user_settings['commission_percentage'] = percentage
 
         if override_role is None:
-            override_role = commission_settings[guild_id]['users'].get(str(user.id), {}).get('override_role', False)
+            override_role = commission_settings['users'].get(str(user.id), {}).get('override_role', False)
 
         user_settings['override_role'] = override_role
-        commission_settings[guild_id]['users'][str(user.id)] = user_settings
+        commission_settings['users'][str(user.id)] = user_settings
         
         # Save updated settings
-        await file_handlers.save_json(settings.COMMISSION_SETTINGS_FILE, commission_settings)
+        await file_handlers.save_json(file_path, commission_settings)
         
         # Respond with confirmation
         response = f"✅ Set commission for {user.mention} to "
@@ -217,25 +206,24 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             return
         
         # Load existing settings
-        commission_settings = await file_handlers.load_json(settings.COMMISSION_SETTINGS_FILE, {})
+        file_path = settings.get_guild_commission_path(interaction.guild.id)
+        commission_settings = await file_handlers.load_json(file_path, {})
         
-        # Ensure guild-specific settings exist
-        guild_id = str(interaction.guild.id)
-        if guild_id not in commission_settings:
-            commission_settings[guild_id] = {"roles": {}, "users": {}}
+        # Ensure 'users' key exists
+        commission_settings.setdefault('users', {})
         
         # Update user settings
-        user_settings = commission_settings[guild_id]['users'].get(str(user.id), {})
+        user_settings = commission_settings['users'].get(str(user.id), {})
         user_settings['hourly_rate'] = rate
 
         if override_role is None:
-            override_role = commission_settings[guild_id]['users'].get(str(user.id), {}).get('override_role', False)
+            override_role = commission_settings['users'].get(str(user.id), {}).get('override_role', False)
 
         user_settings['override_role'] = override_role
-        commission_settings[guild_id]['users'][str(user.id)] = user_settings
+        commission_settings['users'][str(user.id)] = user_settings
         
         # Save updated settings
-        await file_handlers.save_json(settings.COMMISSION_SETTINGS_FILE, commission_settings)
+        await file_handlers.save_json(file_path, commission_settings)
         
         # Respond with confirmation
         response = f"✅ Set hourly rate for {user.mention} to "
@@ -257,19 +245,11 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
 
         # Load existing settings
-        commission_settings = await file_handlers.load_json(settings.COMMISSION_SETTINGS_FILE, {})
-        
-        # Ensure guild-specific settings exist
-        guild_id = str(interaction.guild.id)
-        if guild_id not in commission_settings:
-            await interaction.response.send_message(
-                "❌ No commission settings found for this guild.", 
-                ephemeral=ephemeral
-            )
-            return
+        file_path = settings.get_guild_commission_path(interaction.guild.id)
+        commission_settings = await file_handlers.load_json(file_path, {})
         
         # Ensure user settings exist
-        user_settings = commission_settings[guild_id]['users'].get(str(user.id), {})
+        user_settings = commission_settings['users'].get(str(user.id), {})
         if not user_settings:
             await interaction.response.send_message(
                 "❌ No commission settings found for this user.", 
@@ -279,10 +259,10 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         
         # Toggle override_role
         user_settings['override_role'] = not user_settings.get('override_role', False)
-        commission_settings[guild_id]['users'][str(user.id)] = user_settings
+        commission_settings['users'][str(user.id)] = user_settings
         
         # Save updated settings
-        await file_handlers.save_json(settings.COMMISSION_SETTINGS_FILE, commission_settings)
+        await file_handlers.save_json(file_path, commission_settings)
         
         # Respond with confirmation
         response = f"✅ Toggled role override for {user.mention} to {user_settings['override_role']}"
@@ -303,11 +283,9 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         """View compensation settings for a role or user"""
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
 
-        commission_settings = await file_handlers.load_json(settings.COMMISSION_SETTINGS_FILE, {})
-        
-        # Get guild-specific settings
-        guild_id = str(interaction.guild.id)
-        guild_settings = commission_settings.get(guild_id, {"roles": {}, "users": {}})
+        # Load existing settings
+        file_path = settings.get_guild_commission_path(interaction.guild.id)
+        guild_settings = await file_handlers.load_json(file_path, {})
         
         # Create an embed to display commission_settings
         embed = discord.Embed(title="Commission Settings", color=0x009933)
@@ -1561,7 +1539,13 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         )
 
     async def reset_compensation(self, interaction: discord.Interaction):
-        await file_handlers.save_json(settings.COMMISSION_SETTINGS_FILE, settings.DEFAULT_COMMISSION_SETTINGS)
+        await file_handlers.save_json(
+            settings.get_guild_commission_path(interaction.guild.id),
+            {
+                "roles": {},
+                "users": {}
+            }
+        )
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="reset-compensation-config", description="Reset compensation configuration")
@@ -1570,7 +1554,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
 
         async def reset_action(interaction: discord.Interaction):
             await self.reset_compensation(interaction)
-            await interaction.response.edit_message(content="✅ Commission configuration reset.", view=None)
+            await interaction.response.edit_message(content="✅ Compensation configuration reset.", view=None)
 
         view = ConfirmButton(reset_action, interaction.user.id)
         await interaction.response.send_message(
@@ -1741,9 +1725,11 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
 
         async def restore_action(interaction: discord.Interaction):
-            backup_file = os.path.join(settings.DATA_DIRECTORY, f"{settings.COMMISSION_SETTINGS_FILE}.bak")
+            guild_id = interaction.guild.id
+            file_path = settings.get_guild_commission_path(guild_id)
+            backup_file = f"{file_path}.bak"
             if os.path.exists(backup_file):
-                shutil.copy2(backup_file, os.path.join(settings.DATA_DIRECTORY, settings.COMMISSION_SETTINGS_FILE))
+                shutil.copy2(backup_file, file_path)
                 await interaction.response.edit_message(content="✅ Compensation configuration backup restored successfully.", view=None)
             else:
                 await interaction.response.edit_message(content="❌ No compensation configuration backup found.", view=None)
