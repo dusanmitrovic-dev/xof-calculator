@@ -1577,7 +1577,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             
             if os.path.exists(backup_file):
                 # Clear current data first
-                await file_handlers.save_json(shift_file, [])
+                # await file_handlers.save_json(shift_file, [])
                 shutil.copy2(backup_file, shift_file)
                 await interaction.response.edit_message(
                     content="✅ Shift configuration backup restored successfully.", 

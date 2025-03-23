@@ -410,6 +410,7 @@
 - [x] (v0.154.0) Improve table readability with enhanced font size, padding, and vertical alignment
 - [x] (v0.156.0) Update models and display settings for guild-specific configurations
 - [x] (v0.157.0) Update role settings for guild-specific configurations
+- [x] (v0.158.0) Update shift settings for guild-specific configurations
 - [ ] Option to set default zip exports in setting
 - [ ] Display hourly cut in employee cut?
 - [ ] Add functionality to select column names to display in `view-earnings`

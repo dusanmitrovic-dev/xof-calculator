@@ -23,7 +23,8 @@ EARNINGS_FILE = EARNINGS_FILE_NAME_WITHOUT_EXT + ".json"
 
 # DEFAULT_ROLE_DATA: Dict[str, Dict[str, float]] = {}# TODO: remove
 DEFAULT_ROLE_DATA = {}
-DEFAULT_SHIFT_DATA: Dict[str, List[str]] = {}
+# DEFAULT_SHIFT_DATA: Dict[str, List[str]] = {} # TODO: remove
+DEFAULT_SHIFT_DATA = []
 DEFAULT_PERIOD_DATA: Dict[str, List[str]] = {}
 # DEFAULT_MODELS_DATA: Dict[str, List[str]] = {} # TODO: remove
 DEFAULT_MODELS_DATA = []
