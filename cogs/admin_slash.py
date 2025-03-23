@@ -703,25 +703,28 @@ class AdminSlashCommands(commands.Cog, name="admin"):
     async def set_period(self, interaction: discord.Interaction, period: str):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
         
-        if not interaction.user.guild_permissions.administrator:
-            await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=True)
-            return
-        
         try:
+            if not interaction.user.guild_permissions.administrator:
+                await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=True)
+                return
+
+            logger.info(f"User {interaction.user.name} used set-period command for period '{period}'")
+            
             if not period.strip():
-                await interaction.response.send_message("❌ Period name cannot be empty.", ephemeral=True)
+                await interaction.response.send_message("❌ Period name cannot be empty.", ephemeral=ephemeral)
                 return
                 
-            guild_id = str(interaction.guild.id)
-            period_data = await file_handlers.load_json(settings.PERIOD_DATA_FILE, settings.DEFAULT_PERIOD_DATA)
-            existing_periods = period_data.get(guild_id, [])
+            guild_id = interaction.guild.id
+            period_file = settings.get_guild_periods_path(guild_id)
+            existing_periods = await file_handlers.load_json(period_file, [])
             
-            if validators.validate_period(period, existing_periods) is not None:
+            # Case-insensitive check with original casing preservation
+            if any(period.lower() == p.lower() for p in existing_periods):
                 await interaction.response.send_message(f"❌ Period '{period}' already exists!", ephemeral=ephemeral)
                 return
             
-            period_data.setdefault(guild_id, []).append(period)
-            success = await file_handlers.save_json(settings.PERIOD_DATA_FILE, period_data)
+            existing_periods.append(period.strip())
+            success = await file_handlers.save_json(period_file, existing_periods)
             
             if success:
                 await interaction.response.send_message(f"✅ Period '{period}' added!", ephemeral=ephemeral)
