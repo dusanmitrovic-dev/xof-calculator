@@ -637,27 +637,28 @@ class AdminSlashCommands(commands.Cog, name="admin"):
     async def set_shift(self, interaction: discord.Interaction, shift: str):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
         
-        if not interaction.user.guild_permissions.administrator:
-            await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=True)
-            return
-        
         try:
+            if not interaction.user.guild_permissions.administrator:
+                await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=True)
+                return
+            
             logger.info(f"User {interaction.user.name} used set-shift command for shift '{shift}'")
             
             if not shift.strip():
                 await interaction.response.send_message("❌ Shift name cannot be empty.", ephemeral=ephemeral)
                 return
                 
-            guild_id = str(interaction.guild.id)
-            shift_data = await file_handlers.load_json(settings.SHIFT_DATA_FILE, settings.DEFAULT_SHIFT_DATA)
-            existing_shifts = shift_data.get(guild_id, [])
+            guild_id = interaction.guild.id
+            shift_file = settings.get_guild_shifts_path(guild_id)
+            existing_shifts = await file_handlers.load_json(shift_file, [])
             
-            if validators.validate_shift(shift, existing_shifts) is not None:
+            # Case-insensitive check but preserve original casing
+            if any(shift.lower() == s.lower() for s in existing_shifts):
                 await interaction.response.send_message(f"❌ Shift '{shift}' already exists!", ephemeral=ephemeral)
                 return
             
-            shift_data.setdefault(guild_id, []).append(shift)
-            success = await file_handlers.save_json(settings.SHIFT_DATA_FILE, shift_data)
+            existing_shifts.append(shift.strip())
+            success = await file_handlers.save_json(shift_file, existing_shifts)
             
             if success:
                 await interaction.response.send_message(f"✅ Shift '{shift}' added!", ephemeral=ephemeral)

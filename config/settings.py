@@ -73,3 +73,9 @@ def get_guild_models_path(guild_id: int) -> str:
 def get_guild_roles_path(guild_id: int) -> str:
     """Get path to guild's roles config file"""
     return get_guild_file(guild_id, ROLE_DATA_FILE)
+
+# NOTE: SHIFTS
+
+def get_guild_shifts_path(guild_id: int) -> str:
+    """Get path to guild's shifts config file"""
+    return get_guild_file(guild_id, SHIFT_DATA_FILE)
