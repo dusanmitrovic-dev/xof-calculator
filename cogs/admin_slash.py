@@ -880,18 +880,23 @@ class AdminSlashCommands(commands.Cog, name="admin"):
     @app_commands.command(name="list-shifts", description="List configured shifts")
     async def list_shifts(self, interaction: discord.Interaction):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
-
-        guild_id = str(interaction.guild.id)
-        shift_data = await file_handlers.load_json(settings.SHIFT_DATA_FILE, settings.DEFAULT_SHIFT_DATA)
-        guild_shifts = shift_data.get(guild_id, [])
         
-        if not guild_shifts:
-            await interaction.response.send_message("❌ No shifts configured.", ephemeral=ephemeral)
-            return
+        try:
+            guild_id = interaction.guild.id
+            shift_file = settings.get_guild_shifts_path(guild_id)
+            guild_shifts = await file_handlers.load_json(shift_file, [])
             
-        embed = discord.Embed(title="Configured Shifts", color=discord.Color.blue())
-        embed.add_field(name="Shifts", value="\n".join(f"• {shift}" for shift in guild_shifts))
-        await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
+            if not guild_shifts:
+                await interaction.response.send_message("❌ No shifts configured.", ephemeral=ephemeral)
+                return
+                
+            embed = discord.Embed(title="Configured Shifts", color=discord.Color.blue())
+            embed.add_field(name="Shifts", value="\n".join(f"• {shift}" for shift in guild_shifts))
+            await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
+            
+        except Exception as e:
+            logger.error(f"Error in list_shifts: {str(e)}")
+            await interaction.response.send_message("❌ Failed to load shift data.", ephemeral=ephemeral)
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="list-periods", description="List configured periods")
