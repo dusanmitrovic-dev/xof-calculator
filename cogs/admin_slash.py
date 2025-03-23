@@ -1569,17 +1569,27 @@ class AdminSlashCommands(commands.Cog, name="admin"):
     @app_commands.command(name="restore-shift-backup", description="Restore the latest shift configuration backup")
     async def restore_shift_backup(self, interaction: discord.Interaction):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
-
+        
         async def restore_action(interaction: discord.Interaction):
-            backup_file = os.path.join(settings.DATA_DIRECTORY, f"{settings.SHIFT_DATA_FILE}.bak")
+            guild_id = interaction.guild.id
+            shift_file = settings.get_guild_shifts_path(guild_id)
+            backup_file = f"{shift_file}.bak"
+            
             if os.path.exists(backup_file):
-                shutil.copy2(backup_file, os.path.join(settings.DATA_DIRECTORY, settings.SHIFT_DATA_FILE))
-                await interaction.response.edit_message(content="✅ Shift configuration backup restored successfully.", view=None)
+                # Clear current data first
+                await file_handlers.save_json(shift_file, [])
+                shutil.copy2(backup_file, shift_file)
+                await interaction.response.edit_message(
+                    content="✅ Shift configuration backup restored successfully.", 
+                    view=None
+                )
             else:
-                await interaction.response.edit_message(content="❌ No shift configuration backup found.", view=None)
-
+                await interaction.response.edit_message(
+                    content="❌ No shift configuration backup found.", 
+                    view=None
+                )
+        
         view = ConfirmButton(restore_action, interaction.user.id)
-
         await interaction.response.send_message(
             "⚠️ Are you sure you want to restore the shift configuration backup?", 
             view=view, 
