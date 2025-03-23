@@ -1410,20 +1410,20 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         )
 
     async def reset_shift(self, interaction: discord.Interaction):
-        await file_handlers.save_json(settings.SHIFT_DATA_FILE, settings.DEFAULT_SHIFT_DATA)
+        guild_id = interaction.guild.id
+        shift_file = settings.get_guild_shifts_path(guild_id)
+        await file_handlers.save_json(shift_file, [])
 
-    # Reset Individual Config Files
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="reset-shift-config", description="Reset shift configuration")
     async def reset_shift_config(self, interaction: discord.Interaction):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
-
+        
         async def reset_action(interaction: discord.Interaction):
             await self.reset_shift(interaction)
             await interaction.response.edit_message(content="✅ Shift configuration reset.", view=None)
-
+        
         view = ConfirmButton(reset_action, interaction.user.id)
-
         await interaction.response.send_message(
             "⚠️ Are you sure you want to reset the shift configuration?", 
             view=view, 
