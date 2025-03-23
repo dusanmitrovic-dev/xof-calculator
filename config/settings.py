@@ -86,3 +86,9 @@ def get_guild_shifts_path(guild_id: int) -> str:
 def get_guild_periods_path(guild_id: int) -> str:
     """Get path to guild's periods config file"""
     return get_guild_file(guild_id, PERIOD_DATA_FILE)
+
+# NOTE: BONUS
+
+def get_guild_bonus_rules_path(guild_id: int) -> str:
+    """Get path to guild's bonus rules config file"""
+    return get_guild_file(guild_id, BONUS_RULES_FILE)
