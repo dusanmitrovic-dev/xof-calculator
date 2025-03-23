@@ -944,25 +944,30 @@ class AdminSlashCommands(commands.Cog, name="admin"):
     @app_commands.command(name="list-bonus-rules", description="List configured bonus rules")
     async def list_bonus_rules(self, interaction: discord.Interaction):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
-
-        guild_id = str(interaction.guild.id)
-        bonus_rules = await file_handlers.load_json(settings.BONUS_RULES_FILE, settings.DEFAULT_BONUS_RULES)
-        guild_rules = bonus_rules.get(guild_id, [])
         
-        if not guild_rules:
-            await interaction.response.send_message("❌ No bonus rules configured.", ephemeral=ephemeral)
-            return
+        try:
+            guild_id = interaction.guild.id
+            bonus_file = settings.get_guild_bonus_rules_path(guild_id)
+            bonus_rules = await file_handlers.load_json(bonus_file, [])
             
-        embed = discord.Embed(title="Bonus Rules", color=discord.Color.green())
-        
-        for rule in sorted(guild_rules, key=lambda x: x["from"]):
-            embed.add_field(
-                name=f"${rule['from']} - ${rule['to']}",
-                value=f"Bonus: ${rule['amount']}",
-                inline=False
-            )
+            if not bonus_rules:
+                await interaction.response.send_message("❌ No bonus rules configured.", ephemeral=ephemeral)
+                return
+                
+            embed = discord.Embed(title="Bonus Rules", color=discord.Color.green())
+            
+            for rule in sorted(bonus_rules, key=lambda x: x["from"]):
+                embed.add_field(
+                    name=f"${rule['from']:,.2f} - ${rule['to']:,.2f}",
+                    value=f"Bonus: ${rule['amount']:,.2f}",
+                    inline=False
+                )
 
-        await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
+            await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
+            
+        except Exception as e:
+            logger.error(f"Error in list_bonus_rules: {str(e)}")
+            await interaction.response.send_message("❌ Failed to load bonus rules.", ephemeral=ephemeral)
 
     # Model Management
     @app_commands.default_permissions(administrator=True)
