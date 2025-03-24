@@ -1549,10 +1549,10 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         )
 
     async def reset_earnings(self, interaction: discord.Interaction):
-        await file_handlers.save_json(settings.get_earnings_file_for_guild(interaction.guild.id), settings.DEFAULT_EARNINGS)
+        await file_handlers.save_json(settings.get_guild_earnings_path(interaction.guild.id), [])
     
     async def reset_models(self, interaction: discord.Interaction): 
-        await file_handlers.save_json(settings.MODELS_DATA_FILE, settings.DEFAULT_MODELS_DATA)
+        await file_handlers.save_json(settings.MODELS_DATA_FILE, [])
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="reset-models-config", description="Reset models configuration")
@@ -1728,9 +1728,10 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
 
         async def restore_action(interaction: discord.Interaction):
-            backup_file = os.path.join(settings.DATA_DIRECTORY, f"{settings.get_earnings_file_for_guild(interaction.guild.id)}.bak")
+            file_path = settings.get_guild_earnings_path(interaction.guild.id)
+            backup_file = f"{file_path}.bak"
             if os.path.exists(backup_file):
-                shutil.copy2(backup_file, os.path.join(settings.DATA_DIRECTORY, settings.get_earnings_file_for_guild(interaction.guild.id)))
+                shutil.copy2(backup_file, file_path)
                 await interaction.response.edit_message(content="✅ Earnings configuration backup restored successfully.", view=None)
             else:
                 await interaction.response.edit_message(content="❌ No earnings configuration backup found.", view=None)

@@ -28,7 +28,7 @@ from reportlab.lib import colors
 from utils import file_handlers
 from utils import generator_uuid
 from datetime import datetime
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from config import settings
 from pathlib import Path
 

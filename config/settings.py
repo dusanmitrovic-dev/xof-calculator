@@ -7,7 +7,9 @@ VERSION = "1.0.0"
 
 DATA_DIRECTORY = "data"
 CONFIG_DIR = os.path.join(DATA_DIRECTORY, "config")
+EARNINGS_DIR = os.path.join(DATA_DIRECTORY, "earnings")
 os.makedirs(CONFIG_DIR, exist_ok=True)
+os.makedirs(EARNINGS_DIR, exist_ok=True)
 
 
 ROLE_DATA_FILE = "role_percentages.json"
@@ -29,8 +31,9 @@ DEFAULT_SHIFT_DATA = []
 DEFAULT_PERIOD_DATA = []
 # DEFAULT_MODELS_DATA: Dict[str, List[str]] = {} # TODO: remove
 DEFAULT_MODELS_DATA = []
-DEFAULT_BONUS_RULES: Dict[str, List[Dict[str, float]]] = {}
-DEFAULT_EARNINGS: Dict[str, List[Dict[str, Any]]] = {}
+DEFAULT_BONUS_RULES = []
+DEFAULT_EARNINGS: List[Dict[str, Any]] = []
+
 DEFAULT_DISPLAY_SETTINGS = {
         "ephemeral_responses": True,
         "show_average": True,
@@ -39,7 +42,10 @@ DEFAULT_DISPLAY_SETTINGS = {
         "bot_name": "Shift Calculator"
 }
 
-DEFAULT_COMMISSION_SETTINGS: Dict[str, Dict[str, float]] = {}
+DEFAULT_COMMISSION_SETTINGS = {
+    "roles": {},
+    "users": {}
+}
 
 # Formatting
 DATE_FORMAT = "%d/%m/%Y"
@@ -47,11 +53,11 @@ DECIMAL_PLACES = 2
 
 os.makedirs(DATA_DIRECTORY, exist_ok=True)
 
-def get_earnings_file_name_without_ext():
-    return EARNINGS_FILE_NAME_WITHOUT_EXT
+# def get_earnings_file_name_without_ext(): # TODO: remove
+#     return EARNINGS_FILE_NAME_WITHOUT_EXT
 
-def get_earnings_file_for_guild(guild_id):
-    return f"{EARNINGS_FILE_NAME_WITHOUT_EXT}_{guild_id}.json"
+# def get_earnings_file_for_guild(guild_id):
+#     return f"{EARNINGS_FILE_NAME_WITHOUT_EXT}_{guild_id}.json"
 
 def get_guild_path(guild_id: int) -> str:
     """Return path to guild's config directory"""
@@ -105,3 +111,9 @@ def get_guild_commission_path(guild_id: int) -> str:
 def get_guild_display_path(guild_id: int) -> str:
     """Get path to guild's display settings"""
     return get_guild_file(guild_id, DISPLAY_SETTINGS_FILE)
+
+# NOTE: EARNINGS
+
+def get_guild_earnings_path(guild_id: int) -> str:
+    """Get path to guild's earnings file"""
+    return get_guild_file(guild_id, EARNINGS_FILE)
