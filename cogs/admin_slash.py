@@ -11,7 +11,7 @@ import asyncio
 from decimal import Decimal
 from discord import app_commands
 from discord.ext import commands
-from typing import Optional
+from typing import Optional, Callable
 from config import settings
 from utils import file_handlers, validators
 
@@ -67,7 +67,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         if not self.validate_percentage(percentage):
             await interaction.response.send_message(
                 "❌ Invalid percentage. Must be between 0 and 100.", 
-                ephemeral=True
+                ephemeral=ephemeral
             )
 
             return
@@ -111,7 +111,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         if not self.validate_hourly_rate(rate):
             await interaction.response.send_message(
                 "❌ Invalid hourly rate. Must be a non-negative number.", 
-                ephemeral=True
+                ephemeral=ephemeral
             )
             return
         
@@ -156,7 +156,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         if not self.validate_percentage(percentage):
             await interaction.response.send_message(
                 "❌ Invalid percentage. Must be between 0 and 100.", 
-                ephemeral=True
+                ephemeral=ephemeral
             )
             return
         
@@ -207,7 +207,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         if not self.validate_hourly_rate(rate):
             await interaction.response.send_message(
                 "❌ Invalid hourly rate. Must be a non-negative number.", 
-                ephemeral=True
+                ephemeral=ephemeral
             )
             return
         
@@ -664,7 +664,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         
         try:
             if not interaction.user.guild_permissions.administrator:
-                await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=True)
+                await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=ephemeral)
                 return
             
             logger.info(f"User {interaction.user.name} used set-shift command for shift '{shift}'")
@@ -730,7 +730,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         
         try:
             if not interaction.user.guild_permissions.administrator:
-                await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=True)
+                await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=ephemeral)
                 return
 
             logger.info(f"User {interaction.user.name} used set-period command for period '{period}'")
@@ -800,7 +800,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         
         try:
             if not interaction.user.guild_permissions.administrator:
-                await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=True)
+                await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=ephemeral)
                 return
 
             # Parse inputs
@@ -1005,7 +1005,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         file_path = settings.get_guild_models_path(guild_id)
         
         if not interaction.user.guild_permissions.administrator:
-            await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=True)
+            await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=ephemeral)
             return
         
         logger.info(f"User {interaction.user.name} used set-model command for model '{model}'")
@@ -1037,7 +1037,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
         
         if not interaction.user.guild_permissions.administrator:
-            await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=True)
+            await interaction.response.send_message("❌ This command is restricted to administrators.", ephemeral=ephemeral)
             return
         
         guild_id = interaction.guild.id
@@ -1437,7 +1437,8 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             failed_count = 0
 
             for bak_file in backup_files:
-                if os.path.basename(bak_file) == settings.get_guild_earnings_path(interaction.guild.id) + ".bak":
+                earnings_file = settings.get_guild_earnings_path(interaction.guild.id)
+                if os.path.basename(bak_file) == os.path.basename(earnings_file) + ".bak":
                     continue
 
                 try:
@@ -1862,6 +1863,375 @@ class AdminSlashCommands(commands.Cog, name="admin"):
                 "❌ Failed to update settings",
                 ephemeral=True
             )
+
+
+    @app_commands.command(name="copy-config-from-the-server")
+    @app_commands.default_permissions(administrator=True)
+    @app_commands.describe(
+        source_id="Server ID to copy from",
+        include_words="Comma-separated words to include (e.g., shifts,periods)",
+        exclude_words="Comma-separated words to exclude (e.g., roles,commission)"
+    )
+    async def copy_config(
+        self,
+        interaction: discord.Interaction,
+        source_id: str,
+        include_words: str = None,
+        exclude_words: str = 'role_percentages, commission_settings, display_settings'
+    ):
+        """Copy config files while preserving existing configurations"""
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+        SKIP_FILES = [word.strip().lower() for word in exclude_words.split(',')]
+        
+        try:
+            source_dir = os.path.join("data", "config", source_id)
+            if not os.path.exists(source_dir):
+                await interaction.response.send_message("❌ No config found", ephemeral=ephemeral)
+                return
+
+            # Process include words
+            include_list = [word.strip().lower() for word in include_words.split(',')] if include_words else None
+            
+            view = discord.ui.View()
+            confirm_btn = discord.ui.Button(style=discord.ButtonStyle.red, label="CONFIRM OVERWRITE")
+            cancel_btn = discord.ui.Button(style=discord.ButtonStyle.grey, label="Cancel")
+
+            async def confirm(interaction: discord.Interaction):
+                target_dir = os.path.join("data", "config", str(interaction.guild.id))
+                copied_files = []
+                
+                # Custom ignore function
+                def ignore_func(dir, files):
+                    ignored = []
+                    for f in files:
+                        f_lower = f.lower()
+                        should_include = (
+                            (not include_list or any(word in f_lower for word in include_list))
+                            and not any(skip in f_lower for skip in SKIP_FILES)
+                        )  # Added closing parenthesis
+                        if not should_include:
+                            ignored.append(f)
+                    return ignored
+
+                # Copy without deleting existing files
+                if os.path.exists(target_dir):
+                    for root, dirs, files in os.walk(source_dir):
+                        relative_path = os.path.relpath(root, source_dir)
+                        dest_path = os.path.join(target_dir, relative_path)
+                        
+                        os.makedirs(dest_path, exist_ok=True)
+                        
+                        for file in files:
+                            src_file = os.path.join(root, file)
+                            dest_file = os.path.join(dest_path, file)
+                            
+                            if file in ignore_func(root, [file]):
+                                continue
+                                
+                            shutil.copy2(src_file, dest_file)
+                            copied_files.append(file)
+                else:
+                    shutil.copytree(
+                        source_dir, 
+                        target_dir, 
+                        ignore=ignore_func
+                    )
+                    copied_files = [f for f in os.listdir(source_dir) if not ignore_func(None, [f])]
+
+                await interaction.response.send_message(
+                    f"✅ Copied {len(copied_files)} files while preserving existing config\n"
+                    f"Copied: `{', '.join(copied_files)}`", 
+                    ephemeral=ephemeral
+                )
+
+            confirm_btn.callback = confirm
+            cancel_btn.callback = lambda i: i.response.edit_message(content="❌ Canceled", view=None)
+            view.add_item(confirm_btn)
+            view.add_item(cancel_btn)
+
+            warning_msg = [
+                "‼️🚨 CONFIG OVERWRITE WARNING 🚨‼️",
+                f"Copying from server ID: `{source_id}`",
+                f"Will overwrite files matching: {f'`{include_words}` keywords' or 'all non-excluded files'}",
+                f"Excluding files: `{exclude_words}`",
+                "Files that are not part of the copy process will remain unchanged!"
+            ]
+
+            await interaction.response.send_message(
+                "\n".join(warning_msg), 
+                view=view, 
+                ephemeral=ephemeral
+            )
+
+        except Exception as e:
+            await interaction.response.send_message(
+                f"❌ Failed to copy config: {str(e)}", 
+                ephemeral=ephemeral
+            )
+
+    @app_commands.command(name="copy-earnings-from-the-server")
+    @app_commands.default_permissions(administrator=True)
+    @app_commands.describe(source_id="Server ID to copy from")
+    async def copy_earnings(self, interaction: discord.Interaction, source_id: str):
+        """Copy earnings data from another server"""
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+
+        try:
+            source_file = os.path.join("data", "earnings", f"{source_id}.json")
+            if not os.path.exists(source_file):
+                await interaction.response.send_message("❌ No earnings found", ephemeral=ephemeral)
+                return
+
+            view = discord.ui.View()
+            confirm_btn = discord.ui.Button(style=discord.ButtonStyle.red, label="OVERWRITE EARNINGS")
+            cancel_btn = discord.ui.Button(style=discord.ButtonStyle.grey, label="Cancel")
+            
+            async def confirm(interaction: discord.Interaction):
+                target_file = os.path.join("data", "earnings", f"{interaction.guild.id}.json")
+                shutil.copyfile(source_file, target_file)
+                await interaction.response.send_message("✅ Earnings copied", ephemeral=ephemeral)
+
+            confirm_btn.callback = confirm
+            cancel_btn.callback = lambda i: i.response.edit_message(content="❌ Canceled", view=None)
+            view.add_item(confirm_btn)
+            view.add_item(cancel_btn)
+            
+            await interaction.response.send_message(
+                "‼️🚨‼ This will DELETE ALL CURRENT EARNINGS AND REPLACE THEM ‼", 
+                view=view, 
+                ephemeral=ephemeral
+            )
+        except:
+            await interaction.response.send_message("❌ Failed to copy earnings", ephemeral=ephemeral)
+
+    @app_commands.command(name="view-config", description="View complete server configuration")
+    @app_commands.default_permissions(administrator=True)
+    async def view_config(self, interaction: discord.Interaction) -> None:
+        """Display all server configurations with interactive pagination"""
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+        guild_id = interaction.guild.id
+
+        #region Helper Functions
+        def create_embed(title: str) -> discord.Embed:
+            """Create a styled embed template"""
+            return discord.Embed(
+                title=title,
+                color=0x00ff00,
+                timestamp=discord.utils.utcnow()
+            ).set_footer(text=f"Requested by {interaction.user.display_name}")
+
+        def chunk_content(content: str, title: str) -> list[tuple[str, str]]:
+            """Split content into embed-safe chunks"""
+            newline = '\n'
+            buffer = []
+            chunks = []
+            current_length = 0
+            
+            for line in content.split(newline):
+                if current_length + len(line) > 1000:
+                    chunks.append((
+                        title,
+                        f"```{newline.join(buffer)}```"
+                    ))
+                    buffer = []
+                    current_length = 0
+                    title = f"{title} (cont.)"
+                buffer.append(line)
+                current_length += len(line) + 1
+            
+            if buffer:
+                chunks.append((
+                    title,
+                    f"```{newline.join(buffer)}```"
+                ))
+            return chunks or [(title, "```No configuration found```")]
+
+        async def load_config_section(loader, formatter, section_name: str):
+            """Load and format a config section"""
+            try:
+                raw_data = await loader()
+                formatted = formatter(raw_data)
+                return chunk_content('\n'.join(formatted), section_name)
+            except Exception as e:
+                logger.error(f"Config error in {section_name}: {str(e)}")
+                return chunk_content("", f"{section_name} Error")
+
+        async def format_compensation(data_type: str) -> list[str]:
+            """Format compensation data"""
+            try:
+                comp_data = await file_handlers.load_json(
+                    settings.get_guild_commission_path(guild_id), {}
+                )
+                lines = []
+                # Check if data_type exists and is a dictionary
+                section_data = comp_data.get(data_type, {})
+                if not isinstance(section_data, dict):
+                    raise ValueError(f"{data_type} section is not a dictionary")
+                
+                for entry_id, settings in section_data.items():
+                    # Validate entry_id is a string of digits
+                    if not entry_id.isdigit():
+                        raise ValueError(f"Invalid ID format: {entry_id}")
+                    # Convert entry_id to integer and fetch target
+                    target = (
+                        interaction.guild.get_role(int(entry_id))
+                        if data_type == "roles" else
+                        interaction.guild.get_member(int(entry_id))
+                    )
+                    name = target.mention if target else f"Unknown ({entry_id})"
+                    # Validate settings structure
+                    commission = settings.get('commission_percentage', '?')
+                    hourly = settings.get('hourly_rate', '?')
+                    lines.append(
+                        f"{name}\n"
+                        f"Commission: {commission}%\n"
+                        f"Hourly: ${hourly}/h"
+                    )
+                return lines or ["No entries"]
+            except Exception as e:
+                logger.error(f"Compensation error: {str(e)}")
+                return ["Error loading data"]
+        #endregion
+
+        #region Configuration Loaders
+        config_sections = []
+        
+        # Role Percentages
+        config_sections.extend(await load_config_section(
+            lambda: file_handlers.load_json(settings.get_guild_roles_path(guild_id), {}),
+            lambda d: [f"{interaction.guild.get_role(int(k)) or k}: {v}%" for k, v in d.items()],
+            "Role Cuts"
+        ))
+
+        # Shifts
+        config_sections.extend(await load_config_section(
+            lambda: file_handlers.load_json(settings.get_guild_shifts_path(guild_id), []),
+            lambda d: [f"• {s}" for s in d],
+            "Shifts"
+        ))
+
+        # Periods
+        config_sections.extend(await load_config_section(
+            lambda: file_handlers.load_json(settings.get_guild_periods_path(guild_id), []),
+            lambda d: [f"• {p}" for p in d],
+            "Periods"
+        ))
+
+        # Bonus Rules
+        config_sections.extend(await load_config_section(
+            lambda: file_handlers.load_json(settings.get_guild_bonus_rules_path(guild_id), []),
+            lambda d: [f"${r['from']}-${r['to']}: ${r['amount']}" for r in d],
+            "Bonuses"
+        ))
+
+        # Models
+        config_sections.extend(await load_config_section(
+            lambda: file_handlers.load_json(settings.get_guild_models_path(guild_id), []),
+            lambda d: [f"• {m}" for m in d],
+            "Models"
+        ))
+
+        # Display Settings
+        config_sections.extend(await load_config_section(
+            lambda: file_handlers.load_json(settings.get_guild_display_path(guild_id), {}),
+            lambda d: [
+                f"Ephemeral: {d.get('ephemeral_responses', True)}",
+                f"Show Average: {d.get('show_average', True)}",
+                f"Agency Name: {d.get('agency_name', 'Agency')}",
+                f"Show IDs: {d.get('show_ids', True)}",
+                f"Bot Name: {d.get('bot_name', 'Default')}"
+            ],
+            "Display"
+        ))
+
+        # Compensation Data
+        config_sections.extend(await load_config_section(
+            lambda: format_compensation("roles"),
+            lambda d: d,
+            "Role Compensation"
+        ))
+        config_sections.extend(await load_config_section(
+            lambda: format_compensation("users"),
+            lambda d: d,
+            "User Compensation"
+        ))
+        #endregion
+
+        #region Pagination System
+        class ConfigView(discord.ui.View):
+            def __init__(self, embeds: list[discord.Embed]):
+                super().__init__(timeout=180)
+                self.embeds = embeds
+                self.page = 0
+                
+                # Initial button state
+                self._update_buttons()
+                
+            def _update_buttons(self):
+                self.prev_button.disabled = self.page == 0
+                self.next_button.disabled = self.page == len(self.embeds)-1
+                
+            @discord.ui.button(label="◀", style=discord.ButtonStyle.blurple)
+            async def prev_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+                self.page -= 1
+                self._update_buttons()
+                await interaction.response.edit_message(
+                    embed=self.embeds[self.page],
+                    view=self
+                )
+                
+            @discord.ui.button(label="▶", style=discord.ButtonStyle.blurple)
+            async def next_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+                self.page += 1
+                self._update_buttons()
+                await interaction.response.edit_message(
+                    embed=self.embeds[self.page],
+                    view=self
+                )
+                
+            @discord.ui.button(label="✖", style=discord.ButtonStyle.red)
+            async def close_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+                await interaction.response.defer()
+                await interaction.delete_original_response()
+                self.stop()
+
+        # Build embeds
+        embeds = []
+        current_embed = create_embed("Server Configuration")
+        field_count = 0
+        
+        for title, content in config_sections:
+            if field_count >= 5 or len(current_embed) > 4000:
+                embeds.append(current_embed)
+                current_embed = create_embed("Configuration Continued")
+                field_count = 0
+                
+            current_embed.add_field(name=title, value=content, inline=False)
+            field_count += 1
+            
+        if field_count > 0:
+            embeds.append(current_embed)
+        #endregion
+
+        # Send response
+        try:
+            if not embeds:
+                await interaction.response.send_message("No configuration found", ephemeral=ephemeral)
+                return
+                
+            view = ConfigView(embeds) if len(embeds) > 1 else None
+            await interaction.response.send_message(
+                embed=embeds[0],
+                view=view,
+                ephemeral=ephemeral
+            )
+        except Exception as e:
+            logger.error(f"Config display failed: {str(e)}")
+            await interaction.response.send_message(
+                "Failed to display configuration - data too large",
+                ephemeral=ephemeral
+            )
+
 
 class ConfirmButton(discord.ui.View):
     def __init__(self, action_callback, user_id: int):
