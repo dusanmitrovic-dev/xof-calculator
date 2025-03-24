@@ -1327,8 +1327,8 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         models_list = results["models"]
         
         # Load earnings data
-        # earnings_data = await file_handlers.load_json(settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS) # TODO: remove
-        earnings_data = await file_handlers.load_json(settings.get_earnings_file_for_guild(interaction.guild.id), settings.DEFAULT_EARNINGS)
+        # earnings_data = await file_handlers.load_json(settings.EARNINGS_FILE, []) # TODO: remove
+        earnings_data = await file_handlers.load_json(settings.get_guild_earnings_path(interaction.guild.id), [])
         if sender not in earnings_data:
             earnings_data[sender] = []
         
@@ -1360,7 +1360,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         
         # Save updated earnings data
         # success = await file_handlers.save_json(settings.EARNINGS_FILE, earnings_data) # TODO: remove
-        success = await file_handlers.save_json(settings.get_earnings_file_for_guild(interaction.guild.id), earnings_data)
+        success = await file_handlers.save_json(settings.get_guild_earnings_path(interaction.guild.id), earnings_data)
         if not success:
             logger.error(f"Failed to save earnings data for {sender}")
             await interaction.followup.send("⚠ Calculation failed to save data. Please try again.", ephemeral=True)
@@ -1779,8 +1779,8 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             entries = min(max(entries, 1), MAX_ENTRIES)
 
             # Load and filter data
-            # earnings_data = await file_handlers.load_json(settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS) # TODO: remove
-            earnings_data = await file_handlers.load_json(settings.get_earnings_file_for_guild(interaction.guild.id), settings.DEFAULT_EARNINGS) 
+            # earnings_data = await file_handlers.load_json(settings.EARNINGS_FILE, []) # TODO: remove
+            earnings_data = await file_handlers.load_json(settings.get_guild_earnings_path(interaction.guild.id), []) 
             user_earnings = None
 
             if not all_data:
