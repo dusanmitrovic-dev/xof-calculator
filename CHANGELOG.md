@@ -2,35 +2,39 @@
 
 ## [Unreleased]
 
-## [0.163.1] - 2025-03-22
+## [0.164.0] - 2025-03-24
+### Change
+- Update `!summary` earnings and period data file retrieval to use guild-specific paths.
+
+## [0.163.1] - 2025-03-24
 ### Remove
 - Remove `data/earnings` test residual files.
 
-## [0.163.0] - 2025-03-22
+## [0.163.0] - 2025-03-24
 ### Changed
 - Updated earnings slash calculate commands to use multiple servers file logic.
 
-## [0.162.0] - 2025-03-22
+## [0.162.0] - 2025-03-23
 ### Changed
 - Update display settings, help command and reset restore full config for guild-specific configurations.
 
-## [0.161.0] - 2025-03-22
+## [0.161.0] - 2025-03-23
 ### Changed
 - Update compensation settings for guild-specific configurations.
 
-## [0.160.0] - 2025-03-22
+## [0.160.0] - 2025-03-23
 ### Changed
 - Update bonus settings for guild-specific configurations.
 
-## [0.159.0] - 2025-03-22
+## [0.159.0] - 2025-03-23
 ### Changed
 - Update period settings for guild-specific configurations.
 
-## [0.158.0] - 2025-03-22
+## [0.158.0] - 2025-03-23
 ### Changed
 - Update shift settings for guild-specific configurations.
 
-## [0.157.0] - 2025-03-22
+## [0.157.0] - 2025-03-23
 ### Changed
 - Update role settings for guild-specific configurations.
 

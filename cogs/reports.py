@@ -27,8 +27,7 @@ class ReportCommands(commands.Cog):
         guild_id = str(ctx.guild.id)
         
         # Validate period
-        period_data = await file_handlers.load_json(settings.PERIOD_DATA_FILE, settings.DEFAULT_PERIOD_DATA)
-        valid_periods = period_data.get(guild_id, [])
+        valid_periods = await file_handlers.load_json(settings.get_guild_periods_path(ctx.guild.id), [])
         matched_period = validators.validate_period(period, valid_periods)
         
         if matched_period is None:
@@ -50,7 +49,7 @@ class ReportCommands(commands.Cog):
             return
         
         # Load earnings data
-        earnings_data = await file_handlers.load_json(settings.EARNINGS_FILE, settings.DEFAULT_EARNINGS)
+        earnings_data = await file_handlers.load_json(settings.get_guild_earnings_path(ctx.guild.id), {})
         
         # Collect all entries for the period
         all_entries = []
