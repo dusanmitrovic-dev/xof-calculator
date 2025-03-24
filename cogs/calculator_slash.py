@@ -1050,9 +1050,9 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         guild_id = str(interaction.guild_id)
         
         # Load role data
-        role_data = await file_handlers.load_json(settings.COMMISSION_SETTINGS_FILE, settings.DEFAULT_COMMISSION_SETTINGS)
+        role_data = await file_handlers.load_json(settings.get_guild_commission_path(interaction.guild_id), {})
         
-        if guild_id not in role_data or not role_data[guild_id]:
+        if not role_data or "roles" not in role_data:
             logger.warning(f"No roles configured for guild {guild_id}")
             await interaction.response.edit_message(content="❌ No roles configured! Admins: use /set-role-commission.", view=None)
             return
@@ -1062,7 +1062,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         configured_roles = []
         
         for role in guild_roles:
-            if str(role.id) in role_data[guild_id]["roles"] and role in interaction.user.roles:
+            if str(role.id) in role_data["roles"] and role in interaction.user.roles:
                 configured_roles.append(role)
         
         if not configured_roles:
@@ -1089,18 +1089,17 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         logger.info(f"User {interaction.user.name} ({interaction.user.id}) entered gross revenue: ${gross_revenue}")
         
         guild_id = str(interaction.guild_id)
-        # Load models data
-        models_data = await file_handlers.load_json(settings.MODELS_DATA_FILE, settings.DEFAULT_MODELS_DATA)
+        # Load models data specific to the guild
+        models_file = settings.get_guild_models_path(guild_id)
+        models_data = await file_handlers.load_json(models_file, [])
 
-        valid_models = models_data.get(guild_id, [])
-        
-        if not valid_models:
+        if not models_data:
             logger.warning(f"No models configured for guild {guild_id}")
-            await interaction.response.send_message("❌ No models configured! Admins: use !set-model.", ephemeral=True)
+            await interaction.response.send_message("❌ No models configured! Admins: use /set-model.", ephemeral=True)
             return
         
         # Create model selection view
-        view = ModelSelectionView(self, valid_models, period, shift, role, gross_revenue, compensation_type, hours_worked)
+        view = ModelSelectionView(self, models_data, period, shift, role, gross_revenue, compensation_type, hours_worked)
         await interaction.response.edit_message(content="Select models (optional, you can select multiple):", view=view)
 
     async def preview_calculation(self, interaction: discord.Interaction, period: str, shift: str, role: discord.Role, 
@@ -1109,16 +1108,18 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         guild_id = str(interaction.guild_id)
         logger.info(f"guild_id: {guild_id}")
         
-        # Get role percentage from configuration
-        role_data = await file_handlers.load_json(settings.COMMISSION_SETTINGS_FILE, settings.DEFAULT_COMMISSION_SETTINGS)
+        # Load commission settings for the guild
+        commission_file = settings.get_guild_commission_path(interaction.guild_id)
+        role_data = await file_handlers.load_json(commission_file, settings.DEFAULT_COMMISSION_SETTINGS)
         
         # Check if guild_id exists in role_data
-        if guild_id not in role_data:
-            logger.error(f"Guild ID {guild_id} not found in role_data")
-            await interaction.edit_original_response(content="Guild configuration not found. Please contact an administrator.")
-            return
+        # if guild_id not in role_data: # TODO: remove
+        #     logger.error(f"Guild ID {guild_id} not found in role_data")
+        #     await interaction.edit_original_response(content="Guild configuration not found. Please contact an administrator.")
+        #     return
         
-        guild_config = role_data[guild_id]
+        # guild_config = role_data[guild_id] # TODO: remove
+        guild_config = role_data
         
         # Check if role exists in the guild's roles configuration
         if str(role.id) not in guild_config.get("roles", {}):
@@ -1147,8 +1148,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             percentage = Decimal(str(user_config.get("commission_percentage", percentage)))
         
         # Load bonus rules
-        bonus_rules = await file_handlers.load_json(settings.BONUS_RULES_FILE, settings.DEFAULT_BONUS_RULES)
-        guild_bonus_rules = bonus_rules.get(guild_id, [])
+        guild_bonus_rules = await file_handlers.load_json(settings.get_guild_bonus_rules_path(interaction.guild_id), [])
         
         # Convert to proper Decimal objects for calculations
         bonus_rule_objects = []
