@@ -30,19 +30,16 @@ class AdminCommands(commands.Cog):
             await ctx.send("❌ Percentage must be a valid number between 0 and 100.")
             return
         
-        guild_id = str(ctx.guild.id)
         role_id = str(role.id)
         
         # Load current role data
-        role_data = await file_handlers.load_json(settings.ROLE_DATA_FILE, settings.DEFAULT_ROLE_DATA)
+        role_data = await file_handlers.load_json(settings.get_guild_roles_path(ctx.guild.id), {})
         
         # Update role data
-        if guild_id not in role_data:
-            role_data[guild_id] = {}
-        role_data[guild_id][role_id] = float(percentage_decimal)
+        role_data[role_id] = float(percentage_decimal)
         
         # Save updated data
-        success = await file_handlers.save_json(settings.ROLE_DATA_FILE, role_data)
+        success = await file_handlers.save_json(settings.get_guild_roles_path(ctx.guild.id), role_data)
         
         if success:
             # Log successful operation
@@ -66,19 +63,20 @@ class AdminCommands(commands.Cog):
         role_id = str(role.id)
         
         # Load current role data
-        role_data = await file_handlers.load_json(settings.ROLE_DATA_FILE, settings.DEFAULT_ROLE_DATA)
+        role_file = settings.get_guild_roles_path(ctx.guild.id)
+        role_data = await file_handlers.load_json(role_file, {})
         
-        # Check if guild and role exist in data
-        if guild_id not in role_data or role_id not in role_data[guild_id]:
+        # Check if role exists in data
+        if role_id not in role_data:
             logger.warning(f"Role {role.name} ({role_id}) not found in configuration when {ctx.author.name} tried to remove it")
             await ctx.send(f"❌ {role.name} does not have a configured percentage.")
             return
         
         # Remove role
-        del role_data[guild_id][role_id]
+        del role_data[role_id]
         
         # Save updated data
-        success = await file_handlers.save_json(settings.ROLE_DATA_FILE, role_data)
+        success = await file_handlers.save_json(role_file, role_data)
         
         if success:
             logger.info(f"Role {role.name} ({role_id}) removed from configuration by {ctx.author.name}")
@@ -86,6 +84,7 @@ class AdminCommands(commands.Cog):
         else:
             logger.error(f"Failed to remove role {role.name} ({role_id}) by {ctx.author.name}")
             await ctx.send("❌ Failed to save role data. Please try again later.")
+            
     
     @commands.command(name="set-shift")
     async def shift_set(self, ctx, *, shift: str = commands.parameter(description="The shift name to add")):
@@ -101,14 +100,9 @@ class AdminCommands(commands.Cog):
             logger.warning(f"Empty shift name provided by {ctx.author.name}")
             await ctx.send("❌ Shift name cannot be empty.")
             return
-            
-        guild_id = str(ctx.guild.id)
         
-        # Load current shift data
-        shift_data = await file_handlers.load_json(settings.SHIFT_DATA_FILE, settings.DEFAULT_SHIFT_DATA)
-        
-        # Get existing shifts for this guild
-        existing_shifts = shift_data.get(guild_id, [])
+        shift_file = settings.get_guild_shifts_path(ctx.guild.id)
+        existing_shifts = await file_handlers.load_json(shift_file, [])
         
         # Check if shift already exists (case-insensitive)
         if validators.validate_shift(shift, existing_shifts) is not None:
@@ -117,18 +111,16 @@ class AdminCommands(commands.Cog):
             return
         
         # Add new shift
-        if guild_id not in shift_data:
-            shift_data[guild_id] = []
-        shift_data[guild_id].append(shift)
+        existing_shifts.append(shift)
         
         # Save updated data
-        success = await file_handlers.save_json(settings.SHIFT_DATA_FILE, shift_data)
+        success = await file_handlers.save_json(shift_file, existing_shifts)
         
         if success:
             logger.info(f"Shift '{shift}' added by {ctx.author.name}")
             await ctx.send(f"✅ Shift '{shift}' added!")
         else:
-            logger.error(f"Failed to save shift '{shift}' added by {ctx.author.name}")
+            logger.error(f"Failed to add shift '{shift}' added by {ctx.author.name}")
             await ctx.send("❌ Failed to save shift data. Please try again later.")
     
     @commands.command(name="remove-shift")
@@ -146,13 +138,8 @@ class AdminCommands(commands.Cog):
             await ctx.send("❌ Shift name cannot be empty.")
             return
             
-        guild_id = str(ctx.guild.id)
-        
-        # Load current shift data
-        shift_data = await file_handlers.load_json(settings.SHIFT_DATA_FILE, settings.DEFAULT_SHIFT_DATA)
-        
-        # Get existing shifts for this guild
-        existing_shifts = shift_data.get(guild_id, [])
+        shift_file = settings.get_guild_shifts_path(ctx.guild.id)
+        existing_shifts = await file_handlers.load_json(shift_file, [])
         
         # Validate and get normalized shift name
         normalized_shift = validators.validate_shift(shift, existing_shifts)
@@ -162,10 +149,10 @@ class AdminCommands(commands.Cog):
             return
         
         # Remove shift
-        shift_data[guild_id].remove(normalized_shift)
+        existing_shifts.remove(normalized_shift)
         
         # Save updated data
-        success = await file_handlers.save_json(settings.SHIFT_DATA_FILE, shift_data)
+        success = await file_handlers.save_json(shift_file, existing_shifts)
         
         if success:
             logger.info(f"Shift '{normalized_shift}' removed by {ctx.author.name}")
@@ -192,10 +179,8 @@ class AdminCommands(commands.Cog):
         guild_id = str(ctx.guild.id)
         
         # Load current period data
-        period_data = await file_handlers.load_json(settings.PERIOD_DATA_FILE, settings.DEFAULT_PERIOD_DATA)
-        
-        # Get existing periods for this guild
-        existing_periods = period_data.get(guild_id, [])
+        period_file = settings.get_guild_periods_path(ctx.guild.id)
+        existing_periods = await file_handlers.load_json(period_file, [])
         
         # Check if period already exists (case-insensitive)
         if validators.validate_period(period, existing_periods) is not None:
@@ -204,12 +189,10 @@ class AdminCommands(commands.Cog):
             return
         
         # Add new period
-        if guild_id not in period_data:
-            period_data[guild_id] = []
-        period_data[guild_id].append(period)
+        existing_periods.append(period)
         
         # Save updated data
-        success = await file_handlers.save_json(settings.PERIOD_DATA_FILE, period_data)
+        success = await file_handlers.save_json(period_file, existing_periods)
         
         if success:
             logger.info(f"Period '{period}' added by {ctx.author.name}")
@@ -236,10 +219,8 @@ class AdminCommands(commands.Cog):
         guild_id = str(ctx.guild.id)
         
         # Load current period data
-        period_data = await file_handlers.load_json(settings.PERIOD_DATA_FILE, settings.DEFAULT_PERIOD_DATA)
-        
-        # Get existing periods for this guild
-        existing_periods = period_data.get(guild_id, [])
+        period_file = settings.get_guild_periods_path(ctx.guild.id)
+        existing_periods = await file_handlers.load_json(period_file, [])
         
         # Validate and get normalized period name
         normalized_period = validators.validate_period(period, existing_periods)
@@ -249,10 +230,10 @@ class AdminCommands(commands.Cog):
             return
         
         # Remove period
-        period_data[guild_id].remove(normalized_period)
+        existing_periods.remove(normalized_period)
         
         # Save updated data
-        success = await file_handlers.save_json(settings.PERIOD_DATA_FILE, period_data)
+        success = await file_handlers.save_json(period_file, existing_periods)
         
         if success:
             logger.info(f"Period '{normalized_period}' removed by {ctx.author.name}")
@@ -289,12 +270,9 @@ class AdminCommands(commands.Cog):
             return
             
         # Load current bonus rules
-        bonus_rules = await file_handlers.load_json(settings.BONUS_RULES_FILE, settings.DEFAULT_BONUS_RULES)
+        bonus_file = settings.get_guild_bonus_rules_path(ctx.guild.id)
+        bonus_rules = await file_handlers.load_json(bonus_file, [])
         
-        # Initialize guild entry if needed
-        if guild_id not in bonus_rules:
-            bonus_rules[guild_id] = []
-            
         # Add new rule
         new_rule = {
             "from": float(from_num),
@@ -303,7 +281,7 @@ class AdminCommands(commands.Cog):
         }
         
         # Check for overlaps with existing rules
-        current_rules = bonus_rules[guild_id]
+        current_rules = bonus_rules
         overlapping = False
         
         for rule in current_rules:
@@ -321,8 +299,8 @@ class AdminCommands(commands.Cog):
             return
             
         # Add the new rule and save
-        bonus_rules[guild_id].append(new_rule)
-        success = await file_handlers.save_json(settings.BONUS_RULES_FILE, bonus_rules)
+        bonus_rules.append(new_rule)
+        success = await file_handlers.save_json(bonus_file, bonus_rules)
         
         if success:
             logger.info(f"Bonus rule added by {ctx.author.name}: ${float(from_num):,.2f} to ${float(to_num):,.2f} → ${float(bonus_amount):,.2f} bonus")
@@ -353,18 +331,12 @@ class AdminCommands(commands.Cog):
             return
             
         # Load current bonus rules
-        bonus_rules = await file_handlers.load_json(settings.BONUS_RULES_FILE, settings.DEFAULT_BONUS_RULES)
-        
-        # Get guild rules
-        guild_rules = bonus_rules.get(guild_id, [])
-        if not guild_rules:
-            logger.warning(f"No bonus rules configured for guild {guild_id} when {ctx.author.name} tried to remove one")
-            await ctx.send("❌ No bonus rules have been configured yet.")
-            return
+        bonus_file = settings.get_guild_bonus_rules_path(ctx.guild.id)
+        bonus_rules = await file_handlers.load_json(bonus_file, [])
         
         # Find matching rule
         rule_to_remove = None
-        for rule in guild_rules:
+        for rule in bonus_rules:
             rule_from = Decimal(str(rule.get("from", 0)))
             rule_to = Decimal(str(rule.get("to", 0)))
             
@@ -378,8 +350,8 @@ class AdminCommands(commands.Cog):
             return
             
         # Remove the rule and save
-        bonus_rules[guild_id].remove(rule_to_remove)
-        success = await file_handlers.save_json(settings.BONUS_RULES_FILE, bonus_rules)
+        bonus_rules.remove(rule_to_remove)
+        success = await file_handlers.save_json(bonus_file, bonus_rules)
         
         if success:
             logger.info(f"Bonus rule removed by {ctx.author.name}: ${float(from_num):,.2f} to ${float(to_num):,.2f}")
@@ -406,10 +378,9 @@ class AdminCommands(commands.Cog):
         guild_id = str(ctx.guild.id)
         
         # Load role data
-        role_data = await file_handlers.load_json(settings.ROLE_DATA_FILE, settings.DEFAULT_ROLE_DATA)
-        guild_roles = role_data.get(guild_id, {})
+        role_data = await file_handlers.load_json(settings.get_guild_roles_path(ctx.guild.id), {})
         
-        if not guild_roles:
+        if not role_data:
             logger.info(f"No roles configured for guild {guild_id} when {ctx.author.name} requested list")
             await ctx.send("❌ No roles have been configured yet.")
             return
@@ -422,7 +393,7 @@ class AdminCommands(commands.Cog):
         )
         
         # Add roles to embed
-        for role_id, percentage in guild_roles.items():
+        for role_id, percentage in role_data.items():
             role = ctx.guild.get_role(int(role_id))
             role_name = role.name if role else f"Unknown Role ({role_id})"
             embed.add_field(
@@ -431,7 +402,7 @@ class AdminCommands(commands.Cog):
                 inline=True
             )
         
-        logger.info(f"Listed {len(guild_roles)} roles for guild {guild_id} requested by {ctx.author.name}")
+        logger.info(f"Listed {len(role_data)} roles for guild {guild_id} requested by {ctx.author.name}")
         await ctx.send(embed=embed)
     
     @commands.command(name="list-shifts")
@@ -447,8 +418,8 @@ class AdminCommands(commands.Cog):
         guild_id = str(ctx.guild.id)
         
         # Load shift data
-        shift_data = await file_handlers.load_json(settings.SHIFT_DATA_FILE, settings.DEFAULT_SHIFT_DATA)
-        guild_shifts = shift_data.get(guild_id, [])
+        shift_file = settings.get_guild_shifts_path(ctx.guild.id)
+        guild_shifts = await file_handlers.load_json(shift_file, [])
         
         if not guild_shifts:
             logger.info(f"No shifts configured for guild {guild_id} when {ctx.author.name} requested list")
@@ -485,8 +456,8 @@ class AdminCommands(commands.Cog):
         guild_id = str(ctx.guild.id)
         
         # Load period data
-        period_data = await file_handlers.load_json(settings.PERIOD_DATA_FILE, settings.DEFAULT_PERIOD_DATA)
-        guild_periods = period_data.get(guild_id, [])
+        period_file = settings.get_guild_periods_path(ctx.guild.id)
+        guild_periods = await file_handlers.load_json(period_file, [])
         
         if not guild_periods:
             logger.info(f"No periods configured for guild {guild_id} when {ctx.author.name} requested list")
@@ -523,8 +494,8 @@ class AdminCommands(commands.Cog):
         guild_id = str(ctx.guild.id)
         
         # Load bonus data
-        bonus_rules = await file_handlers.load_json(settings.BONUS_RULES_FILE, settings.DEFAULT_BONUS_RULES)
-        guild_rules = bonus_rules.get(guild_id, [])
+        bonus_file = settings.get_guild_bonus_rules_path(ctx.guild.id)
+        guild_rules = await file_handlers.load_json(bonus_file, [])
         
         if not guild_rules:
             logger.info(f"No bonus rules configured for guild {guild_id} when {ctx.author.name} requested list")
@@ -569,10 +540,10 @@ class AdminCommands(commands.Cog):
             logger.warning(f"Empty model name provided by {ctx.author.name}")
             await ctx.send("❌ Model name cannot be empty.")
             return
-            
-        guild_id = str(ctx.guild.id)
-        model_data = await file_handlers.load_json(settings.MODELS_DATA_FILE, settings.DEFAULT_MODELS_DATA)
-        existing_models = model_data.get(guild_id, [])
+        
+        file_path = settings.get_guild_models_path(ctx.guild.id)
+        model_data = await file_handlers.load_json(file_path, [])
+        existing_models = model_data
         
         # Check if model already exists (case-insensitive)
         if model.lower() in [m.lower() for m in existing_models]:
@@ -581,12 +552,10 @@ class AdminCommands(commands.Cog):
             return
         
         # Add new model
-        if guild_id not in model_data:
-            model_data[guild_id] = []
-        model_data[guild_id].append(model)
+        model_data.append(model)
         
         # Save updated data
-        success = await file_handlers.save_json(settings.MODELS_DATA_FILE, model_data)
+        success = await file_handlers.save_json(file_path, model_data)
         
         if success:
             logger.info(f"Model '{model}' added by {ctx.author.name}")
@@ -610,17 +579,14 @@ class AdminCommands(commands.Cog):
             await ctx.send("❌ Model name cannot be empty.")
             return
             
-        guild_id = str(ctx.guild.id)
+        file_path = settings.get_guild_models_path(ctx.guild.id)
         
         # Load current model data
-        model_data = await file_handlers.load_json(settings.MODELS_DATA_FILE, settings.DEFAULT_MODELS_DATA)
-        
-        # Get existing models for this guild
-        existing_models = model_data.get(guild_id, [])
+        model_data = await file_handlers.load_json(file_path, [])
         
         # Find the model with case-insensitive matching
         normalized_model = None
-        for m in existing_models:
+        for m in model_data:
             if m.lower() == model.lower():
                 normalized_model = m
                 break
@@ -631,10 +597,10 @@ class AdminCommands(commands.Cog):
             return
         
         # Remove model
-        model_data[guild_id].remove(normalized_model)
+        model_data.remove(normalized_model)
         
         # Save updated data
-        success = await file_handlers.save_json(settings.MODELS_DATA_FILE, model_data)
+        success = await file_handlers.save_json(file_path, model_data)
         
         if success:
             logger.info(f"Model '{normalized_model}' removed by {ctx.author.name}")
@@ -656,8 +622,8 @@ class AdminCommands(commands.Cog):
         guild_id = str(ctx.guild.id)
         
         # Load model data
-        model_data = await file_handlers.load_json(settings.MODELS_DATA_FILE, settings.DEFAULT_MODELS_DATA)
-        guild_models = model_data.get(guild_id, [])
+        file_path = settings.get_guild_models_path(ctx.guild.id)
+        guild_models = await file_handlers.load_json(file_path, [])
         
         if not guild_models:
             logger.info(f"No models configured for guild {guild_id} when {ctx.author.name} requested list")

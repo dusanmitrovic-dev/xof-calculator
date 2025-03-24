@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.165.0] - 2025-03-24
+### Change
+- Update `!` commands to use guild-specific paths.
+
 ## [0.164.0] - 2025-03-24
 ### Change
 - Update `!summary` earnings and period data file retrieval to use guild-specific paths.
