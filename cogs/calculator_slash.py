@@ -1029,19 +1029,17 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         # Log period selection
         logger.info(f"User {interaction.user.name} ({interaction.user.id}) selected period: {period}")
         
-        guild_id = str(interaction.guild_id)
-        
         # Load shift data
-        shift_data = await file_handlers.load_json(settings.SHIFT_DATA_FILE, settings.DEFAULT_SHIFT_DATA)
-        valid_shifts = shift_data.get(guild_id, [])
+        shift_file = settings.get_guild_shifts_path(interaction.guild_id)
+        guild_shifts = await file_handlers.load_json(shift_file, [])
         
-        if not valid_shifts:
-            logger.warning(f"No shifts configured for guild {guild_id}")
+        if not guild_shifts:
+            logger.warning(f"No shifts configured for guild {interaction.guild_id}")
             await interaction.response.send_message("❌ No shifts configured! Admins: use !set-shift.", ephemeral=True)
             return
         
         # Create shift selection view, passing the compensation type
-        view = ShiftSelectionView(self, valid_shifts, period, compensation_type, hours_worked)
+        view = ShiftSelectionView(self, guild_shifts, period, compensation_type, hours_worked)
         await interaction.response.edit_message(content="Select a shift:", view=view)
     
     async def show_role_selection(self, interaction: discord.Interaction, period: str, shift: str, compensation_type: str, hours_worked: Decimal):
