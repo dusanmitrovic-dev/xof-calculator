@@ -1119,7 +1119,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         
         # Load commission settings for the guild
         commission_file = settings.get_guild_commission_path(interaction.guild_id)
-        role_data = await file_handlers.load_json(commission_file, settings.DEFAULT_COMMISSION_SETTINGS)
+        role_data = await file_handlers.load_json(commission_file, {})
         
         # Check if guild_id exists in role_data
         # if guild_id not in role_data: # TODO: remove

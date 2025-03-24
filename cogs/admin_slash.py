@@ -22,7 +22,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         self.bot = bot
 
     async def get_ephemeral_setting(self, guild_id):
-        file_path = settings.get_guild_file(guild_id, settings.DISPLAY_SETTINGS_FILE)  # NOTE: Added
+        file_path = settings.get_guild_display_path(guild_id)  # NOTE: Added
         # display_settings = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS) # TODO: remove
         display_settings = await file_handlers.load_json(file_path, {
                 "ephemeral_responses": True,
@@ -485,10 +485,17 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
         
         guild_id = interaction.guild.id
-        settings_data = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
-        guild_settings = settings_data.get(str(guild_id), {})
-
-        
+        file_path = settings.get_guild_display_path(guild_id)
+        # display_settings = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS) # TODO: remove
+        guild_settings = await file_handlers.load_json(file_path, {
+                "ephemeral_responses": True,
+                "show_average": True,
+                "agency_name": "Agency",
+                "show_ids": True,
+                "bot_name": "Shift Calculator"
+        })
+        # settings_data = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS) # TODO: remove
+        # guild_settings = settings_data.get(str(guild_id), {}) # TODO: remove
         
         embed = discord.Embed(title="Display Settings", color=0x00ff00)
         logger.info(f"Ephemeral Responses: {await self.get_ephemeral_setting(guild_id)}")
@@ -1069,7 +1076,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
 
         guild_id = interaction.guild.id
-        file_path = settings.get_guild_file(guild_id, settings.MODELS_DATA_FILE)
+        file_path = settings.get_guild_models_path(guild_id)
         
         guild_models = await file_handlers.load_json(file_path, [])
         
@@ -1111,7 +1118,6 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         users: Optional[list[discord.User]] = None
     ):
         """Helper function to remove sales by IDs or all sales for multiple users."""
-        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
         earnings_data = await file_handlers.load_json(
             settings.get_guild_earnings_path(interaction.guild.id),
             {}
