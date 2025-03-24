@@ -23,7 +23,6 @@ class AdminSlashCommands(commands.Cog, name="admin"):
 
     async def get_ephemeral_setting(self, guild_id):
         file_path = settings.get_guild_display_path(guild_id)  # NOTE: Added
-        # display_settings = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS) # TODO: remove
         display_settings = await file_handlers.load_json(file_path, {
                 "ephemeral_responses": True,
                 "show_average": True,
