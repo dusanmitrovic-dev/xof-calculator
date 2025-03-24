@@ -153,11 +153,15 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         return settings_data.get("show_ids", True)
 
     async def get_bot_name(self, guild_id):
-        settings_data = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
-        guild_settings = settings_data.get(str(guild_id), settings.DEFAULT_DISPLAY_SETTINGS['defaults'])
-        print(guild_settings)
-        return guild_settings.get("bot_name",
-            settings.DEFAULT_DISPLAY_SETTINGS['defaults']['bot_name'])
+        file_path = settings.get_guild_display_path(guild_id)
+        settings_data = await file_handlers.load_json(file_path, {
+            "ephemeral_responses": True,
+            "show_average": True,
+            "agency_name": "Agency",
+            "show_ids": True,
+            "bot_name": "Shift Calculator"
+        })
+        return settings_data.get("bot_name", "Shift Calculator")
 
     async def generate_export_file(self, user_earnings, interaction, user, export_format, zip_formats=None, all_data=False):
         """
