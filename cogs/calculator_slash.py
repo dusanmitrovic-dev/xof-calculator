@@ -1011,16 +1011,16 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         guild_id = str(interaction.guild_id)
         
         # Load period data
-        period_data = await file_handlers.load_json(settings.PERIOD_DATA_FILE, settings.DEFAULT_PERIOD_DATA)
-        valid_periods = period_data.get(guild_id, [])
+        period_file = settings.get_guild_periods_path(interaction.guild.id)
+        period_data = await file_handlers.load_json(period_file, [])
         
-        if not valid_periods:
+        if not period_data:
             logger.warning(f"No periods configured for guild {guild_id}")
             await interaction.response.send_message("❌ No periods configured! Admins: use /set-period.", ephemeral=True)
             return
         
         # Create period selection view, passing the compensation type and hours worked
-        view = PeriodSelectionView(self, valid_periods, compensation_type, hours_worked)
+        view = PeriodSelectionView(self, period_data, compensation_type, hours_worked)
         await interaction.response.edit_message(content="Select a period:", view=view)
     
     async def show_shift_selection(self, interaction: discord.Interaction, period: str, compensation_type: str, hours_worked: Decimal):
