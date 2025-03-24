@@ -32,7 +32,7 @@ DEFAULT_PERIOD_DATA = []
 # DEFAULT_MODELS_DATA: Dict[str, List[str]] = {} # TODO: remove
 DEFAULT_MODELS_DATA = []
 DEFAULT_BONUS_RULES = []
-DEFAULT_EARNINGS: List[Dict[str, Any]] = []
+DEFAULT_EARNINGS: List[Dict[str, Any]] = {}
 
 DEFAULT_DISPLAY_SETTINGS = {
         "ephemeral_responses": True,
@@ -69,6 +69,12 @@ def get_guild_file(guild_id: int, filename: str) -> str:
     """Get full path to a guild-specific config file"""
     print("PATH", get_guild_path(guild_id))
     return os.path.join(get_guild_path(guild_id), filename)
+
+def get_guild_earnings_file(guild_id: int, filename: str) -> str:
+    """Get full path to a guild-specific config file"""
+    path = os.path.join(EARNINGS_DIR, str(guild_id))
+    print("PATH", path)
+    return os.path.join(path, filename)
 
 # NOTE: MODELS
 
@@ -116,4 +122,4 @@ def get_guild_display_path(guild_id: int) -> str:
 
 def get_guild_earnings_path(guild_id: int) -> str:
     """Get path to guild's earnings file"""
-    return get_guild_file(guild_id, EARNINGS_FILE)
+    return get_guild_earnings_file(guild_id, EARNINGS_FILE)

@@ -1113,8 +1113,8 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         """Helper function to remove sales by IDs or all sales for multiple users."""
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
         earnings_data = await file_handlers.load_json(
-            settings.get_earnings_file_for_guild(interaction.guild.id),
-            settings.DEFAULT_EARNINGS
+            settings.get_guild_earnings_path(interaction.guild.id),
+            {}
         )
 
         removed_entries = {}
@@ -1169,7 +1169,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
                 return (False, "❌ No matching sales found for the specified criteria.")
 
             success = await file_handlers.save_json(
-                settings.get_earnings_file_for_guild(interaction.guild.id),
+                settings.get_guild_earnings_path(interaction.guild.id),
                 earnings_data
             )
 
@@ -1262,8 +1262,8 @@ class AdminSlashCommands(commands.Cog, name="admin"):
 
         # Count affected entries
         earnings_data = await file_handlers.load_json(
-            settings.get_earnings_file_for_guild(interaction.guild.id),
-            settings.DEFAULT_EARNINGS
+            settings.get_guild_earnings_path(interaction.guild.id),
+            {}
         )
 
         total_entries = 0
@@ -1431,7 +1431,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             failed_count = 0
 
             for bak_file in backup_files:
-                if os.path.basename(bak_file) == settings.get_earnings_file_for_guild(interaction.guild.id) + ".bak":
+                if os.path.basename(bak_file) == settings.get_guild_earnings_path(interaction.guild.id) + ".bak":
                     continue
 
                 try:
@@ -1549,7 +1549,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         )
 
     async def reset_earnings(self, interaction: discord.Interaction):
-        await file_handlers.save_json(settings.get_guild_earnings_path(interaction.guild.id), [])
+        await file_handlers.save_json(settings.get_guild_earnings_path(interaction.guild.id), {})
     
     async def reset_models(self, interaction: discord.Interaction): 
         await file_handlers.save_json(settings.MODELS_DATA_FILE, [])

@@ -41,7 +41,7 @@ MAX_ENTRIES = 5000000
 logger = logging.getLogger("xof_calculator.calculator")
 
 class HoursWorkedModal(ui.Modal, title="Enter Hours Worked"):
-    def __init__(self, cog, period, shift, role, gross_revenue, compensation_type):
+    def __init__(self, cog, period, shift, role, gross_revenue, compensation_type, ephemeral):
         super().__init__()
         self.cog = cog
         self.period = period
@@ -66,7 +66,7 @@ class HoursWorkedModal(ui.Modal, title="Enter Hours Worked"):
                 raise ValueError("Hours worked must be positive")
         except (ValueError, InvalidOperation):
             logger.warning(f"User {interaction.user.name} ({interaction.user.id}) entered invalid hours format: {hours_str}")
-            await interaction.response.send_message("❌ Invalid hours format. Please use a valid positive number.", ephemeral=True)
+            await interaction.response.send_message("❌ Invalid hours format. Please use a valid positive number.", ephemeral=ephemeral)
             return
         
         # Proceed to period selection with the hours worked
@@ -999,15 +999,19 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
 
     async def start_period_selection(self, interaction: discord.Interaction, compensation_type: str):
         """First step: Period selection"""
+        ephemeral = await self.get_ephemeral_setting(interaction.guild_id)
+
         # Open the HoursWorkedModal to collect hours worked
         if compensation_type == "commission":
             await self.start_period_selection_with_hours(interaction, compensation_type, Decimal(0))
         else:
-            modal = HoursWorkedModal(self, None, None, None, None, compensation_type)
+            modal = HoursWorkedModal(self, None, None, None, None, compensation_type, ephemeral)
             await interaction.response.send_modal(modal)
 
     async def start_period_selection_with_hours(self, interaction: discord.Interaction, compensation_type: str, hours_worked: Decimal):
         """First step: Period selection with hours worked"""
+        ephemeral = await self.get_ephemeral_setting(interaction.guild_id)
+
         guild_id = str(interaction.guild_id)
         
         # Load period data
@@ -1016,7 +1020,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         
         if not period_data:
             logger.warning(f"No periods configured for guild {guild_id}")
-            await interaction.response.send_message("❌ No periods configured! Admins: use /set-period.", ephemeral=True)
+            await interaction.response.send_message("❌ No periods configured! Admins: use /set-period.", ephemeral=ephemeral)
             return
         
         # Create period selection view, passing the compensation type and hours worked
@@ -1025,6 +1029,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
     
     async def show_shift_selection(self, interaction: discord.Interaction, period: str, compensation_type: str, hours_worked: Decimal):
         """Second step: Shift selection"""
+        ephemeral = await self.get_ephemeral_setting(interaction.guild_id)
 
         # Log period selection
         logger.info(f"User {interaction.user.name} ({interaction.user.id}) selected period: {period}")
@@ -1035,7 +1040,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         
         if not guild_shifts:
             logger.warning(f"No shifts configured for guild {interaction.guild_id}")
-            await interaction.response.send_message("❌ No shifts configured! Admins: use !set-shift.", ephemeral=True)
+            await interaction.response.send_message("❌ No shifts configured! Admins: use !set-shift.", ephemeral=ephemeral)
             return
         
         # Create shift selection view, passing the compensation type
@@ -1076,15 +1081,19 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
     
     async def show_revenue_input(self, interaction: discord.Interaction, period: str, shift: str, role: discord.Role, compensation_type: str, hours_worked: Decimal):
         """Fourth step: Revenue input"""
+        ephemeral = await self.get_ephemeral_setting(interaction.guild_id)
+
         # Log role selection
         logger.info(f"User {interaction.user.name} ({interaction.user.id}) selected role: {role.name} ({role.id})")
         
         # Create revenue input modal
-        modal = RevenueInputModal(self, period, shift, role, compensation_type, hours_worked)
+        modal = RevenueInputModal(self, period, shift, role, compensation_type, hours_worked, ephemeral)
         await interaction.response.send_modal(modal)
     
     async def show_model_selection(self, interaction: discord.Interaction, period: str, shift: str, role: discord.Role, gross_revenue: Decimal, compensation_type: str, hours_worked: Decimal):
         """Fifth step: Model selection"""
+        ephemeral = await self.get_ephemeral_setting(interaction.guild_id)
+
         # Log revenue input
         logger.info(f"User {interaction.user.name} ({interaction.user.id}) entered gross revenue: ${gross_revenue}")
         
@@ -1095,7 +1104,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
 
         if not models_data:
             logger.warning(f"No models configured for guild {guild_id}")
-            await interaction.response.send_message("❌ No models configured! Admins: use /set-model.", ephemeral=True)
+            await interaction.response.send_message("❌ No models configured! Admins: use /set-model.", ephemeral=ephemeral)
             return
         
         # Create model selection view
@@ -1317,6 +1326,8 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
 
     async def finalize_calculation(self, interaction: discord.Interaction, results: Dict):
         """Final step: Save and display results to everyone"""
+        ephemeral = self.get_ephemeral_setting(interaction.guild_id)
+
         guild_id = str(interaction.guild_id)
         
         # Save earnings data
@@ -1328,7 +1339,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         
         # Load earnings data
         # earnings_data = await file_handlers.load_json(settings.EARNINGS_FILE, []) # TODO: remove
-        earnings_data = await file_handlers.load_json(settings.get_guild_earnings_path(interaction.guild.id), [])
+        earnings_data = await file_handlers.load_json(settings.get_guild_earnings_path(interaction.guild.id), {})
         if sender not in earnings_data:
             earnings_data[sender] = []
         
@@ -1363,12 +1374,19 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         success = await file_handlers.save_json(settings.get_guild_earnings_path(interaction.guild.id), earnings_data)
         if not success:
             logger.error(f"Failed to save earnings data for {sender}")
-            await interaction.followup.send("⚠ Calculation failed to save data. Please try again.", ephemeral=True)
+            await interaction.followup.send("⚠ Calculation failed to save data. Please try again.", ephemeral=ephemeral)
             return
         
         # Check if average display is enabled
-        display_settings = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
-        show_average = display_settings.get(guild_id, {}).get("show_average", settings.DEFAULT_DISPLAY_SETTINGS['defaults'])
+        guild_settings_file = settings.get_guild_display_path(guild_id)
+        guild_settings = await file_handlers.load_json(guild_settings_file, {
+            "ephemeral_responses": True,
+            "show_average": True,
+            "agency_name": "Agency",
+            "show_ids": True,
+            "bot_name": "Shift Calculator"
+        })
+        show_average = guild_settings.get("show_average", True)
         
         # Create embed for public announcement
         embed = discord.Embed(title="📊 Earnings Calculation", color=0x009933)
@@ -1780,7 +1798,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
 
             # Load and filter data
             # earnings_data = await file_handlers.load_json(settings.EARNINGS_FILE, []) # TODO: remove
-            earnings_data = await file_handlers.load_json(settings.get_guild_earnings_path(interaction.guild.id), []) 
+            earnings_data = await file_handlers.load_json(settings.get_guild_earnings_path(interaction.guild.id), {}) 
             user_earnings = None
 
             if not all_data:
@@ -2087,7 +2105,7 @@ class RoleSelectionView(ui.View):
         await self.cog.show_revenue_input(interaction, self.period, self.shift, role, self.compensation_type, self.hours_worked)
 
 class RevenueInputModal(ui.Modal, title="Enter Gross Revenue"):
-    def __init__(self, cog, period, shift, role, compensation_type, hours_worked):
+    def __init__(self, cog, period, shift, role, compensation_type, hours_worked, ephemeral):
         super().__init__()
         self.cog = cog
         self.period = period
@@ -2110,7 +2128,7 @@ class RevenueInputModal(ui.Modal, title="Enter Gross Revenue"):
         
         if gross_revenue is None:
             logger.warning(f"User {interaction.user.name} ({interaction.user.id}) entered invalid revenue format: {revenue_str}")
-            await interaction.response.send_message("❌ Invalid revenue format. Please use a valid number.", ephemeral=True)
+            await interaction.response.send_message("❌ Invalid revenue format. Please use a valid number.", ephemeral=ephemeral)
             return
         
         await self.cog.show_model_selection(interaction, self.period, self.shift, self.role, gross_revenue, self.compensation_type, self.hours_worked)
