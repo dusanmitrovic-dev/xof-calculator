@@ -120,10 +120,15 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             # settings.DEFAULT_DISPLAY_SETTINGS['defaults']['ephemeral_responses']) # TODO: remove
     
     async def get_average_setting(self, guild_id):
-        settings_data = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
-        guild_settings = settings_data.get(str(guild_id), settings.DEFAULT_DISPLAY_SETTINGS['defaults'])
-        return guild_settings.get("show_average",
-            settings.DEFAULT_DISPLAY_SETTINGS['defaults']['show_average'])
+        guild_settings_file = settings.get_guild_display_path(guild_id)
+        guild_settings = await file_handlers.load_json(guild_settings_file, {
+            "ephemeral_responses": True,
+            "show_average": True,
+            "agency_name": "Agency",
+            "show_ids": True,
+            "bot_name": "Shift Calculator"
+        })
+        return guild_settings.get("show_average", True)
 
     async def get_agency_name(self, guild_id):
         settings_data = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
