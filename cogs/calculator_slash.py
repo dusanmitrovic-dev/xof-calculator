@@ -103,10 +103,21 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         super().__init__()
 
     async def get_ephemeral_setting(self, guild_id):
-        display_settings = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
-        guild_settings = display_settings.get(str(guild_id), settings.DEFAULT_DISPLAY_SETTINGS['defaults'])
+        file_path = settings.get_guild_file(guild_id, settings.DISPLAY_SETTINGS_FILE)  # NOTE: Added
+        # display_settings = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS) # TODO: remove
+        display_settings = await file_handlers.load_json(file_path, {
+                "ephemeral_responses": True,
+                "show_average": True,
+                "agency_name": "Agency",
+                "show_ids": True,
+                "bot_name": "Shift Calculator"
+        })
+        # guild_settings = display_settings.get(str(guild_id), settings.DEFAULT_DISPLAY_SETTINGS['defaults']) # TODO: remove
+        # guild_settings = display_settings.get(str(guild_id), settings.DEFAULT_DISPLAY_SETTINGS) # TODO: remove
+        guild_settings = display_settings
         return guild_settings.get('ephemeral_responses', 
-            settings.DEFAULT_DISPLAY_SETTINGS['defaults']['ephemeral_responses'])
+            settings.DEFAULT_DISPLAY_SETTINGS['ephemeral_responses'])
+            # settings.DEFAULT_DISPLAY_SETTINGS['defaults']['ephemeral_responses']) # TODO: remove
     
     async def get_average_setting(self, guild_id):
         settings_data = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS)
