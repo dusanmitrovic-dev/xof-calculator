@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.163.0] - 2025-03-22
+### Changed
+- Updated earnings slash calculate commands to use multiple servers file logic.
+
 ## [0.162.0] - 2025-03-22
 ### Changed
 - Update display settings, help command and reset restore full config for guild-specific configurations.
