@@ -416,6 +416,7 @@
 - [x] (v0.161.0) Update compensation settings for guild-specific configurations
 - [x] (v0.162.0) Update display settings, help command and reset restore full config for guild-specific configurations
 - [x] (v0.163.0) Updated earnings slash calculate commands to use multiple servers file logic
+- [x] (v0.163.1) Remove `data/earnings` test residual files
 - [ ] Option to set default zip exports in setting
 - [ ] Display hourly cut in employee cut?
 - [ ] Add functionality to select column names to display in `view-earnings`

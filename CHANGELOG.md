@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.163.1] - 2025-03-22
+### Remove
+- Remove `data/earnings` test residual files.
+
 ## [0.163.0] - 2025-03-22
 ### Changed
 - Updated earnings slash calculate commands to use multiple servers file logic.
