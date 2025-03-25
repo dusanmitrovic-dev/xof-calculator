@@ -1886,9 +1886,9 @@ class AdminSlashCommands(commands.Cog, name="admin"):
 
         try:
             # Prevent self-copying
-            if source_id == interaction.guild.id:
-                await interaction.response.send_message("❌ Cannot copy from the same server", ephemeral=ephemeral)
-                return
+            # if source_id == interaction.guild.id: # TODO: remove
+            #     await interaction.response.send_message("❌ Cannot copy from the same server", ephemeral=ephemeral)
+            #     return
 
             source_dir = os.path.join("data", "config", source_id)
             target_dir = os.path.join("data", "config", str(interaction.guild.id))
