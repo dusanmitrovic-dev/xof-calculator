@@ -107,6 +107,7 @@ class HelpSlashCommands(commands.Cog):
                 "`/view-config` - Display all server configurations with interactive pagination",
                 "`/copy-config-from-the-server` - Copy config files while preserving existing configurations",
                 "`/copy-earnings-from-the-server` - Copy earnings data from another server",
+                "`/manage-backups` - Manage server backups with type, action selection and optional ids parameter in case of removal action",
 
             ])
             embed.add_field(name="Miscellaneous Admin Commands", value=misc_admin_commands, inline=False)
