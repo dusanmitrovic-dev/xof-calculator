@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.169.0] - 2025-03-25
+### Changed
+- Enhance `/copy-config-from-the-server` command.
+
 ## [0.168.0] - 2025-03-25
 ### Changed
 - Enhance `/view-config` command.

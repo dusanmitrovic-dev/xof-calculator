@@ -421,6 +421,7 @@
 - [x] (v0.165.0) Update `!` commands to use guild-specific paths
 - [x] (v0.167.0) Fix `/reset-config` command to properly reset models data
 - [x] (v0.168.0) Enhance `/view-config` command
+- [x] (v0.169.0) Enhance `/copy-config-from-the-server` command
 - [ ] Option to set default zip exports in setting
 - [ ] Display hourly cut in employee cut?
 - [ ] Add functionality to select column names to display in `view-earnings`

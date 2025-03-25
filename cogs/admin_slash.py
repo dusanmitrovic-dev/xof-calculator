@@ -2014,6 +2014,125 @@ class AdminSlashCommands(commands.Cog, name="admin"):
                 ephemeral=ephemeral
             )
 
+    @app_commands.command(name="manage-backups", description="List or remove backup configurations for this server")
+    @app_commands.default_permissions(administrator=True)
+    @app_commands.describe(
+        action="Action to perform (list or remove)",
+        backup_ids="Comma-separated backup IDs to remove (required for 'remove' action)"
+    )
+    @app_commands.choices(action=[
+        app_commands.Choice(name="list", value="list"),
+        app_commands.Choice(name="remove", value="remove")
+    ])
+    async def manage_backups(
+        self,
+        interaction: discord.Interaction,
+        action: str,
+        backup_ids: str = None
+    ):
+        """Manage server configuration backups through listing or removal"""
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+        guild_id = str(interaction.guild.id)
+        config_dir = os.path.join("data", "config")
+
+        try:
+            if action == "list":
+                # Find all backup directories for this server
+                backup_dirs = glob.glob(os.path.join(config_dir, f"{guild_id}_backup_*"))
+                backups = []
+
+                for dir_path in backup_dirs:
+                    dir_name = os.path.basename(dir_path)
+                    backup_id = dir_name.split("_backup_")[-1]  # Split to get timestamp
+                    
+                    try:
+                        dt = datetime.strptime(backup_id, "%Y%m%d-%H%M%S")
+                        formatted_date = dt.strftime("%Y-%m-%d %H:%M:%S")
+                    except ValueError:
+                        dt = None
+                        formatted_date = "Invalid timestamp"
+                    
+                    backups.append((backup_id, dt, formatted_date))
+
+                # Sort backups by date (newest first)
+                backups.sort(key=lambda x: x[1] or datetime.min, reverse=True)
+
+                embed = discord.Embed(
+                    title=f"Backups for Server {guild_id}",
+                    color=discord.Color.blue()
+                )
+
+                if not backups:
+                    embed.description = "No backups found for this server."
+                else:
+                    backup_list = []
+                    for bid, dt, formatted_date in backups:
+                        backup_list.append(f"• **{bid}**\n  Created: {formatted_date}")
+                    
+                    embed.description = "\n\n".join(backup_list)
+                    embed.set_footer(text=f"Total backups: {len(backups)}")
+
+                await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
+
+            elif action == "remove":
+                if not backup_ids:
+                    await interaction.response.send_message(
+                        "❌ Please provide backup IDs to remove (comma-separated)",
+                        ephemeral=ephemeral
+                    )
+                    return
+
+                backup_id_list = [bid.strip() for bid in backup_ids.split(',')]
+                removed = []
+                errors = []
+
+                for backup_id in backup_id_list:
+                    # Validate backup ID format
+                    if not re.fullmatch(r"\d{8}-\d{6}", backup_id):
+                        errors.append(f"Invalid ID format: `{backup_id}` (must be YYYYMMDD-HHMMSS)")
+                        continue
+
+                    backup_path = os.path.join(config_dir, f"{guild_id}_backup_{backup_id}")
+
+                    if not os.path.exists(backup_path):
+                        errors.append(f"Backup `{backup_id}` not found")
+                        continue
+
+                    try:
+                        shutil.rmtree(backup_path)
+                        removed.append(backup_id)
+                    except Exception as e:
+                        errors.append(f"Failed to remove `{backup_id}`: {str(e)}")
+
+                # Build result embed
+                embed = discord.Embed(
+                    title="Backup Removal Results",
+                    color=discord.Color.green() if not errors else discord.Color.orange()
+                )
+
+                if removed:
+                    embed.add_field(
+                        name="Successfully Removed",
+                        value="\n".join(f"• `{bid}`" for bid in removed),
+                        inline=False
+                    )
+
+                if errors:
+                    embed.add_field(
+                        name="Errors",
+                        value="\n".join(f"• {e}" for e in errors),
+                        inline=False
+                    )
+
+                await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
+
+        except Exception as e:
+            logger.error(f"Backup management error: {str(e)}", exc_info=True)
+            await interaction.response.send_message(
+                f"❌ Critical error during backup management: {str(e)}",
+                ephemeral=ephemeral
+            )
+
     @app_commands.command(name="copy-earnings-from-the-server")
     @app_commands.default_permissions(administrator=True)
     @app_commands.describe(source_id="The server ID you want to copy earnings from")
