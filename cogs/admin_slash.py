@@ -2185,12 +2185,12 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         """Copy earnings data with backup protection"""
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
 
-        if source_id == str(interaction.guild.id):
-            await interaction.response.send_message(
-                "❌ You can't copy earnings from the same server", 
-                ephemeral=ephemeral
-            )
-            return
+        # if source_id == str(interaction.guild.id):
+        #     await interaction.response.send_message(
+        #         "❌ You can't copy earnings from the same server", 
+        #         ephemeral=ephemeral
+        #     )
+        #     return
         
         class ConfirmationView(discord.ui.View):
             def __init__(self):
@@ -2209,6 +2209,43 @@ class AdminSlashCommands(commands.Cog, name="admin"):
                 self.stop()
 
         try:
+            if str(source_id) == str(interaction.guild.id):
+                target_dir = os.path.join("data", "earnings", str(interaction.guild.id))
+                target_file = os.path.join(target_dir, "earnings.json")
+                
+                if not os.path.exists(target_file):
+                    await interaction.response.send_message(
+                        "❌ No earnings data found to backup",
+                        ephemeral=ephemeral
+                    )
+                    return
+
+                backup_time = datetime.now().strftime("%Y%m%d-%H%M%S")
+                backup_dir_name = f"{interaction.guild.id}_earnings_backup_{backup_time}"
+                backup_path = os.path.join("data", "earnings", backup_dir_name)
+                
+                try:
+                    os.makedirs(backup_path, exist_ok=True)
+                    shutil.copy2(target_file, os.path.join(backup_path, "earnings.json"))
+                    
+                    embed = discord.Embed(
+                        title="✅ Earnings Backup Created",
+                        description="A backup of current earnings data was successfully created.",
+                        color=discord.Color.green()
+                    )
+                    embed.add_field(
+                        name="Backup Location",
+                        value=f"`{backup_dir_name}`",
+                        inline=False
+                    )
+                    await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
+                except Exception as e:
+                    await interaction.response.send_message(
+                        f"❌ Backup failed: {str(e)}",
+                        ephemeral=ephemeral
+                    )
+                return
+
             source_path = os.path.join("data", "earnings", source_id, "earnings.json")
             target_dir = os.path.join("data", "earnings", str(interaction.guild.id))
             target_path = os.path.join(target_dir, "earnings.json")
