@@ -24,7 +24,7 @@ def parse_money(value: Union[str, int, float, Decimal]) -> Optional[Decimal]:
             value = re.sub(r'[^\d.-]', '', value)
         
         # Convert to Decimal with 2 decimal places
-        amount = Decimal(value).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        amount = Decimal(value)
         return amount
         
     except (InvalidOperation, ValueError, TypeError) as e:

@@ -3,38 +3,29 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import discord
-import asyncio
 import zipfile
 import logging
-import random
-import time
-import json
 import io
 import re
-import os
 
 from reportlab.platypus import PageBreak, SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
-from openpyxl.chart import LineChart, BarChart, PieChart, Reference
 from utils import file_handlers, validators, calculations
 from reportlab.lib.styles import getSampleStyleSheet
-from openpyxl.chart.label import DataLabelList
-from typing import Union, Optional, List, Dict
+from decimal import Decimal, InvalidOperation
 from reportlab.lib.pagesizes import letter
 from babel.numbers import format_currency
+from typing import  Optional, List, Dict
 from discord import ui, app_commands
-from discord.ui import Select, View, Button
 from discord.ext import commands
 from reportlab.lib import colors
 from utils import file_handlers
 from utils import generator_uuid
 from datetime import datetime
-from decimal import Decimal, InvalidOperation
 from config import settings
 from pathlib import Path
 
 SUPPORTED_EXPORTS = ["none", "txt", "csv", "json", "xlsx", "pdf", "png", "zip"]
 # All available formats
-# ALL_ZIP_FORMATS = ['csv', 'json', 'xlsx', 'pdf', 'png', 'txt', 'html', 'markdown', 'svg'] # TODO: remove
 ALL_ZIP_FORMATS = ['csv', 'json', 'xlsx', 'pdf', 'png', 'txt', 'html', 'markdown'] # TODO: Option to set default zip exports in settings
 MAX_ENTRIES = 5000000
 
@@ -103,8 +94,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         super().__init__()
 
     async def get_ephemeral_setting(self, guild_id):
-        file_path = settings.get_guild_display_path(guild_id)  # NOTE: Added
-        # display_settings = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS) # TODO: remove
+        file_path = settings.get_guild_display_path(guild_id)
         display_settings = await file_handlers.load_json(file_path, {
                 "ephemeral_responses": True,
                 "show_average": True,
@@ -112,12 +102,9 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                 "show_ids": True,
                 "bot_name": "Shift Calculator"
         })
-        # guild_settings = display_settings.get(str(guild_id), settings.DEFAULT_DISPLAY_SETTINGS['defaults']) # TODO: remove
-        # guild_settings = display_settings.get(str(guild_id), settings.DEFAULT_DISPLAY_SETTINGS) # TODO: remove
         guild_settings = display_settings
         return guild_settings.get('ephemeral_responses', 
             settings.DEFAULT_DISPLAY_SETTINGS['ephemeral_responses'])
-            # settings.DEFAULT_DISPLAY_SETTINGS['defaults']['ephemeral_responses']) # TODO: remove
     
     async def get_average_setting(self, guild_id):
         guild_settings_file = settings.get_guild_display_path(guild_id)
@@ -231,8 +218,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                 await self._generate_pdf(df, interaction, user, buffer, user_earnings, all_data)
             elif format_type == "png":
                 await self._generate_png(df, user, buffer, user_earnings, all_data)
-            # elif format_type == "svg": # TODO: remove
-            #     self._generate_svg(df, user, buffer, user_earnings, all_data) # TODO: It displays User earnings instead of Full for Zip? # WARN: DOUBLE CHECK!!
             elif format_type == "html":
                 await self._generate_html(df, interaction, user, buffer, user_earnings, all_data)
             elif format_type == "markdown":
@@ -615,29 +600,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             plt.savefig(buffer, format='png')
             plt.close()
             buffer.seek(0)
-
-    # def _generate_svg(self, df, user, buffer, user_earnings, all_data=False): # TODO: remove
-    #     """Generate SVG format export"""
-    #     fig, ax = plt.subplots(figsize=(16, 9))
-
-    #     if all_data:
-    #         # Line chart for multiple users
-    #         pivot = df.pivot_table(index='date', columns='display_name', values='total_cut', aggfunc='sum')
-    #         for user in pivot.columns:
-    #             ax.plot(pivot.index, pivot[user], marker='o', linestyle='-', label=user)
-    #         ax.set_title('Daily Gross Revenue by User')
-    #     else:
-    #         # Line chart for individual user
-    #         dates = [datetime.strptime(entry['date'], '%d/%m/%Y') for entry in user_earnings]
-    #         ax.plot_date(dates, [float(e['gross_revenue']) for e in user_earnings], 'b-o', label='Gross Revenue')
-    #         ax.plot_date(dates, [float(e['total_cut']) for e in user_earnings], 'r-o', label='Earnings')
-    #         ax.set_title('Revenue & Earnings Over Time')
-
-    #     ax.legend()
-    #     ax.grid(True, linestyle='--', alpha=0.7)
-    #     plt.xticks(rotation=45)
-    #     plt.savefig(buffer, format='svg')
-    #     plt.close(fig)
 
     async def _generate_html(self, df, interaction, user, buffer, user_earnings, all_data=False):
         """Generate HTML format export"""
@@ -1114,6 +1076,8 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
     async def preview_calculation(self, interaction: discord.Interaction, period: str, shift: str, role: discord.Role, 
                          gross_revenue: Decimal, selected_models: List[str], compensation_type: str, hours_worked: Decimal):
         """Preview calculation and show confirmation options"""
+        ephemeral = await self.get_ephemeral_setting(interaction.guild_id)
+
         guild_id = str(interaction.guild_id)
         logger.info(f"guild_id: {guild_id}")
         
@@ -1121,13 +1085,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         commission_file = settings.get_guild_commission_path(interaction.guild_id)
         role_data = await file_handlers.load_json(commission_file, {})
         
-        # Check if guild_id exists in role_data
-        # if guild_id not in role_data: # TODO: remove
-        #     logger.error(f"Guild ID {guild_id} not found in role_data")
-        #     await interaction.edit_original_response(content="Guild configuration not found. Please contact an administrator.")
-        #     return
-        
-        # guild_config = role_data[guild_id] # TODO: remove
         guild_config = role_data
         
         # Check if role exists in the guild's roles configuration
@@ -1281,22 +1238,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         # Only add hours worked if using hourly or both
         if compensation_type in ["hourly", "both"]:
             results["hours_worked"] = format_currency(hours_worked, decimal_places=True, thousands_separator=False)
-        
-        # results["date"] = current_date # TODO: remove
-        # results["sender"] = sender
-        # results["shift"] = shift
-        # results["role"] = role.name
-        # results["period"] = period
-        # results["gross_revenue"] = f"${float(results['gross_revenue']):,.2f}"
-        
-        # # Only add net revenue if using commission or both
-        # if compensation_type in ["commission", "both"]:
-        #     results["net_revenue"] = f"${float(results['net_revenue']):,.2f} (80%)"
-        
-        # results["bonus"] = f"${float(results['bonus']):,.2f}"
-        # results["employee_cut"] = f"${float(results['employee_cut']):,.2f}"
-        # results["total_cut"] = f"${float(results['total_cut']):,.2f}"
-        # results["models"] = models_list
 
         results.update({
             "date": current_date,
@@ -1304,11 +1245,11 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             "shift": shift,
             "role": role.name,
             "period": period,
-            "gross_revenue": format_currency(results["gross_revenue"]),
-            "net_revenue": format_currency(results.get("net_revenue", 0)) if compensation_type in ["commission", "both"] else None,
-            "bonus": format_currency(results["bonus"]),
-            "employee_cut": format_currency(results["employee_cut"]),
-            "total_cut": format_currency(results["total_cut"]),
+            "gross_revenue": results["gross_revenue"],
+            "net_revenue": results.get("net_revenue", 0) if compensation_type in ["commission", "both"] else None, 
+            "bonus": results["bonus"],
+            "employee_cut": results["employee_cut"],
+            "total_cut": results["total_cut"], 
             "models": models_list
         })
         
@@ -1326,7 +1267,15 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
 
     async def finalize_calculation(self, interaction: discord.Interaction, results: Dict):
         """Final step: Save and display results to everyone"""
-        ephemeral = self.get_ephemeral_setting(interaction.guild_id)
+        ephemeral = await self.get_ephemeral_setting(interaction.guild_id)
+
+        def format_currency(value, decimal_places=False, thousands_separator=False):
+            if decimal_places:
+                formatted_value = f"{float(value):,.{settings.DECIMAL_PLACES}f}"
+            else:
+                formatted_value = f"{float(value):,}{settings.DECIMAL_PLACES}" if thousands_separator else f"{float(value)}"
+            
+            return f"${formatted_value}"
 
         guild_id = str(interaction.guild_id)
         
@@ -1338,7 +1287,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         models_list = results["models"]
         
         # Load earnings data
-        # earnings_data = await file_handlers.load_json(settings.EARNINGS_FILE, []) # TODO: remove
         earnings_data = await file_handlers.load_json(settings.get_guild_earnings_path(interaction.guild.id), {})
         if sender not in earnings_data:
             earnings_data[sender] = []
@@ -1348,14 +1296,14 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         if "hours_worked" in results:
             hours_worked = float(results["hours_worked"].replace('h', ''). replace('$', '').replace(',', ''))
 
-        unique_id = generator_uuid.generate_id() # NOTE: uuid generation
+        unique_id = generator_uuid.generate_id() 
 
         # Add new entry
         new_entry = {
-            "id": unique_id, # NOTE: Added entry ID # WARN: think about possible combination between uuid and timestamp
+            "id": unique_id, 
             "date": results["date"],
-            "total_cut": float(results["total_cut"].replace('$', '').replace(',', '')),
-            "gross_revenue": float(results["gross_revenue"].replace('$', '').replace(',', '')),
+            "total_cut": float(results["total_cut"]), 
+            "gross_revenue": float(results["gross_revenue"]),
             "period": results["period"].lower(),
             "shift": results["shift"].lower(),
             "role": results["role"],
@@ -1370,7 +1318,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         logger.info(f"Final calculation for {interaction.user.name} ({interaction.user.id}): Gross=${results['gross_revenue']}, Total Cut=${results['total_cut']}, Period={results['period']}, Shift={results['shift']}, Role={results['role']}{hours_worked_text}")
         
         # Save updated earnings data
-        # success = await file_handlers.save_json(settings.EARNINGS_FILE, earnings_data) # TODO: remove
         success = await file_handlers.save_json(settings.get_guild_earnings_path(interaction.guild.id), earnings_data)
         if not success:
             logger.error(f"Failed to save earnings data for {sender}")
@@ -1399,7 +1346,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                 all_entries = [e for e in earnings_data[sender] if e["period"] == period]
                 if len(all_entries) > 1:  # Current entry is already added
                     avg_gross = sum(e["gross_revenue"] for e in all_entries[:-1]) / len(all_entries[:-1])
-                    current_gross = float(results["gross_revenue"].replace('$', '').replace(',', ''))
+                    current_gross = float(results["gross_revenue"])
                     performance = (current_gross / avg_gross) * 100 - 100
                     performance_text = f" (↑ {performance:.1f}% avg.)" if performance > 0 else f" (↓ {abs(performance):.1f}% avg.)"
                 else:
@@ -1419,24 +1366,24 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
 
         # Hours Worked (only show if not commission)
         if results.get("compensation_type") != "commission":
-            fields.append(("⏰ Hours Worked", results.get("hours_worked", "N/A"), True))
+            fields.append(("⏰ Hours Worked", f"{results.get('hours_worked', 'N/A')}h", True))
 
         fields.extend([
             ("📥 Shift", results.get("shift", "N/A"), True),
             ("🎯 Role", results.get("role", "N/A"), True),
             ("⌛ Period", results.get("period", "N/A"), True),
-            ("💰 Gross Revenue", f"{results.get('gross_revenue', 'N/A')}{performance_text}", True),
+            ("💰 Gross Revenue", f"{format_currency(results.get('gross_revenue'), decimal_places=True, thousands_separator=True)}{performance_text}", True), 
         ])
         
         # Net Revenue (only show if not hourly)
         if results.get("compensation_type") != "hourly":
-            fields.append(("💵 Net Revenue", f"{results.get('net_revenue', 'N/A')} (80%)", True))
+            fields.append(("💵 Net Revenue", f"{format_currency(results.get('net_revenue'), decimal_places=True, thousands_separator=True)} (80%)", True))
         
         # Remaining fields
         fields.extend([
-            ("🎁 Bonus", results.get("bonus", "N/A"), True),
-            ("💼 Employee Cut", results.get("employee_cut", "N/A"), True), # todo: maybe add hourly cut display
-            ("💰 Total Cut", results.get("total_cut", "N/A"), True),
+            ("🎁 Bonus", format_currency(results.get("bonus"), decimal_places=True, thousands_separator=True), True),
+            ("💼 Employee Cut", format_currency(results.get("employee_cut"), decimal_places=True, thousands_separator=True), True), 
+            ("💰 Total Cut", format_currency(results.get("total_cut"), decimal_places=True, thousands_separator=True), True), 
             (" ", "" if results.get("compensation_type") == "hourly" else "", True),
             ("🎭 Models", results.get("models", "N/A"), False)
         ])
@@ -1733,7 +1680,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         range_from="Starting date (dd/mm/yyyy)",
         range_to="Ending date (dd/mm/yyyy)",
         send_to_message="[Admin] Message to send to the selected users or roles",
-        # zip_formats="Available formats: txt, csv, json, xlsx, pdf, png, markdown, html, svg", # TODO: remove
         zip_formats="Available formats: txt, csv, json, xlsx, pdf, png, markdown, html", 
         all_data="[Admin] Use all earnings data, not just specific user's"
     )
@@ -1748,7 +1694,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             app_commands.Choice(name="PNG Chart", value="png"),
             app_commands.Choice(name="Markdown", value="markdown"),
             app_commands.Choice(name="HTML", value="html"),
-            # app_commands.Choice(name="SVG", value="svg"), # TODO: remove
             app_commands.Choice(name="ZIP Archive", value="zip")
         ]
     )
@@ -1797,7 +1742,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             entries = min(max(entries, 1), MAX_ENTRIES)
 
             # Load and filter data
-            # earnings_data = await file_handlers.load_json(settings.EARNINGS_FILE, []) # TODO: remove
             earnings_data = await file_handlers.load_json(settings.get_guild_earnings_path(interaction.guild.id), {}) 
             user_earnings = None
 
@@ -1907,7 +1851,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             embed.add_field(name="Total Gross", value=f"```\n${total_gross:.2f}\n```", inline=True)
             embed.add_field(name="Total Cut", value=f"```\n${total_cut_sum:.2f}\n```", inline=True)
 
-            # if not all_data: # TODO: remove
             await interaction.followup.send(embed=embed, ephemeral=ephemeral)
 
             if display_entries:
@@ -1927,7 +1870,6 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                     )
                 else:
                     await self.send_paginated_embeds(interaction, embeds, ephemeral=ephemeral)
-                # await self.send_paginated_embeds(interaction, embeds, ephemeral=ephemeral)
                 
             else:
                 pass
@@ -2113,6 +2055,7 @@ class RevenueInputModal(ui.Modal, title="Enter Gross Revenue"):
         self.role = role
         self.compensation_type = compensation_type
         self.hours_worked = hours_worked
+        self.ephemeral = ephemeral
         
         self.revenue_input = ui.TextInput(
             label="Gross Revenue (e.g. 1269.69)",
@@ -2128,7 +2071,7 @@ class RevenueInputModal(ui.Modal, title="Enter Gross Revenue"):
         
         if gross_revenue is None:
             logger.warning(f"User {interaction.user.name} ({interaction.user.id}) entered invalid revenue format: {revenue_str}")
-            await interaction.response.send_message("❌ Invalid revenue format. Please use a valid number.", ephemeral=ephemeral)
+            await interaction.response.send_message("❌ Invalid revenue format. Please use a valid number.", ephemeral=self.ephemeral)
             return
         
         await self.cog.show_model_selection(interaction, self.period, self.shift, self.role, gross_revenue, self.compensation_type, self.hours_worked)
@@ -2306,7 +2249,7 @@ class ConfirmationView(ui.View):
         logger.info(f"User {interaction.user.name} ({interaction.user.id}) cancelled calculation")
         
         # Just cancel the workflow
-        await interaction.response.edit_message(content="Calculation cancelled.", embed=None, view=None)
+        await interaction.response.edit_message(content="❌ Calculation cancelled.", embed=None, view=None)
 
 async def setup(bot):
     await bot.add_cog(CalculatorSlashCommands(bot))

@@ -1,18 +1,15 @@
 import os
 import re
-import io
 import json
 import glob
 import shutil
 import discord
 import logging
-import asyncio
 from datetime import datetime
 
-from decimal import Decimal
 from discord import app_commands
 from discord.ext import commands
-from typing import Optional, Callable
+from typing import Optional
 from config import settings
 from utils import file_handlers, validators
 
@@ -23,7 +20,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         self.bot = bot
 
     async def get_ephemeral_setting(self, guild_id):
-        file_path = settings.get_guild_display_path(guild_id)  # NOTE: Added
+        file_path = settings.get_guild_display_path(guild_id)
         display_settings = await file_handlers.load_json(file_path, {
                 "ephemeral_responses": True,
                 "show_average": True,
@@ -31,12 +28,9 @@ class AdminSlashCommands(commands.Cog, name="admin"):
                 "show_ids": True,
                 "bot_name": "Shift Calculator"
         })
-        # guild_settings = display_settings.get(str(guild_id), settings.DEFAULT_DISPLAY_SETTINGS['defaults']) # TODO: remove
-        # guild_settings = display_settings.get(str(guild_id), settings.DEFAULT_DISPLAY_SETTINGS) # TODO: remove
         guild_settings = display_settings
         return guild_settings.get('ephemeral_responses', 
             settings.DEFAULT_DISPLAY_SETTINGS['ephemeral_responses'])
-            # settings.DEFAULT_DISPLAY_SETTINGS['defaults']['ephemeral_responses']) # TODO: remove
 
     def validate_percentage(self, percentage: Optional[float]) -> bool:
         if percentage is None:
@@ -486,7 +480,6 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         
         guild_id = interaction.guild.id
         file_path = settings.get_guild_display_path(guild_id)
-        # display_settings = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS) # TODO: remove
         guild_settings = await file_handlers.load_json(file_path, {
                 "ephemeral_responses": True,
                 "show_average": True,
@@ -494,8 +487,6 @@ class AdminSlashCommands(commands.Cog, name="admin"):
                 "show_ids": True,
                 "bot_name": "Shift Calculator"
         })
-        # settings_data = await file_handlers.load_json(settings.DISPLAY_SETTINGS_FILE, settings.DEFAULT_DISPLAY_SETTINGS) # TODO: remove
-        # guild_settings = settings_data.get(str(guild_id), {}) # TODO: remove
         
         embed = discord.Embed(title="Display Settings", color=0x00ff00)
         logger.info(f"Ephemeral Responses: {await self.get_ephemeral_setting(guild_id)}")
@@ -1764,7 +1755,6 @@ class AdminSlashCommands(commands.Cog, name="admin"):
                 if os.path.exists(backup_file):
                     # Restore from guild-specific backup
                     shutil.copy2(backup_file, file_path)
-                    # Old global backup path: os.path.join(settings.DATA_DIRECTORY, f"{settings.MODELS_DATA_FILE}.bak") # TODO: remove
                     await interaction.response.edit_message(content="✅ Models configuration backup restored successfully.", view=None)
                 else:
                     await interaction.response.edit_message(content="❌ No models configuration backup found.", view=None)

@@ -37,7 +37,6 @@ async def load_json(filename: str, default: Optional[Union[Dict, List]] = None) 
     if default is None:
         default = {}
         
-    # file_path = f"data/{filename}" # TODO: remove
     file_path = filename
     lock = await get_file_lock(file_path)
     
@@ -86,7 +85,6 @@ async def save_json(filename: str, data: Union[Dict, List], pretty: bool = True,
     Returns:
         True if successful, False otherwise
     """
-    # file_path = f"data/{filename}" # TODO: remove
     file_path = filename
     temp_path = f"{file_path}.tmp"
     backup_path = f"{file_path}.bak"

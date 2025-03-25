@@ -16,15 +16,12 @@ def calculate_revenue_share(gross_revenue: Decimal, role_percentage: Decimal) ->
         Tuple of (net_revenue, employee_cut, platform_fee)
     """
     # Platform takes 20% of gross
-    # platform_fee = (gross_revenue * Decimal('0.2')).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP) # TODO: remove
     platform_fee = (gross_revenue * Decimal('0.2'))
     
     # Net revenue is 80% of gross
-    # net_revenue = (gross_revenue * Decimal('0.8')).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP) # TODO: remove
     net_revenue = (gross_revenue * Decimal('0.8'))
     
     # Employee gets percentage of net revenue
-    # employee_cut = (net_revenue * (role_percentage / Decimal('100'))).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP) # TODO: remove
     employee_cut = (net_revenue * (role_percentage / Decimal('100')))
     
     return net_revenue, employee_cut, platform_fee
@@ -71,7 +68,7 @@ def calculate_earnings(
     """
     net_revenue, employee_cut, platform_fee = calculate_revenue_share(gross_revenue, role_percentage)
     bonus = find_applicable_bonus(gross_revenue, bonus_rules)
-    # total_cut = (employee_cut + bonus).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP) # TODO: remove
+
     total_cut = (employee_cut + bonus)
     
     return {
@@ -157,5 +154,5 @@ def get_total_earnings(earnings_data: List[Dict], period: str, from_date: Option
     # Sum total cuts
     gross = sum(Decimal(str(entry.get("gross_revenue", 0))) for entry in filtered_data)
     total = sum(Decimal(str(entry.get("total_cut", 0))) for entry in filtered_data)
-    # return gross.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP), total.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP) # TODO: remove
+
     return gross, total
