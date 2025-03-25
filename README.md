@@ -420,6 +420,7 @@
 - [x] (v0.164.0) Update `!summary` earnings and period data file retrieval to use guild-specific paths
 - [x] (v0.165.0) Update `!` commands to use guild-specific paths
 - [x] (v0.167.0) Fix `/reset-config` command to properly reset models data
+- [x] (v0.168.0) Enhance `/view-config` command
 - [ ] Option to set default zip exports in setting
 - [ ] Display hourly cut in employee cut?
 - [ ] Add functionality to select column names to display in `view-earnings`

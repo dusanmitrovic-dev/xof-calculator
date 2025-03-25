@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.168.0] - 2025-03-25
+### Changed
+- Enhance `/view-config` command.
+
 ## [0.167.0] - 2025-03-25
 ### Fixed
 - Fixed `/reset-config` command to properly reset models data.

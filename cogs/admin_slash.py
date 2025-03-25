@@ -2153,78 +2153,93 @@ class AdminSlashCommands(commands.Cog, name="admin"):
                 timestamp=discord.utils.utcnow()
             ).set_footer(text=f"Requested by {interaction.user.display_name}")
 
-        def chunk_content(content: str, title: str) -> list[tuple[str, str]]:
-            """Split content into embed-safe chunks"""
+        def chunk_content(content: str, title: str, use_code_block: bool = True) -> list[tuple[str, str]]:
+            """Split content into embed-safe chunks with optional code block"""
             newline = '\n'
             buffer = []
             chunks = []
             current_length = 0
             
             for line in content.split(newline):
-                if current_length + len(line) > 1000:
-                    chunks.append((
-                        title,
-                        f"```{newline.join(buffer)}```"
-                    ))
+                line_length = len(line) + 1  # +1 for newline character
+                if current_length + line_length > 1000:
+                    chunk_value = newline.join(buffer)
+                    if use_code_block and chunk_value.strip():
+                        chunk_value = f"```{chunk_value}```"
+                    
+                    chunks.append((title, chunk_value if chunk_value.strip() else "**[No entries]**"))
                     buffer = []
                     current_length = 0
                     title = f"{title} (cont.)"
+                
                 buffer.append(line)
-                current_length += len(line) + 1
+                current_length += line_length
             
             if buffer:
-                chunks.append((
-                    title,
-                    f"```{newline.join(buffer)}```"
-                ))
-            return chunks or [(title, "```No configuration found```")]
+                chunk_value = newline.join(buffer)
+                if use_code_block and chunk_value.strip():
+                    chunk_value = f"```{chunk_value}```"
+                chunks.append((title, chunk_value if chunk_value.strip() else "**[No entries]**"))
+            
+            return chunks or [(title, "**[No entries]**")]
 
-        async def load_config_section(loader, formatter, section_name: str):
-            """Load and format a config section"""
+        async def load_config_section(loader, formatter, section_name: str, use_code_block: bool = True):
+            """Load and format a config section with code block option"""
             try:
                 raw_data = await loader()
+                if not raw_data:
+                    return chunk_content("", f"{section_name}\n", use_code_block)
                 formatted = formatter(raw_data)
-                return chunk_content('\n'.join(formatted), section_name)
+                return chunk_content('\n'.join(formatted), section_name, use_code_block)
             except Exception as e:
                 logger.error(f"Config error in {section_name}: {str(e)}")
-                return chunk_content("", f"{section_name} Error")
+                return chunk_content("", f"{section_name} Error", use_code_block)
 
         async def format_compensation(data_type: str, interaction: discord.Interaction) -> list[str]:
-            """Format compensation data"""
+            """Format compensation data without code blocks (for mentions)"""
             try:
                 from config import settings
                 comp_data = await file_handlers.load_json(
                     settings.get_guild_commission_path(interaction.guild.id), {}
                 )
                 lines = []
-                # Check if data_type exists and is a dictionary
                 section_data = comp_data.get(data_type, {})
                 if not isinstance(section_data, dict):
                     raise ValueError(f"{data_type} section is not a dictionary")
                 
                 for entry_id, settings in section_data.items():
-                    # Validate entry_id is a string of digits
                     if not entry_id.isdigit():
                         raise ValueError(f"Invalid ID format: {entry_id}")
-                    # Convert entry_id to integer and fetch target
-                    target = (
-                        interaction.guild.get_role(int(entry_id))
-                        if data_type == "roles" else
-                        interaction.guild.get_member(int(entry_id))
-                    )
-                    name = target.mention if target else f"Unknown ({entry_id})"
-                    # Validate settings structure
-                    commission = settings.get('commission_percentage', '?')
-                    hourly = settings.get('hourly_rate', '?')
-                    lines.append(
-                        f"{name}\n"
-                        f"Commission: {commission}%\n"
-                        f"Hourly: ${hourly}/h",
-                    )
-                return lines or ["No entries"]
+
+                    # Get target (role/member) and format mention + name
+                    if data_type == "roles":
+                        target = interaction.guild.get_role(int(entry_id))
+                        display_text = f"**{target.name}**" if target else f"`Unknown Role (ID: {entry_id})`"
+                    else:  # users
+                        target = interaction.guild.get_member(int(entry_id))
+                        display_text = f"**{target.display_name} (@{target.name})**" if target else f"`Unknown User (ID: {entry_id})`"
+                        override_role = settings.get('override_role', False)
+                    
+                    commission = settings.get('commission_percentage', '❓')
+                    hourly = settings.get('hourly_rate', '❓')
+                    
+                    if data_type == "users":
+                        lines.append(
+                            f"◈ {display_text}\n"
+                            f"```• Commission: {commission}%\n"
+                            f"• Hourly Rate: ${hourly}/h\n"
+                            f"• Override Role: {'Yes```' if settings.get('override_role', False) else 'No```'}"
+                        )
+                    else:
+                        lines.append(
+                            f"◈ {display_text}\n"
+                            f"```• Commission: {commission}%\n"
+                            f"• Hourly Rate: ${hourly}/h\n```"
+                        )
+                return lines or ["**[No entries]**"]
             except Exception as e:
                 logger.error(f"Compensation error: {str(e)}")
-                return ["Error loading data"]
+                return ["**⚠ Error loading data**"]
         #endregion
 
         #region Configuration Loaders
@@ -2234,7 +2249,8 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         config_sections.extend(await load_config_section(
             lambda: file_handlers.load_json(settings.get_guild_roles_path(guild_id), {}),
             lambda d: [f"{interaction.guild.get_role(int(k)) or k}: {v}%" for k, v in d.items()],
-            "Role Cuts"
+            "Role Cuts",
+            use_code_block=True
         ))
 
         # Shifts
@@ -2282,12 +2298,14 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         config_sections.extend(await load_config_section(
             lambda: format_compensation("roles", interaction),
             lambda d: d,
-            "Role Compensation"
+            "Role Compensation",
+            use_code_block=False  # Disable code block
         ))
         config_sections.extend(await load_config_section(
             lambda: format_compensation("users", interaction),
             lambda d: d,
-            "User Compensation"
+            "User Compensation",
+            use_code_block=False  # Disable code block
         ))
         #endregion
 
