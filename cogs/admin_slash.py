@@ -1886,21 +1886,21 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         
         try:
             # Validate source server access
-            source_guild = self.bot.get_guild(int(source_id))
-            if not source_guild:
-                await interaction.response.send_message(
-                    "❌ Bot is not in the source server or invalid server ID",
-                    ephemeral=ephemeral
-                )
-                return
+            # source_guild = self.bot.get_guild(int(source_id)) # TODO: remove
+            # if not source_guild:
+            #     await interaction.response.send_message(
+            #         "❌ Bot is not in the source server or invalid server ID",
+            #         ephemeral=ephemeral
+            #     )
+            #     return
 
-            # Validate bot permissions in source server
-            if not source_guild.me.guild_permissions.administrator:
-                await interaction.response.send_message(
-                    "❌ Bot needs administrator permissions in the source server",
-                    ephemeral=ephemeral
-                )
-                return
+            # # Validate bot permissions in source server
+            # if not source_guild.me.guild_permissions.administrator:
+            #     await interaction.response.send_message(
+            #         "❌ Bot needs administrator permissions in the source server",
+            #         ephemeral=ephemeral
+            #     )
+            #     return
 
             # Prepare paths
             source_dir = os.path.join("data", "config", source_id)
@@ -2231,11 +2231,12 @@ class AdminSlashCommands(commands.Cog, name="admin"):
                 logger.error(f"Config error in {section_name}: {str(e)}")
                 return chunk_content("", f"{section_name} Error")
 
-        async def format_compensation(data_type: str) -> list[str]:
+        async def format_compensation(data_type: str, interaction: discord.Interaction) -> list[str]:
             """Format compensation data"""
             try:
+                from config import settings
                 comp_data = await file_handlers.load_json(
-                    settings.get_guild_commission_path(guild_id), {}
+                    settings.get_guild_commission_path(interaction.guild.id), {}
                 )
                 lines = []
                 # Check if data_type exists and is a dictionary
@@ -2321,12 +2322,12 @@ class AdminSlashCommands(commands.Cog, name="admin"):
 
         # Compensation Data
         config_sections.extend(await load_config_section(
-            lambda: format_compensation("roles"),
+            lambda: format_compensation("roles", interaction),
             lambda d: d,
             "Role Compensation"
         ))
         config_sections.extend(await load_config_section(
-            lambda: format_compensation("users"),
+            lambda: format_compensation("users", interaction),
             lambda d: d,
             "User Compensation"
         ))
