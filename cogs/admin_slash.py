@@ -1883,26 +1883,8 @@ class AdminSlashCommands(commands.Cog, name="admin"):
     ):
         """Copy config files with enhanced safety and feedback"""
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
-        
+
         try:
-            # Validate source server access
-            # source_guild = self.bot.get_guild(int(source_id)) # TODO: remove
-            # if not source_guild:
-            #     await interaction.response.send_message(
-            #         "❌ Bot is not in the source server or invalid server ID",
-            #         ephemeral=ephemeral
-            #     )
-            #     return
-
-            # # Validate bot permissions in source server
-            # if not source_guild.me.guild_permissions.administrator:
-            #     await interaction.response.send_message(
-            #         "❌ Bot needs administrator permissions in the source server",
-            #         ephemeral=ephemeral
-            #     )
-            #     return
-
-            # Prepare paths
             source_dir = os.path.join("data", "config", source_id)
             target_dir = os.path.join("data", "config", str(interaction.guild.id))
             
@@ -1913,14 +1895,12 @@ class AdminSlashCommands(commands.Cog, name="admin"):
                 )
                 return
 
-            # Process keywords
             include_list = [w.strip().lower() for w in include_words.split(',')] if include_words else []
             exclude_list = [w.strip().lower() for w in exclude_words.split(',')]
             copied_files = []
             skipped_files = []
             errors = []
 
-            # Create backup if requested
             backup_path = None
             if create_backup and os.path.exists(target_dir):
                 backup_time = datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -1930,31 +1910,22 @@ class AdminSlashCommands(commands.Cog, name="admin"):
                 except Exception as e:
                     errors.append(f"Backup failed: {str(e)}")
 
-            # Custom file filter
             def should_copy(file_path: str) -> bool:
                 fname = os.path.basename(file_path).lower()
                 
-                # Always exclude backups
-                if fname.endswith('.bak'):
+                if fname.endswith('.bak') or any(excl in fname for excl in exclude_list):
                     return False
                     
-                # Check exclude list
-                if any(excl in fname for excl in exclude_list):
-                    return False
-                    
-                # Check include list (if specified)
                 if include_list and not any(inc in fname for inc in include_list):
                     return False
                     
                 return True
 
-            # Copy operation
             try:
                 for root, dirs, files in os.walk(source_dir):
                     relative_path = os.path.relpath(root, source_dir)
                     dest_root = os.path.join(target_dir, relative_path)
                     
-                    # Create destination directory
                     os.makedirs(dest_root, exist_ok=True)
                     
                     for file in files:
@@ -1966,12 +1937,6 @@ class AdminSlashCommands(commands.Cog, name="admin"):
                             continue
                             
                         try:
-                            # Preserve existing files with conflict notation
-                            if os.path.exists(dest_path):
-                                timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-                                conflict_path = f"{dest_path}.conflict_{timestamp}"
-                                shutil.copy2(dest_path, conflict_path)
-                                
                             shutil.copy2(src_path, dest_path)
                             copied_files.append(file)
                         except Exception as e:
@@ -1979,13 +1944,11 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             except Exception as e:
                 errors.append(f"Directory traversal failed: {str(e)}")
 
-            # Build result embed
             embed = discord.Embed(
                 title="Config Copy Results",
                 color=discord.Color.orange() if errors else discord.Color.green()
             )
             
-            # Backup information
             if backup_path:
                 embed.add_field(
                     name="Backup Created",
@@ -1993,7 +1956,6 @@ class AdminSlashCommands(commands.Cog, name="admin"):
                     inline=False
                 )
                 
-            # Copy results
             result_stats = [
                 f"• Copied: {len(copied_files)} files",
                 f"• Skipped: {len(skipped_files)} files",
@@ -2005,7 +1967,6 @@ class AdminSlashCommands(commands.Cog, name="admin"):
                 inline=False
             )
             
-            # Sample file lists
             if copied_files:
                 sample_copied = "\n".join(f"`{f}`" for f in copied_files[:5])
                 if len(copied_files) > 5:
@@ -2025,9 +1986,6 @@ class AdminSlashCommands(commands.Cog, name="admin"):
                     value=sample_errors,
                     inline=False
                 )
-
-            # Add security note
-            embed.set_footer(text="Note: Existing files were preserved with .conflict timestamps")
 
             await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
 
@@ -2261,7 +2219,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
                     lines.append(
                         f"{name}\n"
                         f"Commission: {commission}%\n"
-                        f"Hourly: ${hourly}/h"
+                        f"Hourly: ${hourly}/h",
                     )
                 return lines or ["No entries"]
             except Exception as e:
