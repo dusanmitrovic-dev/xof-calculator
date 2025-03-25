@@ -103,7 +103,11 @@ class HelpSlashCommands(commands.Cog):
                 "`/set-agency-name` - Set the agency name",
                 "`/set-bot-name` - Set the bot name",
                 "`/clear-earnings` - Clear all earnings data",
-                "`/remove-sale` - Remove earnings entries by IDs , Users mentions or combined"
+                "`/remove-sale` - Remove earnings entries by IDs , Users mentions or combined",
+                "`/view-config` - Display all server configurations with interactive pagination",
+                "`/copy-config-from-the-server` - Copy config files while preserving existing configurations",
+                "`/copy-earnings-from-the-server` - Copy earnings data from another server",
+
             ])
             embed.add_field(name="Miscellaneous Admin Commands", value=misc_admin_commands, inline=False)
 
