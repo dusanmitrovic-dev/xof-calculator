@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.166.0] - 2025-03-25
+### Change
+- Enhanced `/copy-earnings-from-the-server` command.
+
 ## [0.165.0] - 2025-03-24
 ### Change
 - Update `!` commands to use guild-specific paths.
