@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.171.0] - 2025-03-25
+### Added
+- Enabled self server backups.
+
 ## [0.170.0] - 2025-03-25
 ### Changed
 - Enhance `/manage-backups` command with backup type selection and improved error handling and `/copy-earnings-from-the-server`.
