@@ -1974,6 +1974,13 @@ class AdminSlashCommands(commands.Cog, name="admin"):
     async def copy_earnings(self, interaction: discord.Interaction, source_id: str):
         """Copy earnings data from another server (WARNING: Overwrites current data)"""
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+
+        if source_id == str(interaction.guild.id):
+            await interaction.response.send_message(
+                "❌ You can't copy earnings from the same server", 
+                ephemeral=ephemeral
+            )
+            return
         
         class ConfirmationView(discord.ui.View):
             def __init__(self):
@@ -2018,34 +2025,52 @@ class AdminSlashCommands(commands.Cog, name="admin"):
                 )
                 return
 
-            # Rest of the code remains the same...
-            # Initial warning
-            initial_view = ConfirmationView()
+            # Initial confirmation view
+            class FinalConfirmationView(discord.ui.View):
+                def __init__(self):
+                    super().__init__(timeout=60)
+                    self.confirmed = False
+
+                @discord.ui.button(label="Confirm Overwrite", style=discord.ButtonStyle.danger)
+                async def confirm(self, interaction: discord.Interaction, button: discord.ui.Button):
+                    self.confirmed = True
+                    await interaction.response.defer()
+                    self.stop()
+
+                @discord.ui.button(label="Cancel", style=discord.ButtonStyle.secondary)
+                async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
+                    await interaction.response.edit_message(content="Operation cancelled", view=None)
+                    self.stop()
+
+            # Initial warning with first confirmation
+            first_view = ConfirmationView()
             await interaction.response.send_message(
-                f"‼️🚨‼ **WARNING: This will REPLACE current data with {entry_count} entries!**\n"
+                f"‼️🚨‼ **WARNING: This will **`REPLACE`** current data with `{entry_count}` entries!**\n"
                 "Are you sure you want to continue?",
-                view=initial_view,
+                view=first_view,
                 ephemeral=ephemeral
             )
 
             # Wait for first confirmation
-            await initial_view.wait()
-            if not initial_view.confirmed:
+            await first_view.wait()
+            if not first_view.confirmed:
                 return
 
-            # Final confirmation
-            final_view = ConfirmationView()
-            await interaction.followup.send(
-                "‼️🚨‼ **FINAL CONFIRMATION** ‼️🚨‼\n"
+            # Final confirmation view
+            final_view = FinalConfirmationView()
+            await interaction.edit_original_response(
+                content="‼️🚨‼ **FINAL CONFIRMATION** ‼️🚨‼\n"
                 f"About to overwrite with `{entry_count}` entries from `{source_id}`\n",
-                view=final_view,
-                ephemeral=ephemeral
+                view=final_view
             )
 
             # Wait for final confirmation
             await final_view.wait()
             if not final_view.confirmed:
-                await interaction.followup.send("Operation cancelled", ephemeral=ephemeral)
+                await interaction.edit_original_response(
+                    content="Operation cancelled", 
+                    view=None
+                )
                 return
 
             # Perform the copy operation
@@ -2053,30 +2078,30 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             os.makedirs(target_dir, exist_ok=True)
             shutil.copyfile(source_path, os.path.join(target_dir, "earnings.json"))
             
-            await interaction.followup.send(
-                f"✅ Successfully copied `{entry_count}` entries from server `{source_id}` !",
-                ephemeral=ephemeral
+            await interaction.edit_original_response(
+                content=f"✅ Successfully copied `{entry_count}` entries from server `{source_id}` !",
+                view=None
             )
 
         except json.JSONDecodeError:
-            await interaction.followup.send(
-                "❌ Failed to read source data: Invalid JSON format",
-                ephemeral=ephemeral
+            await interaction.edit_original_response(
+                content="❌ Failed to read source data: Invalid JSON format",
+                view=None
             )
         except PermissionError:
-            await interaction.followup.send(
-                "❌ Permission denied: Bot cannot access earnings files",
-                ephemeral=ephemeral
+            await interaction.edit_original_response(
+                content="❌ Permission denied: Bot cannot access earnings files",
+                view=None
             )
         except FileNotFoundError:
-            await interaction.followup.send(
-                "❌ Error: Earnings file not found or inaccessible",
-                ephemeral=ephemeral
+            await interaction.edit_original_response(
+                content="❌ Error: Earnings file not found or inaccessible",
+                view=None
             )
         except Exception as e:
-            await interaction.followup.send(
-                f"❌ Unexpected error occurred: {str(e)}",
-                ephemeral=ephemeral
+            await interaction.edit_original_response(
+                content=f"❌ Unexpected error occurred: {str(e)}",
+                view=None
             )
 
     @app_commands.command(name="view-config", description="View complete server configuration")
