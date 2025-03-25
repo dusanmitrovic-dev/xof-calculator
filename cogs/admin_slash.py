@@ -2014,122 +2014,136 @@ class AdminSlashCommands(commands.Cog, name="admin"):
                 ephemeral=ephemeral
             )
 
-    @app_commands.command(name="manage-backups", description="List or remove backup configurations for this server")
+    @app_commands.command(name="manage-backups", description="Manage configuration or earnings backups")
     @app_commands.default_permissions(administrator=True)
     @app_commands.describe(
-        action="Action to perform (list or remove)",
-        backup_ids="Comma-separated backup IDs to remove (required for 'remove' action)"
+        backup_type="Type of backups to manage",
+        action="Action to perform",
+        backup_ids="Comma-separated backup IDs to remove (for 'remove' action)"
     )
+    @app_commands.choices(backup_type=[
+        app_commands.Choice(name="Configuration", value="config"),
+        app_commands.Choice(name="Earnings", value="earnings")
+    ])
     @app_commands.choices(action=[
-        app_commands.Choice(name="list", value="list"),
-        app_commands.Choice(name="remove", value="remove")
+        app_commands.Choice(name="List", value="list"),
+        app_commands.Choice(name="Remove", value="remove")
     ])
     async def manage_backups(
         self,
         interaction: discord.Interaction,
+        backup_type: str,
         action: str,
         backup_ids: str = None
     ):
-        """Manage server configuration backups through listing or removal"""
+        """Manage server backups with type selection"""
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
         guild_id = str(interaction.guild.id)
-        config_dir = os.path.join("data", "config")
-
+        
         try:
-            if action == "list":
-                # Find all backup directories for this server
-                backup_dirs = glob.glob(os.path.join(config_dir, f"{guild_id}_backup_*"))
-                backups = []
+            # Determine paths based on backup type
+            if backup_type == "config":
+                base_dir = os.path.join("data", "config")
+                pattern = f"{guild_id}_backup_*"
+                backup_name = "Configuration"
+            else:
+                base_dir = os.path.join("data", "earnings")
+                pattern = f"{guild_id}_earnings_backup_*"
+                backup_name = "Earnings"
 
+            if action == "list":
+                backup_dirs = glob.glob(os.path.join(base_dir, pattern))
+                backups = []
+                
                 for dir_path in backup_dirs:
                     dir_name = os.path.basename(dir_path)
-                    backup_id = dir_name.split("_backup_")[-1]  # Split to get timestamp
+                    backup_id = dir_name.split("_backup_")[-1]
                     
                     try:
                         dt = datetime.strptime(backup_id, "%Y%m%d-%H%M%S")
                         formatted_date = dt.strftime("%Y-%m-%d %H:%M:%S")
                     except ValueError:
-                        dt = None
-                        formatted_date = "Invalid timestamp"
+                        formatted_date = "Unknown date"
                     
-                    backups.append((backup_id, dt, formatted_date))
-
-                # Sort backups by date (newest first)
-                backups.sort(key=lambda x: x[1] or datetime.min, reverse=True)
-
+                    backups.append((backup_id, dir_name, formatted_date))
+                
+                # Sort by date
+                backups.sort(key=lambda x: x[0], reverse=True)
+                
                 embed = discord.Embed(
-                    title=f"Backups for Server {guild_id}",
+                    title=f"{backup_name} Backups",
                     color=discord.Color.blue()
                 )
-
+                
                 if not backups:
-                    embed.description = "No backups found for this server."
+                    embed.description = "No backups found"
                 else:
                     backup_list = []
-                    for bid, dt, formatted_date in backups:
-                        backup_list.append(f"• **{bid}**\n  Created: {formatted_date}")
+                    for bid, dir_name, date in backups:
+                        backup_list.append(f"• **{bid}**\n  Created: {date}\n  Directory: `{dir_name}`")
                     
                     embed.description = "\n\n".join(backup_list)
-                    embed.set_footer(text=f"Total backups: {len(backups)}")
-
+                    embed.set_footer(text=f"Total {backup_name.lower()} backups: {len(backups)}")
+                
                 await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
-
+            
             elif action == "remove":
                 if not backup_ids:
                     await interaction.response.send_message(
-                        "❌ Please provide backup IDs to remove (comma-separated)",
+                        "❌ Please provide backup IDs to remove",
                         ephemeral=ephemeral
                     )
                     return
-
+                    
                 backup_id_list = [bid.strip() for bid in backup_ids.split(',')]
                 removed = []
                 errors = []
-
+                
                 for backup_id in backup_id_list:
-                    # Validate backup ID format
+                    # Validate ID format
                     if not re.fullmatch(r"\d{8}-\d{6}", backup_id):
-                        errors.append(f"Invalid ID format: `{backup_id}` (must be YYYYMMDD-HHMMSS)")
+                        errors.append(f"Invalid ID: {backup_id}")
                         continue
-
-                    backup_path = os.path.join(config_dir, f"{guild_id}_backup_{backup_id}")
-
+                    
+                    dir_name = f"{guild_id}_{'earnings_' if backup_type == 'earnings' else ''}backup_{backup_id}"
+                    backup_path = os.path.join(base_dir, dir_name)
+                    
                     if not os.path.exists(backup_path):
-                        errors.append(f"Backup `{backup_id}` not found")
+                        errors.append(f"Backup {backup_id} not found")
                         continue
-
+                    
                     try:
                         shutil.rmtree(backup_path)
                         removed.append(backup_id)
                     except Exception as e:
-                        errors.append(f"Failed to remove `{backup_id}`: {str(e)}")
-
-                # Build result embed
+                        errors.append(f"Failed to remove {backup_id}: {str(e)}")
+                
+                # Build results embed
                 embed = discord.Embed(
-                    title="Backup Removal Results",
+                    title=f"{backup_name} Backup Removal",
                     color=discord.Color.green() if not errors else discord.Color.orange()
                 )
-
+                
                 if removed:
                     embed.add_field(
                         name="Successfully Removed",
                         value="\n".join(f"• `{bid}`" for bid in removed),
                         inline=False
                     )
-
+                
                 if errors:
                     embed.add_field(
                         name="Errors",
                         value="\n".join(f"• {e}" for e in errors),
                         inline=False
                     )
-
+                
                 await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
-
+        
         except Exception as e:
             logger.error(f"Backup management error: {str(e)}", exc_info=True)
             await interaction.response.send_message(
-                f"❌ Critical error during backup management: {str(e)}",
+                f"❌ Critical error: {str(e)}",
                 ephemeral=ephemeral
             )
 
