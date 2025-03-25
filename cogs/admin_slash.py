@@ -7,6 +7,7 @@ import shutil
 import discord
 import logging
 import asyncio
+from datetime import datetime
 
 from decimal import Decimal
 from discord import app_commands
@@ -1558,7 +1559,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         await file_handlers.save_json(settings.get_guild_earnings_path(interaction.guild.id), {})
     
     async def reset_models(self, interaction: discord.Interaction): 
-        await file_handlers.save_json(settings.MODELS_DATA_FILE, [])
+        await file_handlers.save_json(settings.get_guild_models_path(interaction.guild.id), [])
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="reset-models-config", description="Reset models configuration")
@@ -1864,107 +1865,181 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             )
 
 
-    @app_commands.command(name="copy-config-from-the-server")
+    @app_commands.command(name="copy-config-from-the-server", description="Copy server configuration from another server")
     @app_commands.default_permissions(administrator=True)
     @app_commands.describe(
         source_id="Server ID to copy from",
         include_words="Comma-separated words to include (e.g., shifts,periods)",
-        exclude_words="Comma-separated words to exclude (e.g., roles,commission)"
+        exclude_words="Comma-separated words to exclude (e.g., roles,commission)",
+        create_backup="Whether to create backup before copying"
     )
     async def copy_config(
         self,
         interaction: discord.Interaction,
         source_id: str,
         include_words: str = None,
-        exclude_words: str = 'role_percentages, commission_settings, display_settings'
+        exclude_words: str = 'role_percentages,commission_settings,display_settings',
+        create_backup: bool = True
     ):
-        """Copy config files while preserving existing configurations"""
+        """Copy config files with enhanced safety and feedback"""
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
-        SKIP_FILES = [word.strip().lower() for word in exclude_words.split(',')]
         
         try:
-            source_dir = os.path.join("data", "config", source_id)
-            if not os.path.exists(source_dir):
-                await interaction.response.send_message("❌ No config found", ephemeral=ephemeral)
-                return
-
-            # Process include words
-            include_list = [word.strip().lower() for word in include_words.split(',')] if include_words else None
-            
-            view = discord.ui.View()
-            confirm_btn = discord.ui.Button(style=discord.ButtonStyle.red, label="CONFIRM OVERWRITE")
-            cancel_btn = discord.ui.Button(style=discord.ButtonStyle.grey, label="Cancel")
-
-            async def confirm(interaction: discord.Interaction):
-                target_dir = os.path.join("data", "config", str(interaction.guild.id))
-                copied_files = []
-                
-                # Custom ignore function
-                def ignore_func(dir, files):
-                    ignored = []
-                    for f in files:
-                        f_lower = f.lower()
-                        should_include = (
-                            (not include_list or any(word in f_lower for word in include_list))
-                            and not any(skip in f_lower for skip in SKIP_FILES)
-                        )  # Added closing parenthesis
-                        if not should_include:
-                            ignored.append(f)
-                    return ignored
-
-                # Copy without deleting existing files
-                if os.path.exists(target_dir):
-                    for root, dirs, files in os.walk(source_dir):
-                        relative_path = os.path.relpath(root, source_dir)
-                        dest_path = os.path.join(target_dir, relative_path)
-                        
-                        os.makedirs(dest_path, exist_ok=True)
-                        
-                        for file in files:
-                            src_file = os.path.join(root, file)
-                            dest_file = os.path.join(dest_path, file)
-                            
-                            if file in ignore_func(root, [file]):
-                                continue
-                                
-                            shutil.copy2(src_file, dest_file)
-                            copied_files.append(file)
-                else:
-                    shutil.copytree(
-                        source_dir, 
-                        target_dir, 
-                        ignore=ignore_func
-                    )
-                    copied_files = [f for f in os.listdir(source_dir) if not ignore_func(None, [f])]
-
+            # Validate source server access
+            source_guild = self.bot.get_guild(int(source_id))
+            if not source_guild:
                 await interaction.response.send_message(
-                    f"✅ Copied {len(copied_files)} files while preserving existing config\n"
-                    f"Copied: `{', '.join(copied_files)}`", 
+                    "❌ Bot is not in the source server or invalid server ID",
                     ephemeral=ephemeral
                 )
+                return
 
-            confirm_btn.callback = confirm
-            cancel_btn.callback = lambda i: i.response.edit_message(content="❌ Canceled", view=None)
-            view.add_item(confirm_btn)
-            view.add_item(cancel_btn)
+            # Validate bot permissions in source server
+            if not source_guild.me.guild_permissions.administrator:
+                await interaction.response.send_message(
+                    "❌ Bot needs administrator permissions in the source server",
+                    ephemeral=ephemeral
+                )
+                return
 
-            warning_msg = [
-                "‼️🚨 CONFIG OVERWRITE WARNING 🚨‼️",
-                f"Copying from server ID: `{source_id}`",
-                f"Will overwrite files matching: {f'`{include_words}` keywords' or 'all non-excluded files'}",
-                f"Excluding files: `{exclude_words}`",
-                "Files that are not part of the copy process will remain unchanged!"
+            # Prepare paths
+            source_dir = os.path.join("data", "config", source_id)
+            target_dir = os.path.join("data", "config", str(interaction.guild.id))
+            
+            if not os.path.exists(source_dir):
+                await interaction.response.send_message(
+                    "❌ Source server configuration not found",
+                    ephemeral=ephemeral
+                )
+                return
+
+            # Process keywords
+            include_list = [w.strip().lower() for w in include_words.split(',')] if include_words else []
+            exclude_list = [w.strip().lower() for w in exclude_words.split(',')]
+            copied_files = []
+            skipped_files = []
+            errors = []
+
+            # Create backup if requested
+            backup_path = None
+            if create_backup and os.path.exists(target_dir):
+                backup_time = datetime.now().strftime("%Y%m%d-%H%M%S")
+                backup_path = f"{target_dir}_backup_{backup_time}"
+                try:
+                    shutil.copytree(target_dir, backup_path)
+                except Exception as e:
+                    errors.append(f"Backup failed: {str(e)}")
+
+            # Custom file filter
+            def should_copy(file_path: str) -> bool:
+                fname = os.path.basename(file_path).lower()
+                
+                # Always exclude backups
+                if fname.endswith('.bak'):
+                    return False
+                    
+                # Check exclude list
+                if any(excl in fname for excl in exclude_list):
+                    return False
+                    
+                # Check include list (if specified)
+                if include_list and not any(inc in fname for inc in include_list):
+                    return False
+                    
+                return True
+
+            # Copy operation
+            try:
+                for root, dirs, files in os.walk(source_dir):
+                    relative_path = os.path.relpath(root, source_dir)
+                    dest_root = os.path.join(target_dir, relative_path)
+                    
+                    # Create destination directory
+                    os.makedirs(dest_root, exist_ok=True)
+                    
+                    for file in files:
+                        src_path = os.path.join(root, file)
+                        dest_path = os.path.join(dest_root, file)
+                        
+                        if not should_copy(src_path):
+                            skipped_files.append(file)
+                            continue
+                            
+                        try:
+                            # Preserve existing files with conflict notation
+                            if os.path.exists(dest_path):
+                                timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+                                conflict_path = f"{dest_path}.conflict_{timestamp}"
+                                shutil.copy2(dest_path, conflict_path)
+                                
+                            shutil.copy2(src_path, dest_path)
+                            copied_files.append(file)
+                        except Exception as e:
+                            errors.append(f"{file}: {str(e)}")
+            except Exception as e:
+                errors.append(f"Directory traversal failed: {str(e)}")
+
+            # Build result embed
+            embed = discord.Embed(
+                title="Config Copy Results",
+                color=discord.Color.orange() if errors else discord.Color.green()
+            )
+            
+            # Backup information
+            if backup_path:
+                embed.add_field(
+                    name="Backup Created",
+                    value=f"`{os.path.basename(backup_path)}`",
+                    inline=False
+                )
+                
+            # Copy results
+            result_stats = [
+                f"• Copied: {len(copied_files)} files",
+                f"• Skipped: {len(skipped_files)} files",
+                f"• Errors: {len(errors)}"
             ]
+            embed.add_field(
+                name="Statistics",
+                value="\n".join(result_stats),
+                inline=False
+            )
+            
+            # Sample file lists
+            if copied_files:
+                sample_copied = "\n".join(f"`{f}`" for f in copied_files[:5])
+                if len(copied_files) > 5:
+                    sample_copied += f"\n...and {len(copied_files)-5} more"
+                embed.add_field(
+                    name="Copied Files",
+                    value=sample_copied,
+                    inline=False
+                )
+                
+            if errors:
+                sample_errors = "\n".join(f"• {e}" for e in errors[:3])
+                if len(errors) > 3:
+                    sample_errors += f"\n...and {len(errors)-3} more"
+                embed.add_field(
+                    name="Errors",
+                    value=sample_errors,
+                    inline=False
+                )
 
+            # Add security note
+            embed.set_footer(text="Note: Existing files were preserved with .conflict timestamps")
+
+            await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
+
+        except ValueError:
             await interaction.response.send_message(
-                "\n".join(warning_msg), 
-                view=view, 
+                "❌ Invalid server ID format",
                 ephemeral=ephemeral
             )
-
         except Exception as e:
+            logger.error(f"Config copy failed: {str(e)}")
             await interaction.response.send_message(
-                f"❌ Failed to copy config: {str(e)}", 
+                f"❌ Critical error during copy: {str(e)}",
                 ephemeral=ephemeral
             )
 

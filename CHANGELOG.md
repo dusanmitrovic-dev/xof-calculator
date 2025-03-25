@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.167.0] - 2025-03-25
+### Fixed
+- Fixed `/reset-config` command to properly reset models data.
+
 ## [0.166.0] - 2025-03-25
 ### Change
 - Enhanced `/copy-earnings-from-the-server` command.
