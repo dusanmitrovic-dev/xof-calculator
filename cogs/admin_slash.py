@@ -1886,8 +1886,36 @@ class AdminSlashCommands(commands.Cog, name="admin"):
 
         try:
             # Prevent self-copying
-            if source_id == interaction.guild.id:
-                await interaction.response.send_message("❌ Cannot copy from the same server", ephemeral=ephemeral)
+            if str(source_id) == str(interaction.guild.id):
+                target_dir = os.path.join("data", "config", str(interaction.guild.id))
+                
+                if not os.path.exists(target_dir):
+                    await interaction.response.send_message(
+                        "❌ No configuration found to backup",
+                        ephemeral=ephemeral
+                    )
+                    return
+
+                backup_time = datetime.now().strftime("%Y%m%d-%H%M%S")
+                backup_path = f"{target_dir}_backup_{backup_time}"
+                try:
+                    shutil.copytree(target_dir, backup_path)
+                    embed = discord.Embed(
+                        title="Config Backup Created",
+                        description="A backup of the current server configuration was created.",
+                        color=discord.Color.green()
+                    )
+                    embed.add_field(
+                        name="Backup Location",
+                        value=f"`{os.path.basename(backup_path)}`",
+                        inline=False
+                    )
+                    await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
+                except Exception as e:
+                    await interaction.response.send_message(
+                        f"❌ Backup failed: {str(e)}",
+                        ephemeral=ephemeral
+                    )
                 return
 
             source_dir = os.path.join("data", "config", source_id)
