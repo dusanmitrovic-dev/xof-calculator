@@ -1970,38 +1970,114 @@ class AdminSlashCommands(commands.Cog, name="admin"):
 
     @app_commands.command(name="copy-earnings-from-the-server")
     @app_commands.default_permissions(administrator=True)
-    @app_commands.describe(source_id="Server ID to copy from")
+    @app_commands.describe(source_id="The server ID you want to copy earnings from")
     async def copy_earnings(self, interaction: discord.Interaction, source_id: str):
-        """Copy earnings data from another server"""
+        """Copy earnings data from another server (WARNING: Overwrites current data)"""
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+        
+        class ConfirmationView(discord.ui.View):
+            def __init__(self):
+                super().__init__(timeout=60)
+                self.confirmed = False
+
+            @discord.ui.button(label="Confirm Overwrite", style=discord.ButtonStyle.danger)
+            async def confirm(self, interaction: discord.Interaction, button: discord.ui.Button):
+                self.confirmed = True
+                await interaction.response.defer()
+                self.stop()
+
+            @discord.ui.button(label="Cancel", style=discord.ButtonStyle.secondary)
+            async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
+                await interaction.response.edit_message(content="Operation cancelled", view=None)
+                self.stop()
 
         try:
-            source_file = os.path.join("data", "earnings", f"{source_id}.json")
-            if not os.path.exists(source_file):
-                await interaction.response.send_message("❌ No earnings found", ephemeral=ephemeral)
+            source_path = os.path.join("data", "earnings", source_id, "earnings.json")
+            if not os.path.exists(source_path):
+                await interaction.response.send_message(
+                    f"❌ No earnings data found in source server {source_id}",
+                    ephemeral=ephemeral
+                )
                 return
 
-            view = discord.ui.View()
-            confirm_btn = discord.ui.Button(style=discord.ButtonStyle.red, label="OVERWRITE EARNINGS")
-            cancel_btn = discord.ui.Button(style=discord.ButtonStyle.grey, label="Cancel")
+            # Load the data and calculate entry count
+            with open(source_path, 'r') as f:
+                data = json.load(f)
             
-            async def confirm(interaction: discord.Interaction):
-                target_file = os.path.join("data", "earnings", f"{interaction.guild.id}.json")
-                shutil.copyfile(source_file, target_file)
-                await interaction.response.send_message("✅ Earnings copied", ephemeral=ephemeral)
+            # Determine entry count based on data structure
+            if isinstance(data, dict):
+                # Sum the lengths of all lists in dictionary values
+                entry_count = sum(len(entries) for entries in data.values() if isinstance(entries, list))
+            elif isinstance(data, list):
+                entry_count = len(data)
+            else:
+                # Handle unexpected data structure
+                await interaction.response.send_message(
+                    "❌ Invalid data format in source earnings file",
+                    ephemeral=ephemeral
+                )
+                return
 
-            confirm_btn.callback = confirm
-            cancel_btn.callback = lambda i: i.response.edit_message(content="❌ Canceled", view=None)
-            view.add_item(confirm_btn)
-            view.add_item(cancel_btn)
-            
+            # Rest of the code remains the same...
+            # Initial warning
+            initial_view = ConfirmationView()
             await interaction.response.send_message(
-                "‼️🚨‼ This will DELETE ALL CURRENT EARNINGS AND REPLACE THEM ‼", 
-                view=view, 
+                f"‼️🚨‼ **WARNING: This will REPLACE current data with {entry_count} entries!**\n"
+                "Are you sure you want to continue?",
+                view=initial_view,
                 ephemeral=ephemeral
             )
-        except:
-            await interaction.response.send_message("❌ Failed to copy earnings", ephemeral=ephemeral)
+
+            # Wait for first confirmation
+            await initial_view.wait()
+            if not initial_view.confirmed:
+                return
+
+            # Final confirmation
+            final_view = ConfirmationView()
+            await interaction.followup.send(
+                "‼️🚨‼ **FINAL CONFIRMATION** ‼️🚨‼\n"
+                f"About to overwrite with `{entry_count}` entries from `{source_id}`\n",
+                view=final_view,
+                ephemeral=ephemeral
+            )
+
+            # Wait for final confirmation
+            await final_view.wait()
+            if not final_view.confirmed:
+                await interaction.followup.send("Operation cancelled", ephemeral=ephemeral)
+                return
+
+            # Perform the copy operation
+            target_dir = os.path.join("data", "earnings", str(interaction.guild.id))
+            os.makedirs(target_dir, exist_ok=True)
+            shutil.copyfile(source_path, os.path.join(target_dir, "earnings.json"))
+            
+            await interaction.followup.send(
+                f"✅ Successfully copied `{entry_count}` entries from server `{source_id}` !",
+                ephemeral=ephemeral
+            )
+
+        except json.JSONDecodeError:
+            await interaction.followup.send(
+                "❌ Failed to read source data: Invalid JSON format",
+                ephemeral=ephemeral
+            )
+        except PermissionError:
+            await interaction.followup.send(
+                "❌ Permission denied: Bot cannot access earnings files",
+                ephemeral=ephemeral
+            )
+        except FileNotFoundError:
+            await interaction.followup.send(
+                "❌ Error: Earnings file not found or inaccessible",
+                ephemeral=ephemeral
+            )
+        except Exception as e:
+            await interaction.followup.send(
+                f"❌ Unexpected error occurred: {str(e)}",
+                ephemeral=ephemeral
+            )
 
     @app_commands.command(name="view-config", description="View complete server configuration")
     @app_commands.default_permissions(administrator=True)
