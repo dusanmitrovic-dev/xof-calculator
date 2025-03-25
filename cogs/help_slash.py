@@ -100,6 +100,7 @@ class HelpSlashCommands(commands.Cog):
             misc_admin_commands = "\n".join([
                 "`/toggle-ephemeral` - Toggle whether command responses are ephemeral",
                 "`/toggle-average` - Toggle performance averages in calculation embeds",
+                "`/toggle-id-display` - Toggle display of IDs in reports",
                 "`/set-agency-name` - Set the agency name",
                 "`/set-bot-name` - Set the bot name",
                 "`/clear-earnings` - Clear all earnings data",
