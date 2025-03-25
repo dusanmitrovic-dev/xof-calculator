@@ -1869,14 +1869,14 @@ class AdminSlashCommands(commands.Cog, name="admin"):
     @app_commands.default_permissions(administrator=True)
     @app_commands.describe(
         source_id="Server ID to copy from",
-        include_words="Comma-separated words to include (e.g., shifts,periods)",
-        exclude_words="Comma-separated words to exclude (e.g., roles,commission)",
+        include_words="Comma-separated words to include in filenames (substring match)",
+        exclude_words="Comma-separated words to exclude from filenames (substring match)",
         create_backup="Whether to create backup before copying"
     )
     async def copy_config(
         self,
         interaction: discord.Interaction,
-        source_id: str,
+        source_id: str, 
         include_words: str = None,
         exclude_words: str = 'role_percentages,commission_settings,display_settings',
         create_backup: bool = True
@@ -1885,6 +1885,11 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
 
         try:
+            # Prevent self-copying
+            if source_id == interaction.guild.id:
+                await interaction.response.send_message("❌ Cannot copy from the same server", ephemeral=ephemeral)
+                return
+
             source_dir = os.path.join("data", "config", source_id)
             target_dir = os.path.join("data", "config", str(interaction.guild.id))
             
@@ -1896,11 +1901,12 @@ class AdminSlashCommands(commands.Cog, name="admin"):
                 return
 
             include_list = [w.strip().lower() for w in include_words.split(',')] if include_words else []
-            exclude_list = [w.strip().lower() for w in exclude_words.split(',')]
+            exclude_list = [w.strip().lower() for w in exclude_words.split(',')] + [".bak"] # Always exclude backup files
             copied_files = []
             skipped_files = []
             errors = []
 
+            # Backup handling
             backup_path = None
             if create_backup and os.path.exists(target_dir):
                 backup_time = datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -1913,14 +1919,17 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             def should_copy(file_path: str) -> bool:
                 fname = os.path.basename(file_path).lower()
                 
+                # Exclusion checks
                 if fname.endswith('.bak') or any(excl in fname for excl in exclude_list):
                     return False
                     
+                # Inclusion filter
                 if include_list and not any(inc in fname for inc in include_list):
                     return False
                     
                 return True
 
+            # File operations
             try:
                 for root, dirs, files in os.walk(source_dir):
                     relative_path = os.path.relpath(root, source_dir)
@@ -1944,6 +1953,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             except Exception as e:
                 errors.append(f"Directory traversal failed: {str(e)}")
 
+            # Build result embed
             embed = discord.Embed(
                 title="Config Copy Results",
                 color=discord.Color.orange() if errors else discord.Color.green()
@@ -1967,16 +1977,24 @@ class AdminSlashCommands(commands.Cog, name="admin"):
                 inline=False
             )
             
+            # Add details if files were copied
             if copied_files:
-                sample_copied = "\n".join(f"`{f}`" for f in copied_files[:5])
+                sample_copied = "\n".join(f"• {f}" for f in copied_files[:5])
                 if len(copied_files) > 5:
                     sample_copied += f"\n...and {len(copied_files)-5} more"
                 embed.add_field(
                     name="Copied Files",
-                    value=sample_copied,
+                    value=f"```{sample_copied}```",
+                    inline=False
+                )
+            else:
+                embed.add_field(
+                    name="⚠️ Notice",
+                    value="No files were copied based on filters",
                     inline=False
                 )
                 
+            # Error reporting
             if errors:
                 sample_errors = "\n".join(f"• {e}" for e in errors[:3])
                 if len(errors) > 3:
@@ -1989,13 +2007,8 @@ class AdminSlashCommands(commands.Cog, name="admin"):
 
             await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
 
-        except ValueError:
-            await interaction.response.send_message(
-                "❌ Invalid server ID format",
-                ephemeral=ephemeral
-            )
         except Exception as e:
-            logger.error(f"Config copy failed: {str(e)}")
+            logger.error(f"Config copy failed: {str(e)}", exc_info=True)
             await interaction.response.send_message(
                 f"❌ Critical error during copy: {str(e)}",
                 ephemeral=ephemeral
