@@ -1958,13 +1958,11 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
                             )
                             report__message_embed.add_field(name="Sent by", value=interaction.user.mention, inline=False)
                             await recipient.send(embed=report__message_embed)
-                        # note: sent success logic
                         successfully_sent_to_content += f"- {recipient.mention} ({recipient.name})\n"
                         success_count += 1
                     except discord.Forbidden:
                         failures.append(f"{recipient.mention} (Blocked DMs)")
                     except Exception as e:
-                        # note: sent failure logic
                         failures.append(f"{recipient.mention} ({str(e)})")
                 
                 # Generate and send report

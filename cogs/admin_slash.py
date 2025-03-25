@@ -2174,13 +2174,6 @@ class AdminSlashCommands(commands.Cog, name="admin"):
     async def copy_earnings(self, interaction: discord.Interaction, source_id: str, create_backup: bool = True):
         """Copy earnings data with backup protection"""
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
-
-        # if source_id == str(interaction.guild.id):
-        #     await interaction.response.send_message(
-        #         "❌ You can't copy earnings from the same server", 
-        #         ephemeral=ephemeral
-        #     )
-        #     return
         
         class ConfirmationView(discord.ui.View):
             def __init__(self):
