@@ -40,7 +40,7 @@
 
 ## [0.163.0] - 2025-03-24
 ### Changed
-- Updated earnings slash calculate commands to use multiple servers file logic
+- Updated earnings slash calculate commands to use multiple servers file logic.
 
 ## [0.162.0] - 2025-03-23
 ### Changed
