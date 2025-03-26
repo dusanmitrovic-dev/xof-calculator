@@ -1,6 +1,6 @@
 ### XOF Agency shift calculator.
 
-# Discord Bot Implementation Plan
+# Implementation Plan
 
 ## CRITICAL (Security & Core Stability)
 

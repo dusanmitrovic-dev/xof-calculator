@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+## [1.0.0] - 2025-03-27
+### Added
+- First major release.
 
 ## [0.171.0] - 2025-03-25
 ### Added
