@@ -76,7 +76,7 @@
 
 ## [0.154.2] - 2025-03-22
 ### Changed
-- First attempt to for multiple server file organization. Requires rollback to `v0.154.1`
+- First attempt to for multiple server file organization. Requires rollback to `v0.154.1`.
 
 ## [0.154.1] - 2025-03-22
 ### Changed
