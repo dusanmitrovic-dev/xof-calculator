@@ -48,7 +48,7 @@
 
 ## [0.161.0] - 2025-03-23
 ### Changed
-- Update compensation settings for guild-specific configurations
+- Update compensation settings for guild-specific configurations.
 
 ## [0.160.0] - 2025-03-23
 ### Changed
