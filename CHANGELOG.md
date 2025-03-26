@@ -32,7 +32,7 @@
 
 ## [0.164.0] - 2025-03-24
 ### Change
-- Update `!summary` earnings and period data file retrieval to use guild-specific paths
+- Update `!summary` earnings and period data file retrieval to use guild-specific paths.
 
 ## [0.163.1] - 2025-03-24
 ### Remove
