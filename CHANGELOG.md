@@ -95,7 +95,7 @@
 
 ## [0.153.0] - 2025-03-20
 ### Changed
-- Enhance table formatting and improve chart layout for better readability
+- Enhance table formatting and improve chart layout for better readability.
 
 ## [0.152.0] - 2025-03-20
 ### Removed
