@@ -44,7 +44,7 @@
 
 ## [0.162.0] - 2025-03-23
 ### Changed
-- Update display settings, help command and reset restore full config for guild-specific configurations
+- Update display settings, help command and reset restore full config for guild-specific configurations.
 
 ## [0.161.0] - 2025-03-23
 ### Changed
