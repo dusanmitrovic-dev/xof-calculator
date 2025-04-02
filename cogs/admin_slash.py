@@ -1634,6 +1634,27 @@ class AdminSlashCommands(commands.Cog, name="admin"):
 
     # Restore Backup Methods
     @app_commands.default_permissions(administrator=True)
+    @app_commands.command(name="restore-shift-config", description="Restore the latest shift configuration backup")
+    async def restore_shift_config(self, interaction: discord.Interaction):
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+
+        async def restore_action(interaction: discord.Interaction):
+            file_path = settings.get_guild_shifts_path(interaction.guild.id)
+            backup_file = f"{file_path}.bak"
+            if os.path.exists(backup_file):
+                shutil.copy2(backup_file, file_path)
+                await interaction.response.edit_message(content="✅ Shift configuration backup restored successfully.", view=None)
+            else:
+                await interaction.response.edit_message(content="❌ No shift configuration backup found.", view=None)
+
+        view = ConfirmButton(restore_action, interaction.user.id)
+        await interaction.response.send_message(
+            "⚠️ Are you sure you want to restore the shift configuration backup?", 
+            view=view, 
+            ephemeral=ephemeral
+        )
+
+    @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="restore-period-backup", description="Restore the latest period configuration backup")
     async def restore_period_backup(self, interaction: discord.Interaction):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)

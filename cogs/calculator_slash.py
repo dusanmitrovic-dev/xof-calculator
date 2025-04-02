@@ -18,7 +18,6 @@ from typing import  Optional, List, Dict
 from discord import ui, app_commands
 from discord.ext import commands
 from reportlab.lib import colors
-from utils import file_handlers
 from utils import generator_uuid
 from datetime import datetime
 from config import settings
@@ -40,6 +39,7 @@ class HoursWorkedModal(ui.Modal, title="Enter Hours Worked"):
         self.role = role
         self.gross_revenue = gross_revenue
         self.compensation_type = compensation_type
+        self.ephemeral = ephemeral
         
         self.hours_input = ui.TextInput(
             label="Hours Worked (e.g. 8)",
@@ -57,7 +57,7 @@ class HoursWorkedModal(ui.Modal, title="Enter Hours Worked"):
                 raise ValueError("Hours worked must be positive")
         except (ValueError, InvalidOperation):
             logger.warning(f"User {interaction.user.name} ({interaction.user.id}) entered invalid hours format: {hours_str}")
-            await interaction.response.send_message("❌ Invalid hours format. Please use a valid positive number.", ephemeral=ephemeral)
+            await interaction.response.send_message("❌ Invalid hours format. Please use a valid positive number.", ephemeral=self.ephemeral)
             return
         
         # Proceed to period selection with the hours worked
@@ -1100,18 +1100,22 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
 
             return
         
-        commission_percentage = role_config.get("commission_percentage", 0)
-        percentage = None
+        user_config = guild_config.get("users", {}).get(str(interaction.user.id), {})
 
+        # Determine the base commission percentage
+        if user_config.get("override_role", False):
+            # Use user's commission, defaulting to 0 if None
+            commission_percentage = user_config.get("commission_percentage", 0)
+        else:
+            # Fall back to role's commission, defaulting to 0
+            commission_percentage = role_config.get("commission_percentage", 0)
+
+        # Safely convert to Decimal
         try:
             percentage = Decimal(str(commission_percentage))
-        except (ValueError, TypeError):
-            percentage = Decimal("0")
-
-        # Check if the user has an override
-        user_config = guild_config.get("users", {}).get(str(interaction.user.id), {})
-        if user_config.get("override_role", False):
-            percentage = Decimal(str(user_config.get("commission_percentage", percentage)))
+        except (ValueError, TypeError, InvalidOperation) as e:
+            logger.error(f"Invalid commission value '{commission_percentage}': {e}")
+            percentage = Decimal(0)
         
         # Load bonus rules
         guild_bonus_rules = await file_handlers.load_json(settings.get_guild_bonus_rules_path(interaction.guild_id), [])
@@ -1138,9 +1142,16 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             )
         elif compensation_type == "hourly":
             # Calculate hourly earnings
-            hourly_rate = Decimal(str(role_config.get("hourly_rate", "0")))
-            if user_config.get("override_role", False):
-                hourly_rate = Decimal(str(user_config.get("hourly_rate", hourly_rate)))
+            if not user_config.get("override_role", False):
+                hourly_rate = Decimal(str(role_config.get("hourly_rate", "0")))
+            hourly_rate_override = user_config.get("hourly_rate")
+            if user_config.get("override_role", False) and hourly_rate_override is not None:
+                try:
+                    hourly_rate = Decimal(str(hourly_rate_override))
+                except InvalidOperation:
+                    logger.error(f"Invalid hourly rate format: {hourly_rate_override}")
+            else:
+                hourly_rate = Decimal(str(hourly_rate))
             
             results = calculations.calculate_hourly_earnings(
                 gross_revenue,
@@ -1150,9 +1161,16 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             )
         elif compensation_type == "both":
             # Calculate both commission and hourly earnings
-            hourly_rate = Decimal(str(role_config.get("hourly_rate", "0")))
-            if user_config.get("override_role", False):
-                hourly_rate = Decimal(str(user_config.get("hourly_rate", hourly_rate)))
+            if not user_config.get("override_role", False):
+                hourly_rate = Decimal(str(role_config.get("hourly_rate", "0")))
+            hourly_rate_override = user_config.get("hourly_rate")
+            if user_config.get("override_role", False) and hourly_rate_override is not None:
+                try:
+                    hourly_rate = Decimal(str(hourly_rate_override))
+                except InvalidOperation:
+                    logger.error(f"Invalid hourly rate format: {hourly_rate_override}")
+            else:
+                hourly_rate = Decimal(str(hourly_rate))
             
             results = calculations.calculate_combined_earnings(
                 gross_revenue,
@@ -1200,7 +1218,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
 
         # Hours Worked (only show if not commission)
         if compensation_type != "commission":
-            fields.append(("⏰ Hours Worked", format_currency(hours_worked, decimal_places=True) + "h", True))
+            fields.append(("⏰ Hours Worked", format_currency(hours_worked, decimal_places=True)[1:] + "h", True))
 
         fields.extend([
             ("📥 Shift", shift, True),
@@ -1365,8 +1383,11 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         ])
 
         # Hours Worked (only show if not commission)
+        result_hours_worked = results.get('hours_worked', 'N/A')
+        if isinstance(result_hours_worked, str) and result_hours_worked != 'N/A':
+            result_hours_worked = result_hours_worked[1:]
         if results.get("compensation_type") != "commission":
-            fields.append(("⏰ Hours Worked", f"{results.get('hours_worked', 'N/A')}h", True))
+            fields.append(("⏰ Hours Worked", f"{result_hours_worked}h", True))
 
         fields.extend([
             ("📥 Shift", results.get("shift", "N/A"), True),
