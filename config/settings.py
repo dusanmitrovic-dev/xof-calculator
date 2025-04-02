@@ -1,9 +1,9 @@
 import os
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 
 BOT_PREFIX = "!"
 
-VERSION = "1.0.0"
+VERSION = "1.0.2"
 
 DATA_DIRECTORY = "data"
 CONFIG_DIR = os.path.join(DATA_DIRECTORY, "config")

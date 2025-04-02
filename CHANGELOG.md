@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [1.0.2] - 2025-04-3
+### Fixed
+- Update version display.
+
 ## [1.0.1] - 2025-04-3
 ### Fixed
 - Fix commission and hourly rate handling with overrides and added missing `/restore-shift-config`.
