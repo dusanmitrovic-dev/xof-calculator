@@ -148,8 +148,6 @@ async def _save_guild_config_mongo(guild_id: int, config_key: str, data: Any) ->
 async def _save_earnings_mongo(guild_id: int, data: Dict[str, List[Dict]]) -> bool:
     """Saves earnings data to MongoDB (Replaces existing entries for the guild)."""
     _, mdb = get_mongo_client()
-    # --- FIX HERE ---
-    # if not mdb: return False
     if mdb is None: return False
 
     # ... (rest of the function remains the same) ...
