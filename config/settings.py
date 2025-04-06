@@ -3,7 +3,7 @@ from typing import Dict, Any, List
 
 BOT_PREFIX = "!"
 
-VERSION = "1.0.2"
+VERSION = "1.1.0"
 
 DATA_DIRECTORY = "data"
 CONFIG_DIR = os.path.join(DATA_DIRECTORY, "config")
@@ -22,6 +22,13 @@ COMMISSION_SETTINGS_FILE = "commission_settings.json"
 
 EARNINGS_FILE_NAME_WITHOUT_EXT = "earnings"
 EARNINGS_FILE = EARNINGS_FILE_NAME_WITHOUT_EXT + ".json"
+
+# --- MongoDB Settings ---
+MONGODB_URI = os.getenv("MONGODB_URI")
+DATABASE_NAME = MONGODB_URI.split('/')[-1].split('?')[0] if MONGODB_URI else "xof_calculator_db" # Extract from URI or default
+GUILD_CONFIG_COLLECTION = "guild_configs"
+EARNINGS_COLLECTION = "earnings"
+# --- End MongoDB Settings ---
 
 # DEFAULT_ROLE_DATA: Dict[str, Dict[str, float]] = {}# TODO: remove
 DEFAULT_ROLE_DATA = {}
