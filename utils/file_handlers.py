@@ -124,10 +124,8 @@ async def _load_earnings_mongo(guild_id: int) -> Optional[Dict[str, List[Dict]]]
 async def _save_guild_config_mongo(guild_id: int, config_key: str, data: Any) -> bool:
     """Saves a specific config key for a guild to MongoDB."""
     _, mdb = get_mongo_client()
-    # --- FIX HERE ---
-    # if not mdb: return False
-    if mdb is None: return False
-    # --- END FIX ---
+    if mdb is None: 
+        return False
 
     try:
         update_result = await mdb[settings.GUILD_CONFIG_COLLECTION].update_one(
