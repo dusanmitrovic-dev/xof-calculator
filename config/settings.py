@@ -138,3 +138,15 @@ def get_guild_display_path(guild_id: int) -> str:
 def get_guild_earnings_path(guild_id: int) -> str:
     """Get path to guild's earnings file"""
     return get_guild_earnings_file(guild_id, EARNINGS_FILE)
+
+# --- Helper to map filenames to config keys ---
+# This helps structure the MongoDB document
+FILENAME_TO_MONGO_KEY = {
+    ROLE_DATA_FILE: "roles",
+    SHIFT_DATA_FILE: "shifts",
+    PERIOD_DATA_FILE: "periods",
+    MODELS_DATA_FILE: "models",
+    BONUS_RULES_FILE: "bonus_rules",
+    DISPLAY_SETTINGS_FILE: "display_settings",
+    COMMISSION_SETTINGS_FILE: "commission_settings",
+}
