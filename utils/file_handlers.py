@@ -151,7 +151,6 @@ async def _save_earnings_mongo(guild_id: int, data: Dict[str, List[Dict]]) -> bo
     # --- FIX HERE ---
     # if not mdb: return False
     if mdb is None: return False
-    # --- END FIX ---
 
     # ... (rest of the function remains the same) ...
     try:
