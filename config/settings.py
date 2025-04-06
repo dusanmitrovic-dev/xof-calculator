@@ -74,6 +74,12 @@ def get_guild_path(guild_id: int) -> str:
     os.makedirs(path, exist_ok=True)
     return path
 
+def get_guild_earnings_path_dir(guild_id: int) -> str:
+    """Return path to guild's earnings directory"""
+    path = os.path.join(EARNINGS_DIR, str(guild_id))
+    os.makedirs(path, exist_ok=True)
+    return path
+
 def get_guild_file(guild_id: int, filename: str) -> str:
     """Get full path to a guild-specific config file"""
     # print("PATH", get_guild_path(guild_id)) # TODO: remove
