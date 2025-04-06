@@ -151,7 +151,6 @@ async def _save_earnings_mongo(guild_id: int, data: Dict[str, List[Dict]]) -> bo
     if mdb is None: 
         return False
 
-    # ... (rest of the function remains the same) ...
     try:
         # 1. Delete existing entries for the guild
         delete_result = await mdb[settings.EARNINGS_COLLECTION].delete_many({"guild_id": guild_id})
