@@ -65,9 +65,6 @@ os.makedirs(DATA_DIRECTORY, exist_ok=True)
 # def get_earnings_file_name_without_ext(): # TODO: remove
 #     return EARNINGS_FILE_NAME_WITHOUT_EXT
 
-# def get_earnings_file_for_guild(guild_id):
-#     return f"{EARNINGS_FILE_NAME_WITHOUT_EXT}_{guild_id}.json"
-
 def get_guild_path(guild_id: int) -> str:
     """Return path to guild's config directory"""
     path = os.path.join(CONFIG_DIR, str(guild_id))
