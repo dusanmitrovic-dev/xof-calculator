@@ -266,7 +266,6 @@ async def save_json(filename: str, data: Union[Dict, List], pretty: bool = True,
     lock = await get_file_lock(file_path)
     file_save_successful = False
 
-    # --- File Save Logic ---
     async with lock:
         try:
             # Ensure parent directory exists for the file
