@@ -24,7 +24,6 @@ COMMISSION_SETTINGS_FILE = "commission_settings.json"
 EARNINGS_FILE_NAME_WITHOUT_EXT = "earnings"
 EARNINGS_FILE = EARNINGS_FILE_NAME_WITHOUT_EXT + ".json"
 
-# --- MongoDB Settings ---
 MONGODB_URI = os.getenv("MONGODB_URI")
 DATABASE_NAME = MONGODB_URI.split('/')[-1].split('?')[0] if MONGODB_URI else "xof_calculator_db" # Extract from URI or default
 GUILD_CONFIG_COLLECTION = "guild_configs"
