@@ -82,7 +82,6 @@ def get_guild_earnings_path_dir(guild_id: int) -> str:
 
 def get_guild_file(guild_id: int, filename: str) -> str:
     """Get full path to a guild-specific config file"""
-    # print("PATH", get_guild_path(guild_id)) # TODO: remove
     return os.path.join(get_guild_path(guild_id), filename)
 
 def get_guild_earnings_file(guild_id: int, filename: str) -> str:
