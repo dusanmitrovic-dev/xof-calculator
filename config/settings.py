@@ -29,7 +29,6 @@ MONGODB_URI = os.getenv("MONGODB_URI")
 DATABASE_NAME = MONGODB_URI.split('/')[-1].split('?')[0] if MONGODB_URI else "xof_calculator_db" # Extract from URI or default
 GUILD_CONFIG_COLLECTION = "guild_configs"
 EARNINGS_COLLECTION = "earnings"
-# --- End MongoDB Settings ---
 
 DEFAULT_ROLE_DATA = {}
 DEFAULT_SHIFT_DATA = []
