@@ -38,7 +38,6 @@ DEFAULT_ROLE_DATA = {}
 DEFAULT_SHIFT_DATA = []
 # DEFAULT_PERIOD_DATA: Dict[str, List[str]] = {} # TODO: remove
 DEFAULT_PERIOD_DATA = []
-# DEFAULT_MODELS_DATA: Dict[str, List[str]] = {} # TODO: remove
 DEFAULT_MODELS_DATA = []
 DEFAULT_BONUS_RULES = []
 DEFAULT_EARNINGS: List[Dict[str, Any]] = {}
