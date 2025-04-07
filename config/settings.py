@@ -32,7 +32,6 @@ GUILD_CONFIG_COLLECTION = "guild_configs"
 EARNINGS_COLLECTION = "earnings"
 # --- End MongoDB Settings ---
 
-# DEFAULT_ROLE_DATA: Dict[str, Dict[str, float]] = {}# TODO: remove
 DEFAULT_ROLE_DATA = {}
 DEFAULT_SHIFT_DATA = []
 DEFAULT_PERIOD_DATA = []
