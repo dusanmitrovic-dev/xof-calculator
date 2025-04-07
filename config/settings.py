@@ -13,7 +13,6 @@ EARNINGS_DIR = os.path.join(DATA_DIRECTORY, "earnings")
 os.makedirs(CONFIG_DIR, exist_ok=True)
 os.makedirs(EARNINGS_DIR, exist_ok=True)
 
-
 ROLE_DATA_FILE = "role_percentages.json"
 SHIFT_DATA_FILE = "shift_config.json"
 PERIOD_DATA_FILE = "period_config.json"
