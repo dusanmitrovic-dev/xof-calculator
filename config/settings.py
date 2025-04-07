@@ -25,7 +25,7 @@ EARNINGS_FILE_NAME_WITHOUT_EXT = "earnings"
 EARNINGS_FILE = EARNINGS_FILE_NAME_WITHOUT_EXT + ".json"
 
 MONGODB_URI = os.getenv("MONGODB_URI")
-DATABASE_NAME = MONGODB_URI.split('/')[-1].split('?')[0] if MONGODB_URI else "xof_calculator_db" # Extract from URI or default
+DATABASE_NAME = MONGODB_URI.split('/')[-1].split('?')[0] if MONGODB_URI else "xof_calculator_db"
 GUILD_CONFIG_COLLECTION = "guild_configs"
 EARNINGS_COLLECTION = "earnings"
 
