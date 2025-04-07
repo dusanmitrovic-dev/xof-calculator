@@ -73,10 +73,8 @@ def _serialize_mongo_doc(doc: Dict) -> Dict:
 async def _load_guild_config_mongo(guild_id: int, config_key: str) -> Optional[Any]:
     """Loads a specific config key for a guild from MongoDB."""
     _, mdb = get_mongo_client()
-    # --- FIX HERE ---
-    # if not mdb: return None
-    if mdb is None: return None
-    # --- END FIX ---
+    if mdb is None: 
+        return None
 
     try:
         guild_doc = await mdb[settings.GUILD_CONFIG_COLLECTION].find_one({"guild_id": guild_id})
@@ -92,10 +90,8 @@ async def _load_guild_config_mongo(guild_id: int, config_key: str) -> Optional[A
 async def _load_earnings_mongo(guild_id: int) -> Optional[Dict[str, List[Dict]]]:
     """Loads all earnings entries for a guild from MongoDB and formats them."""
     _, mdb = get_mongo_client()
-    # --- FIX HERE ---
-    # if not mdb: return None
-    if mdb is None: return None
-    # --- END FIX ---
+    if mdb is None: 
+        return None
 
     try:
         cursor = mdb[settings.EARNINGS_COLLECTION].find({"guild_id": guild_id})
