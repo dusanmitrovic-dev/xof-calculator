@@ -285,7 +285,6 @@ async def save_json(filename: str, data: Union[Dict, List], pretty: bool = True,
             except TypeError as te:
                 logger.error(f"Data for {file_path} is not JSON serializable: {te}. Data: {str(data)[:200]}...")
                 # Attempt to clean problematic types (like ObjectId if accidentally included)
-                # This is a basic attempt; more robust serialization might be needed
                 cleaned_data = json.loads(json.dumps(data, default=str))
                 json_str = json.dumps(cleaned_data, indent=4 if pretty else None, ensure_ascii=False)
                 logger.warning("Attempted to clean data for JSON serialization.")
