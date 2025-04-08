@@ -257,8 +257,7 @@ class CalculatorCommands(commands.Cog):
         
         # Prepare date range display
         date_range = f"from `{from_date}` to `{to_date}`" if from_date and to_date else "for all time"
-        
-        # Create and send embed
+
         embed = discord.Embed(
             title="💰 Total Earnings",
             description=f"**{sender}**'s total earnings for {period} period {date_range}:",
