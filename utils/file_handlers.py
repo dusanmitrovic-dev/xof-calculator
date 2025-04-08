@@ -5,7 +5,7 @@ import logging
 import asyncio
 import aiofiles
 import motor.motor_asyncio # Import motor
-from bson import ObjectId # Needed for MongoDB _id if we want to handle it directly
+from bson import ObjectId
 
 from datetime import datetime
 from typing import Dict, List, Any, Optional, Union
