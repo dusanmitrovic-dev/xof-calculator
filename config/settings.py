@@ -49,7 +49,6 @@ DEFAULT_COMMISSION_SETTINGS = {
     "users": {}
 }
 
-# Formatting
 DATE_FORMAT = "%d/%m/%Y"
 DECIMAL_PLACES = 2
 
