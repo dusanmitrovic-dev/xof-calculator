@@ -337,7 +337,6 @@ async def save_json(filename: str, data: Union[Dict, List], pretty: bool = True,
 
             if not mongo_save_successful:
                  logger.error(f"Failed to save corresponding data for {os.path.basename(filename)} (guild {guild_id}) to MongoDB.")
-            # else: # No need to log success here, it's logged in the helper
 
     return file_save_successful # Return status of the file save operation
 
