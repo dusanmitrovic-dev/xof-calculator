@@ -318,7 +318,7 @@ async def save_json(filename: str, data: Union[Dict, List], pretty: bool = True,
                     pass
             file_save_successful = False # Explicitly set file save as failed
 
-    # --- MongoDB Save Logic (Attempt even if file save failed? No, only if file save succeeded) ---
+    # --- MongoDB Save Logic ---
     if file_save_successful:
         guild_id = _extract_guild_id(filename)
         mongo_save_successful = False
