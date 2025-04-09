@@ -7,8 +7,10 @@ import logging
 import asyncio
 import aiofiles
 import motor.motor_asyncio
-from bson import ObjectId
+# Make sure 'ReplaceOne' or 'operations' is NOT imported from motor.motor_asyncio here
+# Example: Remove or comment out -> # from motor.motor_asyncio import operations
 
+from bson import ObjectId
 from datetime import datetime
 from typing import Dict, List, Any, Optional, Union
 from config import settings
@@ -183,74 +185,56 @@ async def _save_earnings_mongo(guild_id: int, data: Dict[str, List[Dict]]) -> bo
     """Saves earnings data to MongoDB (Replaces existing entries for the guild)."""
     _, mdb = get_mongo_client()
     if mdb is None:
-        logger.warning(f"MongoDB client not available, cannot save earnings for guild {guild_id}.")
-        return False
+        logger.warning(f"MongoDB client not available. Skipping MongoDB save for earnings (guild {guild_id}).")
+        return False # Indicate Mongo save didn't happen
 
     try:
-        # --- Efficient Upsert Strategy ---
-        # 1. Prepare bulk operations
-        operations = []
-        total_entries_processed = 0
+        collection = mdb[settings.EARNINGS_COLLECTION]
+
+        # 1. Prepare the list of documents to insert
+        all_entries_to_insert = []
         for user_mention, user_entries in data.items():
+            # Basic validation of input structure
+            if not isinstance(user_entries, list):
+                logger.error(f"Invalid data format for user {user_mention} in guild {guild_id}. Expected list, got {type(user_entries)}. Skipping Mongo save.")
+                return False # Stop if data structure is wrong
+
             for entry in user_entries:
-                total_entries_processed += 1
-                entry_to_upsert = entry.copy()
-                # Use the unique 'id' field from the JSON entry for matching
-                sale_id = entry_to_upsert.pop('id', None)
-                if not sale_id:
-                    logger.warning(f"Skipping earnings entry without 'id' field for MongoDB upsert: {entry_to_upsert}")
-                    continue
+                if not isinstance(entry, dict):
+                    logger.error(f"Invalid entry format for user {user_mention} in guild {guild_id}. Expected dict, got {type(entry)}. Skipping Mongo save.")
+                    return False # Stop if data structure is wrong
 
-                # Add fields needed for querying/indexing in MongoDB
-                entry_to_upsert["guild_id"] = guild_id
-                entry_to_upsert["user_mention"] = user_mention
-                entry_to_upsert["sale_id"] = sale_id # Store the original ID explicitly
+                # Create a copy to avoid modifying original data
+                entry_to_insert = entry.copy()
+                # Ensure guild_id and user_mention are added for MongoDB querying
+                entry_to_insert["guild_id"] = guild_id
+                entry_to_insert["user_mention"] = user_mention
+                # Remove MongoDB's internal _id if it exists (e.g., from a previous load)
+                entry_to_insert.pop('_id', None)
+                all_entries_to_insert.append(entry_to_insert)
 
-                operations.append(
-                    motor.motor_asyncio.operations.ReplaceOne(
-                        {"guild_id": guild_id, "sale_id": sale_id}, # Filter to find this specific sale
-                        entry_to_upsert, # The full document to replace/insert
-                        upsert=True
-                    )
-                )
+        # 2. Delete existing entries for the guild *before* inserting new ones
+        # This ensures atomicity at the operation level (replace)
+        delete_result = await collection.delete_many({"guild_id": guild_id})
+        logger.debug(f"Deleted {delete_result.deleted_count} existing MongoDB earnings entries for guild {guild_id} before inserting new data.")
 
-        # 2. Execute Bulk Upsert if there are operations
-        if operations:
-            bulk_result = await mdb[settings.EARNINGS_COLLECTION].bulk_write(operations, ordered=False)
-            logger.info(f"MongoDB earnings bulk write for guild {guild_id}: "
-                        f"Inserted={bulk_result.inserted_count}, "
-                        f"Matched={bulk_result.matched_count}, "
-                        f"Modified={bulk_result.modified_count}, "
-                        f"Upserted={bulk_result.upserted_count}")
-            # Check for write errors
-            if bulk_result.write_errors:
-                 logger.error(f"MongoDB earnings bulk write errors for guild {guild_id}: {bulk_result.write_errors}")
-                 # Decide if this constitutes failure - arguably yes if any error occurred.
-                 # return False
-            # We consider it a success if acknowledged, even if some minor errors occured during bulk write.
-            # The important part is that the operation was attempted.
-
-        # --- Cleanup Strategy ---
-        # 3. Find all current sale_ids in the provided data for this guild
-        current_sale_ids = set()
-        for user_entries in data.values():
-            for entry in user_entries:
-                if 'id' in entry:
-                    current_sale_ids.add(entry['id'])
-
-        # 4. Delete entries in MongoDB for this guild that are NOT in the current data
-        delete_filter = {
-            "guild_id": guild_id,
-            "sale_id": {"$nin": list(current_sale_ids)}
-        }
-        delete_result = await mdb[settings.EARNINGS_COLLECTION].delete_many(delete_filter)
-        if delete_result.deleted_count > 0:
-            logger.info(f"Removed {delete_result.deleted_count} stale earnings entries from MongoDB for guild {guild_id}.")
-
-        logger.info(f"Completed earnings sync for guild {guild_id}. Processed {total_entries_processed} entries from input data.")
-        return True # Assume success unless a major exception occurred
+        # 3. Insert the new batch if there are any entries to insert
+        if all_entries_to_insert:
+            insert_result = await collection.insert_many(all_entries_to_insert, ordered=False) # ordered=False might be slightly faster
+            success = insert_result.acknowledged and len(insert_result.inserted_ids) == len(all_entries_to_insert)
+            if success:
+                logger.debug(f"Successfully inserted {len(all_entries_to_insert)} earnings entries for guild {guild_id} into MongoDB.")
+            else:
+                logger.error(f"MongoDB insert failed or incomplete for earnings (guild {guild_id}). Acknowledged: {insert_result.acknowledged}, Inserted: {len(insert_result.inserted_ids)}/{len(all_entries_to_insert)}")
+            return success
+        else:
+            # If there was nothing to insert, the operation is still considered successful
+            # as the state matches the input (empty earnings for the guild).
+            logger.debug(f"No new earnings entries to insert for guild {guild_id} after deletion.")
+            return True
 
     except Exception as e:
+        # Log the full traceback for better debugging
         logger.error(f"MongoDB Error saving/syncing earnings for guild {guild_id}: {e}", exc_info=True)
         return False
 
