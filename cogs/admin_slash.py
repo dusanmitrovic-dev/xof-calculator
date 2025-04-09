@@ -1,5 +1,3 @@
-# --- START OF FILE admin_slash.py ---
-
 import os
 import re
 import json
