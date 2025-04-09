@@ -3024,4 +3024,3 @@ class ConfirmButton(discord.ui.View):
 # --- Cog Setup ---
 async def setup(bot):
     await bot.add_cog(AdminSlashCommands(bot))
-# --- END OF FILE admin_slash.py ---
