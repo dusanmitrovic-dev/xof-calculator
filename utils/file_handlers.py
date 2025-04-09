@@ -276,7 +276,7 @@ async def load_json(
     if default is None:
         # Use list default for files expected to be lists, else dict
         base_name = os.path.basename(filename)
-        if base_name in [settings.SHIFTS_FILE, settings.PERIODS_FILE, settings.MODELS_FILE, settings.BONUS_RULES_FILE]:
+        if base_name in [settings.SHIFT_DATA_FILE, settings.PERIOD_DATA_FILE, settings.MODELS_DATA_FILE, settings.BONUS_RULES_FILE]:
              default = []
         else:
              default = {}
@@ -519,7 +519,7 @@ async def force_sync_to_mongo(filename: str) -> bool:
     # Check if loaded data is the default value, potentially indicating an issue
     # (e.g., file was corrupted or empty and load_json returned default)
     # Need to compare against the correct default type
-    default_val = [] if os.path.basename(filename) in [settings.SHIFTS_FILE, settings.PERIODS_FILE, settings.MODELS_FILE, settings.BONUS_RULES_FILE] else {}
+    default_val = [] if os.path.basename(filename) in [settings.SHIFT_DATA_FILE, settings.PERIOD_DATA_FILE, settings.MODELS_DATA_FILE, settings.BONUS_RULES_FILE] else {}
     if local_data == default_val:
          # Check if the file actually exists and is empty/corrupt or just missing
          if not os.path.exists(filename):

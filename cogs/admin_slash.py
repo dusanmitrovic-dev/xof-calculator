@@ -1,3 +1,4 @@
+import asyncio
 import os
 import re
 import json
@@ -1398,63 +1399,126 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         await interaction.response.send_message(content="‼️🚨‼ Are you sure you want to reset all configuration data for this server? Earnings data will not be affected (use: `/clear-earnings`).", view=view, ephemeral=ephemeral)
 
     @app_commands.default_permissions(administrator=True)
-    @app_commands.command(name="restore-latest-backup", description="Restore the latest backup")
+    @app_commands.command(name="restore-latest-backup", description="Restore the latest config backup (local files + DB sync)")
     async def restore_latest_backup(self, interaction: discord.Interaction):
+        """Restores all config .bak files and syncs them to the database."""
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
-
-        view = discord.ui.View()
-        view.add_item(discord.ui.Button(label="Confirm", style=discord.ButtonStyle.danger, custom_id="confirm_restore_backup"))
-        view.add_item(discord.ui.Button(label="Cancel", style=discord.ButtonStyle.success, custom_id="cancel_restore_backup"))
+        guild_id = str(interaction.guild.id)
 
         async def confirm_callback(interaction: discord.Interaction):
             # Defer the interaction to prevent timeout
-            await interaction.response.defer(ephemeral=ephemeral)
+            await interaction.response.defer(ephemeral=ephemeral, thinking=True)
 
-            cogs_dir = os.path.dirname(os.path.abspath(__file__))
-            parent_dir = os.path.dirname(cogs_dir)
-            data_dir = os.path.join(parent_dir, "data")
-            data_dir = os.path.join(data_dir, "config", str(interaction.guild.id))
-            if not os.path.exists(data_dir):
-                await interaction.edit_original_response(content="❌ Server's data directory not found!", view=None)
+            # Use the specific config directory for the guild
+            config_data_dir = settings.get_guild_path(guild_id) # Assuming settings has this helper
+
+            if not os.path.exists(config_data_dir):
+                await interaction.edit_original_response(content="❌ Server's configuration data directory not found!", view=None)
                 return
 
-            backup_files = glob.glob(os.path.join(data_dir, "*.bak"))
+            # Find .bak files specifically within the config directory
+            backup_files = glob.glob(os.path.join(config_data_dir, "*.bak"))
 
             if not backup_files:
-                await interaction.edit_original_response(content="❌ No backup files found!", view=None)
+                await interaction.edit_original_response(content="❌ No configuration backup (.bak) files found!", view=None)
                 return
 
-            restored_count = 0
-            failed_count = 0
+            restored_files = []
+            synced_files = []
+            failed_restore = []
+            failed_sync = []
 
+            # --- Restoration and Sync Loop ---
             for bak_file in backup_files:
-                earnings_file = settings.get_guild_earnings_path(interaction.guild.id)
-                if os.path.basename(bak_file) == os.path.basename(earnings_file) + ".bak":
-                    continue
+                original_file = bak_file[:-4]  # Remove .bak extension
+                file_name = os.path.basename(original_file)
 
+                # Skip earnings file if it happens to be in config dir (shouldn't be)
+                # Also skip if the original file isn't a known config type for DB sync
+                if file_name == settings.EARNINGS_FILE or not file_handlers._is_config_file(original_file):
+                     logger.debug(f"Skipping restore/sync for non-config or earnings file: {file_name} in {config_data_dir}")
+                     continue
+
+                # 1. Restore Local File
                 try:
-                    original_file = bak_file[:-4]  # Remove .bak extension
                     shutil.copy2(bak_file, original_file)
-                    restored_count += 1
-                except Exception as e:
-                    print(f"Failed to restore {bak_file}: {str(e)}")
-                    failed_count += 1
+                    logger.info(f"Restored local file {original_file} from backup for guild {guild_id}.")
+                    restored_files.append(file_name)
 
-            # Prepare the response content
-            if failed_count == 0:
-                content = f"✅ Successfully restored {restored_count} backup files."
-            else:
-                content = f"⚠️ Restored {restored_count} files, but {failed_count} failed. Check console for details."
+                    # 2. Force Sync to MongoDB
+                    try:
+                        mongo_synced = await file_handlers.force_sync_to_mongo(original_file)
+                        if mongo_synced:
+                            synced_files.append(file_name)
+                        else:
+                            failed_sync.append(file_name)
+                            logger.error(f"Failed MongoDB sync for restored file {original_file} (guild {guild_id}).")
+                    except Exception as sync_e:
+                        logger.error(f"Error during MongoDB sync for restored file {original_file} (guild {guild_id}): {sync_e}", exc_info=True)
+                        failed_sync.append(f"{file_name} (Sync Error)")
 
-            await interaction.edit_original_response(content=content, view=None)
+                except Exception as restore_e:
+                    logger.error(f"Failed to restore local file {original_file} from {bak_file} (guild {guild_id}): {restore_e}", exc_info=True)
+                    failed_restore.append(f"{file_name} (Restore Error)")
+                
+                # Optional small delay
+                await asyncio.sleep(0.1)
+
+
+            # --- Build Response Embed ---
+            embed = discord.Embed(title="Latest Config Backup Restore Results", color=discord.Color.blue())
+
+            if restored_files:
+                 embed.add_field(name="✅ Files Restored Locally", value=f"```\n{', '.join(restored_files)}\n```", inline=False)
+            if synced_files:
+                 embed.add_field(name="🔄 Files Synced to Database", value=f"```\n{', '.join(synced_files)}\n```", inline=False)
+
+            if failed_restore:
+                 embed.color = discord.Color.red()
+                 embed.add_field(name="❌ Failed Restores (Local)", value=f"```\n{', '.join(failed_restore)}\n```", inline=False)
+            if failed_sync:
+                 embed.color = discord.Color.orange() if embed.color != discord.Color.red() else embed.color
+                 embed.add_field(name="⚠️ Failed Database Syncs", value=f"```\n{', '.join(failed_sync)}\n```", inline=False)
+
+            if not restored_files and not failed_restore:
+                 embed.description = "No configuration files were processed for restore."
+                 embed.color = discord.Color.greyple()
+            elif not failed_restore and not failed_sync:
+                 embed.color = discord.Color.green() # All green if no failures
+
+            await interaction.edit_original_response(embed=embed, view=None)
 
         async def cancel_callback(interaction: discord.Interaction):
-            await interaction.response.edit_message(content="❌ Canceled.", view=None)
+            await interaction.response.edit_message(content="❌ Restore operation canceled.", view=None)
 
-        view.children[0].callback = confirm_callback
-        view.children[1].callback = cancel_callback
+        # --- Confirmation View Setup ---
+        view = discord.ui.View(timeout=60) # Add timeout
+        confirm_button = discord.ui.Button(label="Confirm Restore & Sync", style=discord.ButtonStyle.danger, custom_id="confirm_restore_backup")
+        cancel_button = discord.ui.Button(label="Cancel", style=discord.ButtonStyle.secondary, custom_id="cancel_restore_backup")
+
+        confirm_button.callback = confirm_callback
+        cancel_button.callback = cancel_callback
+
+        view.add_item(confirm_button)
+        view.add_item(cancel_button)
+
+        # Prevent view timeout from causing issues
+        async def on_timeout():
+             try:
+                 # Edit message to indicate timeout if it hasn't been interacted with
+                 await interaction.edit_original_response(content="Restore confirmation timed out.", view=None)
+             except discord.NotFound:
+                 pass # Message already deleted or changed
+             except discord.HTTPException as e:
+                 logger.warning(f"Failed to edit message on restore timeout: {e}")
+        view.on_timeout = on_timeout
+
+
         await interaction.response.send_message(
-            content="‼️🚨‼ Are you sure you want to restore the latest configuration backup?",
+            content="‼️🚨‼ **Confirm Restore?**\n"
+                    "This will restore ALL configuration `.bak` files found in the server's config directory, "
+                    "overwriting the current local files.\n"
+                    "It will then attempt to **sync each restored file to the database**, overwriting DB data.",
             view=view,
             ephemeral=ephemeral
         )
@@ -1642,15 +1706,28 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             file_path = settings.get_guild_shifts_path(interaction.guild.id)
             backup_file = f"{file_path}.bak"
             if os.path.exists(backup_file):
-                shutil.copy2(backup_file, file_path)
-                await interaction.response.edit_message(content="✅ Shift configuration backup restored successfully.", view=None)
+                try:
+                    shutil.copy2(backup_file, file_path)
+                    logger.info(f"Restored local file {file_path} from backup for guild {interaction.guild.id}.")
+
+                    # Force sync this restored file to MongoDB
+                    mongo_synced = await file_handlers.force_sync_to_mongo(file_path)
+
+                    if mongo_synced:
+                        await interaction.response.edit_message(content="✅ Shift configuration backup restored locally and synced to database.", view=None)
+                    else:
+                        await interaction.response.edit_message(content="⚠️ Shift configuration backup restored locally, but failed to sync to database.", view=None)
+
+                except Exception as e:
+                    logger.error(f"Error during shift restore/sync for guild {interaction.guild.id}: {e}", exc_info=True)
+                    await interaction.response.edit_message(content=f"❌ Error during restore process: {e}", view=None)
             else:
                 await interaction.response.edit_message(content="❌ No shift configuration backup found.", view=None)
 
         view = ConfirmButton(restore_action, interaction.user.id)
         await interaction.response.send_message(
-            "⚠️ Are you sure you want to restore the shift configuration backup?", 
-            view=view, 
+            "⚠️ Are you sure you want to restore the shift configuration backup?",
+            view=view,
             ephemeral=ephemeral
         )
 
@@ -1658,86 +1735,137 @@ class AdminSlashCommands(commands.Cog, name="admin"):
     @app_commands.command(name="restore-period-backup", description="Restore the latest period configuration backup")
     async def restore_period_backup(self, interaction: discord.Interaction):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
-        
+
         async def restore_action(interaction: discord.Interaction):
             guild_id = interaction.guild.id
             period_file = settings.get_guild_periods_path(guild_id)
             backup_file = f"{period_file}.bak"
-            
+
             if os.path.exists(backup_file):
-                shutil.copy2(backup_file, period_file)
-                await interaction.response.edit_message(
-                    content="✅ Period configuration backup restored successfully.", 
-                    view=None
-                )
+                try:
+                    shutil.copy2(backup_file, period_file)
+                    logger.info(f"Restored local file {period_file} from backup for guild {guild_id}.")
+
+                    # Force sync this restored file to MongoDB
+                    mongo_synced = await file_handlers.force_sync_to_mongo(period_file)
+
+                    if mongo_synced:
+                        await interaction.response.edit_message(
+                            content="✅ Period configuration backup restored locally and synced to database.",
+                            view=None
+                        )
+                    else:
+                         await interaction.response.edit_message(
+                            content="⚠️ Period configuration backup restored locally, but failed to sync to database.",
+                            view=None
+                        )
+                except Exception as e:
+                    logger.error(f"Error during period restore/sync for guild {guild_id}: {e}", exc_info=True)
+                    await interaction.response.edit_message(content=f"❌ Error during restore process: {e}", view=None)
             else:
                 await interaction.response.edit_message(
-                    content="❌ No period configuration backup found.", 
+                    content="❌ No period configuration backup found.",
                     view=None
                 )
-        
+
         view = ConfirmButton(restore_action, interaction.user.id)
         await interaction.response.send_message(
-            "⚠️ Are you sure you want to restore the period configuration backup?", 
-            view=view, 
+            "⚠️ Are you sure you want to restore the period configuration backup?",
+            view=view,
             ephemeral=ephemeral
         )
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="restore-role-backup", description="Restore the latest role configuration backup")
     async def restore_role_backup(self, interaction: discord.Interaction):
+        # NOTE: This restores the *old* role_percentages.json.
+        # The newer system uses commission_settings.json.
+        # Consider deprecating or updating this command.
+        # For now, it will restore the old file if it exists.
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
-        
+
         async def restore_action(interaction: discord.Interaction):
             guild_id = interaction.guild.id
-            role_file = settings.get_guild_roles_path(guild_id)
+            role_file = settings.get_guild_roles_path(guild_id) # OLD FILE PATH
             backup_file = f"{role_file}.bak"
-            
+
             if os.path.exists(backup_file):
-                shutil.copy2(backup_file, role_file)
-                await interaction.response.edit_message(
-                    content="✅ Role configuration backup restored successfully.", 
-                    view=None
-                )
+                try:
+                    shutil.copy2(backup_file, role_file)
+                    logger.info(f"Restored local file {role_file} from backup for guild {guild_id}.")
+
+                    # Force sync this restored file to MongoDB
+                    mongo_synced = await file_handlers.force_sync_to_mongo(role_file)
+
+                    if mongo_synced:
+                         await interaction.response.edit_message(
+                            content="✅ (Legacy) Role percentage configuration backup restored locally and synced to database.",
+                            view=None
+                        )
+                    else:
+                        await interaction.response.edit_message(
+                            content="⚠️ (Legacy) Role percentage configuration backup restored locally, but failed to sync to database.",
+                            view=None
+                        )
+                except Exception as e:
+                    logger.error(f"Error during legacy role restore/sync for guild {guild_id}: {e}", exc_info=True)
+                    await interaction.response.edit_message(content=f"❌ Error during restore process: {e}", view=None)
+
             else:
                 await interaction.response.edit_message(
-                    content="❌ No role configuration backup found.", 
+                    content="❌ No (legacy) role configuration backup found.",
                     view=None
                 )
-        
+
         view = ConfirmButton(restore_action, interaction.user.id)
         await interaction.response.send_message(
-            "⚠️ Are you sure you want to restore the role configuration backup?", 
-            view=view, 
+            "⚠️ This restores the *legacy* role percentage file. Are you sure?",
+            view=view,
             ephemeral=ephemeral
         )
+
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="restore-bonus-backup", description="Restore the latest bonus rules configuration backup")
     async def restore_bonus_backup(self, interaction: discord.Interaction):
         ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
-        
+
         async def restore_action(interaction: discord.Interaction):
             guild_id = interaction.guild.id
             bonus_file = settings.get_guild_bonus_rules_path(guild_id)
             backup_file = f"{bonus_file}.bak"
-            
+
             if os.path.exists(backup_file):
-                shutil.copy2(backup_file, bonus_file)
-                await interaction.response.edit_message(
-                    content="✅ Bonus rules configuration backup restored successfully.", 
-                    view=None
-                )
+                try:
+                    shutil.copy2(backup_file, bonus_file)
+                    logger.info(f"Restored local file {bonus_file} from backup for guild {guild_id}.")
+
+                     # Force sync this restored file to MongoDB
+                    mongo_synced = await file_handlers.force_sync_to_mongo(bonus_file)
+
+                    if mongo_synced:
+                        await interaction.response.edit_message(
+                            content="✅ Bonus rules configuration backup restored locally and synced to database.",
+                            view=None
+                        )
+                    else:
+                         await interaction.response.edit_message(
+                            content="⚠️ Bonus rules configuration backup restored locally, but failed to sync to database.",
+                            view=None
+                        )
+                except Exception as e:
+                    logger.error(f"Error during bonus rule restore/sync for guild {guild_id}: {e}", exc_info=True)
+                    await interaction.response.edit_message(content=f"❌ Error during restore process: {e}", view=None)
             else:
                 await interaction.response.edit_message(
-                    content="❌ No bonus rules configuration backup found.", 
+                    content="❌ No bonus rules configuration backup found.",
                     view=None
                 )
-        
+
         view = ConfirmButton(restore_action, interaction.user.id)
         await interaction.response.send_message(
-            "⚠️ Are you sure you want to restore the bonus rules configuration backup?", 
-            view=view, 
+            "⚠️ Are you sure you want to restore the bonus rules configuration backup?",
+            view=view,
             ephemeral=ephemeral
         )
 
@@ -1750,15 +1878,29 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             file_path = settings.get_guild_earnings_path(interaction.guild.id)
             backup_file = f"{file_path}.bak"
             if os.path.exists(backup_file):
-                shutil.copy2(backup_file, file_path)
-                await interaction.response.edit_message(content="✅ Earnings configuration backup restored successfully.", view=None)
+                try:
+                    shutil.copy2(backup_file, file_path)
+                    logger.info(f"Restored local file {file_path} from backup for guild {interaction.guild.id}.")
+
+                    # Force sync this restored file to MongoDB
+                    mongo_synced = await file_handlers.force_sync_to_mongo(file_path)
+
+                    if mongo_synced:
+                        await interaction.response.edit_message(content="✅ Earnings data backup restored locally and synced to database.", view=None)
+                    else:
+                        await interaction.response.edit_message(content="⚠️ Earnings data backup restored locally, but failed to sync to database.", view=None)
+
+                except Exception as e:
+                    logger.error(f"Error during earnings restore/sync for guild {interaction.guild.id}: {e}", exc_info=True)
+                    await interaction.response.edit_message(content=f"❌ Error during restore process: {e}", view=None)
+
             else:
                 await interaction.response.edit_message(content="❌ No earnings configuration backup found.", view=None)
 
         view = ConfirmButton(restore_action, interaction.user.id)
         await interaction.response.send_message(
-            "‼️🚨‼ Are you sure you want to restore the earnings configuration backup?", 
-            view=view, 
+            "‼️🚨‼ Are you sure you want to restore the earnings data backup? This will overwrite current earnings.",
+            view=view,
             ephemeral=ephemeral
         )
 
@@ -1771,22 +1913,30 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             guild_id = interaction.guild.id
             file_path = settings.get_guild_models_path(guild_id)
             backup_file = f"{file_path}.bak"
-            
-            try:
-                if os.path.exists(backup_file):
-                    # Restore from guild-specific backup
+
+            if os.path.exists(backup_file):
+                try:
                     shutil.copy2(backup_file, file_path)
-                    await interaction.response.edit_message(content="✅ Models configuration backup restored successfully.", view=None)
-                else:
-                    await interaction.response.edit_message(content="❌ No models configuration backup found.", view=None)
-            except Exception as e:
-                logger.error(f"Error restoring models backup: {str(e)}")
-                await interaction.response.edit_message(content="❌ Failed to restore backup.", view=None)
+                    logger.info(f"Restored local file {file_path} from backup for guild {guild_id}.")
+
+                    # Force sync this restored file to MongoDB
+                    mongo_synced = await file_handlers.force_sync_to_mongo(file_path)
+
+                    if mongo_synced:
+                        await interaction.response.edit_message(content="✅ Models configuration backup restored locally and synced to database.", view=None)
+                    else:
+                        await interaction.response.edit_message(content="⚠️ Models configuration backup restored locally, but failed to sync to database.", view=None)
+
+                except Exception as e:
+                    logger.error(f"Error during models restore/sync for guild {guild_id}: {e}", exc_info=True)
+                    await interaction.response.edit_message(content=f"❌ Error during restore process: {e}", view=None)
+            else:
+                await interaction.response.edit_message(content="❌ No models configuration backup found.", view=None)
 
         view = ConfirmButton(restore_action, interaction.user.id)
         await interaction.response.send_message(
-            "⚠️ Are you sure you want to restore the models configuration backup?", 
-            view=view, 
+            "⚠️ Are you sure you want to restore the models configuration backup?",
+            view=view,
             ephemeral=ephemeral
         )
 
@@ -1800,15 +1950,28 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             file_path = settings.get_guild_commission_path(guild_id)
             backup_file = f"{file_path}.bak"
             if os.path.exists(backup_file):
-                shutil.copy2(backup_file, file_path)
-                await interaction.response.edit_message(content="✅ Compensation configuration backup restored successfully.", view=None)
+                try:
+                    shutil.copy2(backup_file, file_path)
+                    logger.info(f"Restored local file {file_path} from backup for guild {guild_id}.")
+
+                    # Force sync this restored file to MongoDB
+                    mongo_synced = await file_handlers.force_sync_to_mongo(file_path)
+
+                    if mongo_synced:
+                        await interaction.response.edit_message(content="✅ Compensation configuration backup restored locally and synced to database.", view=None)
+                    else:
+                        await interaction.response.edit_message(content="⚠️ Compensation configuration backup restored locally, but failed to sync to database.", view=None)
+
+                except Exception as e:
+                    logger.error(f"Error during compensation restore/sync for guild {guild_id}: {e}", exc_info=True)
+                    await interaction.response.edit_message(content=f"❌ Error during restore process: {e}", view=None)
             else:
                 await interaction.response.edit_message(content="❌ No compensation configuration backup found.", view=None)
 
         view = ConfirmButton(restore_action, interaction.user.id)
         await interaction.response.send_message(
-            "⚠️ Are you sure you want to restore the compensation configuration backup?", 
-            view=view, 
+            "⚠️ Are you sure you want to restore the compensation configuration backup?",
+            view=view,
             ephemeral=ephemeral
         )
 
@@ -1820,19 +1983,32 @@ class AdminSlashCommands(commands.Cog, name="admin"):
         async def restore_action(interaction: discord.Interaction):
             guild_id = interaction.guild.id
             file_path = settings.get_guild_display_path(guild_id)
-
             backup_file = f"{file_path}.bak"
 
             if os.path.exists(backup_file):
-                shutil.copy2(backup_file, file_path)
-                await interaction.response.edit_message(content="✅ Display configuration backup restored successfully.", view=None)
+                try:
+                    shutil.copy2(backup_file, file_path)
+                    logger.info(f"Restored local file {file_path} from backup for guild {guild_id}.")
+
+                    # Force sync this restored file to MongoDB
+                    mongo_synced = await file_handlers.force_sync_to_mongo(file_path)
+
+                    if mongo_synced:
+                        await interaction.response.edit_message(content="✅ Display configuration backup restored locally and synced to database.", view=None)
+                    else:
+                        await interaction.response.edit_message(content="⚠️ Display configuration backup restored locally, but failed to sync to database.", view=None)
+
+                except Exception as e:
+                    logger.error(f"Error during display restore/sync for guild {guild_id}: {e}", exc_info=True)
+                    await interaction.response.edit_message(content=f"❌ Error during restore process: {e}", view=None)
+
             else:
                 await interaction.response.edit_message(content="❌ No display configuration backup found.", view=None)
 
         view = ConfirmButton(restore_action, interaction.user.id)
         await interaction.response.send_message(
-            "⚠️ Are you sure you want to restore the display configuration backup?", 
-            view=view, 
+            "⚠️ Are you sure you want to restore the display configuration backup?",
+            view=view,
             ephemeral=ephemeral
         )
 
@@ -2592,6 +2768,124 @@ class AdminSlashCommands(commands.Cog, name="admin"):
                 "Failed to display configuration - data too large",
                 ephemeral=ephemeral
             )
+
+    @app_commands.command(name="sync-local-config-to-db", description="Force sync ALL local config files to the database (Overwrites DB)")
+    @app_commands.default_permissions(administrator=True)
+    async def sync_local_config_to_db(self, interaction: discord.Interaction):
+        """Manually synchronizes all local configuration files to the database."""
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+        guild_id = interaction.guild.id
+
+        config_file_getters = [
+            settings.get_guild_shifts_path,
+            settings.get_guild_periods_path,
+            settings.get_guild_bonus_rules_path,
+            settings.get_guild_models_path,
+            settings.get_guild_display_path,
+            settings.get_guild_commission_path,
+            settings.get_guild_roles_path, # Include legacy roles path if needed
+        ]
+
+        async def sync_action(interaction: discord.Interaction):
+            await interaction.response.defer(ephemeral=ephemeral, thinking=True) # Defer as it might take time
+
+            success_files = []
+            failed_files = []
+            skipped_files = []
+
+            for getter in config_file_getters:
+                file_path = getter(guild_id)
+                file_name = os.path.basename(file_path)
+
+                if not os.path.exists(file_path):
+                    logger.warning(f"Skipping sync for {file_name} (Guild: {guild_id}): Local file not found.")
+                    skipped_files.append(file_name)
+                    continue
+
+                try:
+                    logger.info(f"Attempting force sync for {file_name} (Guild: {guild_id})...")
+                    synced = await file_handlers.force_sync_to_mongo(file_path)
+                    if synced:
+                        success_files.append(file_name)
+                        logger.info(f"Successfully synced {file_name} for guild {guild_id}.")
+                    else:
+                        failed_files.append(file_name)
+                        logger.error(f"Failed to sync {file_name} for guild {guild_id}.")
+                    # Add a small delay to avoid overwhelming resources if needed
+                    await asyncio.sleep(0.1)
+                except Exception as e:
+                    logger.error(f"Error during force sync of {file_name} for guild {guild_id}: {e}", exc_info=True)
+                    failed_files.append(f"{file_name} (Error: {e})")
+
+            # --- Build Response ---
+            embed = discord.Embed(title="Local Config -> Database Sync Results", color=discord.Color.blue())
+            if success_files:
+                embed.add_field(name="✅ Synced Successfully", value="```\n" + "\n".join(success_files) + "\n```", inline=False)
+            if failed_files:
+                 embed.color = discord.Color.orange() if success_files else discord.Color.red()
+                 embed.add_field(name="❌ Sync Failed", value="```\n" + "\n".join(failed_files) + "\n```", inline=False)
+            if skipped_files:
+                 embed.add_field(name="⚠️ Skipped (Local file missing)", value="```\n" + "\n".join(skipped_files) + "\n```", inline=False)
+
+            if not success_files and not failed_files and not skipped_files:
+                 embed.description = "No configuration files found or processed."
+                 embed.color = discord.Color.greyple()
+
+            await interaction.followup.send(embed=embed, ephemeral=ephemeral)
+
+
+        # --- Confirmation View ---
+        view = ConfirmButton(sync_action, interaction.user.id)
+        await interaction.response.send_message(
+            "‼️🚨‼️ **Confirm Sync?**\n"
+            "This will **overwrite** the current configuration data in the **database** "
+            "with the data found in your **local** bot files for this server.\n"
+            "Use this if you've restored local files and need to update the database.",
+            view=view,
+            ephemeral=ephemeral
+        )
+
+    @app_commands.command(name="sync-local-earnings-to-db", description="Force sync local earnings file to the database (Overwrites DB)")
+    @app_commands.default_permissions(administrator=True)
+    async def sync_local_earnings_to_db(self, interaction: discord.Interaction):
+        """Manually synchronizes the local earnings file to the database."""
+        ephemeral = await self.get_ephemeral_setting(interaction.guild.id)
+        guild_id = interaction.guild.id
+        file_path = settings.get_guild_earnings_path(guild_id)
+        file_name = os.path.basename(file_path)
+
+        async def sync_action(interaction: discord.Interaction):
+            await interaction.response.defer(ephemeral=ephemeral, thinking=True)
+
+            if not os.path.exists(file_path):
+                logger.error(f"Cannot sync {file_name} (Guild: {guild_id}): Local file not found.")
+                await interaction.followup.send(f"❌ **Sync Failed:** Local earnings file (`{file_name}`) not found.", ephemeral=ephemeral)
+                return
+
+            try:
+                logger.info(f"Attempting force sync for {file_name} (Guild: {guild_id})...")
+                synced = await file_handlers.force_sync_to_mongo(file_path)
+                if synced:
+                    logger.info(f"Successfully synced {file_name} for guild {guild_id}.")
+                    await interaction.followup.send(f"✅ **Sync Complete:** Local earnings data (`{file_name}`) successfully synced to the database.", ephemeral=ephemeral)
+                else:
+                    logger.error(f"Failed to sync {file_name} for guild {guild_id}.")
+                    await interaction.followup.send(f"❌ **Sync Failed:** Could not sync local earnings data (`{file_name}`) to the database. Check bot logs.", ephemeral=ephemeral)
+
+            except Exception as e:
+                logger.error(f"Error during force sync of {file_name} for guild {guild_id}: {e}", exc_info=True)
+                await interaction.followup.send(f"❌ **Sync Error:** An unexpected error occurred: {e}", ephemeral=ephemeral)
+
+        # --- Confirmation View ---
+        view = ConfirmButton(sync_action, interaction.user.id)
+        await interaction.response.send_message(
+            "‼️🚨‼️ **Confirm Sync?**\n"
+            "This will **overwrite** the current earnings data in the **database** "
+            "with the data found in your **local** `earnings.json` file for this server.\n"
+            "**USE WITH CAUTION!** This is generally only needed after restoring a local earnings backup.",
+            view=view,
+            ephemeral=ephemeral
+        )
 
 
 class ConfirmButton(discord.ui.View):
