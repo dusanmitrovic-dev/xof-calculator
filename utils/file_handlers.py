@@ -548,5 +548,3 @@ async def force_sync_to_mongo(filename: str) -> bool:
 
 # Ensure MongoDB client is initialized when the module loads
 get_mongo_client()
-
-# --- END OF FILE file_handlers.py ---
