@@ -1,6 +1,7 @@
 from typing import Dict, List, Optional, Union
 from pymongo import MongoClient
 import logging
+import inspect
 
 logger = logging.getLogger("xof_calculator.db")
 
@@ -85,16 +86,18 @@ def load_from_mongodb(client: MongoClient, collection_name: str, query: Optional
         logger.error(f"Error loading from MongoDB: {e}")
         return None
 
-def determine_data_type(data: Union[Dict, List]) -> Optional[str]:
+def determine_data_type(data: Union[Dict, List], fallback: Optional[str] = None) -> Optional[str]:
     """
-    Determine the type of data based on its structure or content.
+    Determine the type of data based on its structure, content, or calling function.
 
     Args:
         data: The data to analyze.
+        fallback: Optional fallback data type if no match is found.
 
     Returns:
-        str: The determined data type (e.g., 'users', 'orders'), or None if unknown.
+        str: The determined data type (e.g., 'roles', 'models'), or None if unknown.
     """
+    # Check data structure
     if isinstance(data, dict):
         if "user_id" in data:
             return "users"
@@ -114,6 +117,21 @@ def determine_data_type(data: Union[Dict, List]) -> Optional[str]:
             return "commission_settings"
         elif "earnings" in data:
             return "earnings"
+
+    # Check for array-like data
+    if isinstance(data, list):
+        # Use parent function name to infer type
+        stack = inspect.stack()
+        for frame in stack:
+            function_name = frame.function.lower()
+            for keyword, collection in MONGO_COLLECTION_MAPPING.items():
+                if keyword in function_name:
+                    return keyword
+
+        # Fallback to provided type
+        if fallback:
+            return fallback
+
     return None
 
 async def save_json(client: MongoClient, filename: str, data: Union[Dict, List], pretty: bool = True, make_backup: bool = True) -> bool:
