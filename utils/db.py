@@ -98,8 +98,6 @@ def determine_data_type(data: Union[Dict, List]) -> Optional[str]:
     if isinstance(data, dict):
         if "user_id" in data:
             return "users"
-        elif "order_id" in data:
-            return "orders"
         elif "role_id" in data:
             return "roles"
         elif "shift_id" in data:
