@@ -5,6 +5,7 @@ import asyncio
 import traceback
 
 from dotenv import load_dotenv
+from pymongo import MongoClient
 from discord.ext import commands
 from discord import app_commands
 from logging.handlers import RotatingFileHandler
@@ -32,12 +33,24 @@ logger = logging.getLogger("xof_calculator")
 load_dotenv()
 
 class BotInstance:
-    def __init__(self, token):
+    def __init__(self, token, mongo_uri):
         self.token = token
+        self.mongo_uri = mongo_uri
+        self.mongo_client = None
+        self.database = None
         self.bot = None
 
     async def setup_hook(self):
         """Initialize bot instance with all handlers and extensions"""
+        # Initialize MongoDB connection
+        if self.mongo_uri:
+            try:
+                self.mongo_client = MongoClient(self.mongo_uri)
+                self.database = self.mongo_client.get_database()
+                logger.info(f"Connected to MongoDB for bot with token: {self.token[:5]}...")
+            except Exception as e:
+                logger.error(f"Failed to connect to MongoDB for bot: {e}")
+
         intents = discord.Intents.default()
         intents.members = True
         intents.message_content = True
@@ -165,19 +178,29 @@ class BotInstance:
         finally:
             if self.bot:
                 await self.bot.close()
+            if self.mongo_client:
+                self.mongo_client.close()
 
 async def main():
-    # Get all tokens from environment variables starting with DISCORD_TOKEN_
-    tokens = {k: v for k, v in os.environ.items() if k.startswith("DISCORD_TOKEN_")}.values()
-    
-    if not tokens:
-        logger.critical("No Discord tokens found. Please create .env entries with DISCORD_TOKEN_ prefix.")
+    # Get all tokens and MongoDB URIs from environment variables
+    tokens_and_uris = {
+        k.split("_", 2)[-1]: (v, os.getenv(f"MONGODB_URI_{k.split('_', 2)[-1]}"))
+        for k, v in os.environ.items() if k.startswith("DISCORD_TOKEN_")
+    }
+
+    print("Tokens and URIs:", tokens_and_uris)  # Debugging line
+
+    if not tokens_and_uris:
+        logger.critical("No Discord tokens or MongoDB URIs found. Please update your .env file.")
         return
 
-    logger.info(f"Starting {len(tokens)} bot instances...")
-    
+    logger.info(f"Starting {len(tokens_and_uris)} bot instances...")
+
     # Create and start all bot instances
-    bots = [BotInstance(token) for token in tokens]
+    bots = [
+        BotInstance(token, mongo_uri)
+        for _, (token, mongo_uri) in tokens_and_uris.items()
+    ]
     await asyncio.gather(*(bot.start() for bot in bots))
 
 if __name__ == "__main__":
