@@ -160,6 +160,7 @@ class CalculatorCommands(commands.Cog):
             ("⌛ Period", period, True),
             ("💰 Gross Revenue", f"${float(results['gross_revenue']):,.2f}", True),
             ("💵 Net Revenue", f"${float(results['net_revenue']):,.2f} (80%)", True),
+            # ("💸 Employee Cut", f"${float(results['employee_cut']):,.2f} ({float(percentage)}%)", True),
             ("🎁 Bonus", f"${float(results['bonus']):,.2f}", True),
             ("💰 Total Cut", f"${float(results['total_cut']):,.2f}", True),
             ("🎭 Models", models_list, False)
@@ -256,7 +257,8 @@ class CalculatorCommands(commands.Cog):
         
         # Prepare date range display
         date_range = f"from `{from_date}` to `{to_date}`" if from_date and to_date else "for all time"
-
+        
+        # Create and send embed
         embed = discord.Embed(
             title="💰 Total Earnings",
             description=f"**{sender}**'s total earnings for {period} period {date_range}:",
