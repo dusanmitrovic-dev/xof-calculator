@@ -32,18 +32,27 @@ async def load_json(filename: str, default: Optional[Union[Dict, List]] = None) 
     if default is None:
         default = {}
 
+     # Extract the server ID (guild ID) from the file path
+    server_id = os.path.basename(os.path.dirname(filename))
+
     # Check if the filename maps to a MongoDB collection
     collection_name = MONGO_COLLECTION_MAPPING.get(os.path.basename(filename))
-    if collection_name:
-        try:
-            client = get_current_mongo_client()
-            data = load_from_mongodb(client, collection_name)
-            if data:
-                return data
-            logger.info(f"No data found in MongoDB for collection: {collection_name}. Returning default.")
-        except Exception as e:
-            logger.error(f"Error loading data from MongoDB for {collection_name}: {e}")
-        return default
+
+    print("================================")
+    print(f"Saving data to {filename} with collection name: {collection_name}")
+    print(f"Extracted server ID (guild ID): {server_id}")
+    print("================================")
+
+    # if collection_name:
+    #     try:
+    #         client = get_current_mongo_client()
+    #         data = load_from_mongodb(client, collection_name)
+    #         if data:
+    #             return data
+    #         logger.info(f"No data found in MongoDB for collection: {collection_name}. Returning default.")
+    #     except Exception as e:
+    #         logger.error(f"Error loading data from MongoDB for {collection_name}: {e}")
+    #     return default
 
     # Fallback to file system
     return await load_json_from_file(filename, default)
@@ -102,18 +111,27 @@ async def save_json(filename: str, data: Union[Dict, List], pretty: bool = True,
     """
     Safely save data to a JSON file or MongoDB if applicable.
     """
+     # Extract the server ID (guild ID) from the file path
+    server_id = os.path.basename(os.path.dirname(filename))
+
     # Check if the filename maps to a MongoDB collection
     collection_name = MONGO_COLLECTION_MAPPING.get(os.path.basename(filename))
-    if collection_name:
-        try:
-            client = get_current_mongo_client()
-            success = save_to_mongodb(client, collection_name, data)
-            if success:
-                logger.info(f"Data successfully saved to MongoDB collection: {collection_name}")
-                return True
-        except Exception as e:
-            logger.error(f"Error saving data to MongoDB for {collection_name}: {e}")
-        return False
+
+    print("================================")
+    print(f"Saving data to {filename} with collection name: {collection_name}")
+    print(f"Extracted server ID (guild ID): {server_id}")
+    print("================================")
+
+    # if collection_name:
+    #     try:
+    #         client = get_current_mongo_client()
+    #         success = save_to_mongodb(client, collection_name, data)
+    #         if success:
+    #             logger.info(f"Data successfully saved to MongoDB collection: {collection_name}")
+    #             return True
+    #     except Exception as e:
+    #         logger.error(f"Error saving data to MongoDB for {collection_name}: {e}")
+    #     return False
 
     # Fallback to file system
     return await save_json_to_file(filename, data, pretty, make_backup)
