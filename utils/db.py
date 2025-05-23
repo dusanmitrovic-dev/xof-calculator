@@ -26,15 +26,14 @@ def get_current_mongo_client() -> MongoClient:
     return client
 
 MONGO_COLLECTION_MAPPING = {
-    "role_percentages.json": "role_data",
-    "shift_config.json": "shift_data",
-    "period_config.json": "period_data",
-    "models_config.json": "model_data",
-    "bonus_rules.json": "bonus_rules_data",
-    "display_settings.json": "display_settings_data",
-    "commission_settings.json": "commission_settings_data",
-    "earnings.json": "earnings_data",
-    # Add more mappings as needed
+    "role_percentages.json": "roles",
+    "shift_config.json": "shifts",
+    "period_config.json": "periods",
+    "models_config.json": "models",
+    "bonus_rules.json": "bonus_rules",
+    "display_settings.json": "display_settings",
+    "commission_settings.json": "commission_settings",
+    "earnings.json": "earnings",
 }
 
 def connect_to_mongodb(connection_string: str) -> Optional[MongoClient]:
