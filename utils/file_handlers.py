@@ -4,10 +4,12 @@ import shutil
 import logging
 import asyncio
 import aiofiles
+import inspect
 
 from datetime import datetime
 from typing import Dict, List, Any, Optional, Union
 from config import settings
+from utils.db import get_current_mongo_client, MONGO_COLLECTION_MAPPING, load_from_mongodb, save_to_mongodb
 
 logger = logging.getLogger("xof_calculator.file_handlers")
 
@@ -25,6 +27,29 @@ async def get_file_lock(filename: str) -> asyncio.Lock:
 
 async def load_json(filename: str, default: Optional[Union[Dict, List]] = None) -> Union[Dict, List]:
     """
+    Safely load a JSON file or data from MongoDB if applicable.
+    """
+    if default is None:
+        default = {}
+
+    # Check if the filename maps to a MongoDB collection
+    collection_name = MONGO_COLLECTION_MAPPING.get(os.path.basename(filename))
+    if collection_name:
+        try:
+            client = get_current_mongo_client()
+            data = load_from_mongodb(client, collection_name)
+            if data:
+                return data
+            logger.info(f"No data found in MongoDB for collection: {collection_name}. Returning default.")
+        except Exception as e:
+            logger.error(f"Error loading data from MongoDB for {collection_name}: {e}")
+        return default
+
+    # Fallback to file system
+    return await load_json_from_file(filename, default)
+
+async def load_json_from_file(filename: str, default: Optional[Union[Dict, List]] = None) -> Union[Dict, List]:
+    """
     Safely load a JSON file
     
     Args:
@@ -36,7 +61,7 @@ async def load_json(filename: str, default: Optional[Union[Dict, List]] = None) 
     """
     if default is None:
         default = {}
-        
+    
     file_path = filename
     lock = await get_file_lock(file_path)
     
@@ -72,8 +97,28 @@ async def load_json(filename: str, default: Optional[Union[Dict, List]] = None) 
         except Exception as e:
             logger.error(f"Unexpected error loading {file_path}: {e}")
             return default
-
+        
 async def save_json(filename: str, data: Union[Dict, List], pretty: bool = True, make_backup: bool = True) -> bool:
+    """
+    Safely save data to a JSON file or MongoDB if applicable.
+    """
+    # Check if the filename maps to a MongoDB collection
+    collection_name = MONGO_COLLECTION_MAPPING.get(os.path.basename(filename))
+    if collection_name:
+        try:
+            client = get_current_mongo_client()
+            success = save_to_mongodb(client, collection_name, data)
+            if success:
+                logger.info(f"Data successfully saved to MongoDB collection: {collection_name}")
+                return True
+        except Exception as e:
+            logger.error(f"Error saving data to MongoDB for {collection_name}: {e}")
+        return False
+
+    # Fallback to file system
+    return await save_json_to_file(filename, data, pretty, make_backup)
+
+async def save_json_to_file(filename: str, data: Union[Dict, List], pretty: bool = True, make_backup: bool = True) -> bool:
     """
     Safely save data to a JSON file with atomic write operations
     

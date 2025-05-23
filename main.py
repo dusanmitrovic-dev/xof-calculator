@@ -9,6 +9,7 @@ from pymongo import MongoClient
 from discord.ext import commands
 from discord import app_commands
 from logging.handlers import RotatingFileHandler
+from utils.db import set_current_mongo_client
 
 # Create logs directory if it doesn't exist
 os.makedirs("logs", exist_ok=True)
@@ -47,6 +48,7 @@ class BotInstance:
             try:
                 self.mongo_client = MongoClient(self.mongo_uri)
                 self.database = self.mongo_client.get_database()
+                set_current_mongo_client(self.mongo_client)  # Set the MongoDB client in the context
                 logger.info(f"Connected to MongoDB for bot with token: {self.token[:5]}...")
             except Exception as e:
                 logger.error(f"Failed to connect to MongoDB for bot: {e}")

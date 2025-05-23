@@ -1,19 +1,39 @@
-from typing import Dict, List, Optional, Union
-from pymongo import MongoClient
 import logging
 import inspect
 
+from pymongo import MongoClient
+from contextvars import ContextVar
+from typing import Dict, List, Optional, Union
+
 logger = logging.getLogger("xof_calculator.db")
 
+# Context variable to store the current MongoDB client
+current_mongo_client: ContextVar[MongoClient] = ContextVar("current_mongo_client", default=None)
+
+def set_current_mongo_client(client: MongoClient):
+    """
+    Set the current MongoDB client in the context.
+    """
+    current_mongo_client.set(client)
+
+def get_current_mongo_client() -> MongoClient:
+    """
+    Get the current MongoDB client from the context.
+    """
+    client = current_mongo_client.get()
+    if not client:
+        raise RuntimeError("No MongoDB client is set for the current context.")
+    return client
+
 MONGO_COLLECTION_MAPPING = {
-    "roles": "role_data",
-    "shifts": "shift_data",
-    "periods": "period_data",
-    "models": "model_data",
-    "bonus_rules": "bonus_rules_data",
-    "display_settings": "display_settings_data",
-    "commission_settings": "commission_settings_data",
-    "earnings": "earnings_data",
+    "role_percentages.json": "role_data",
+    "shift_config.json": "shift_data",
+    "period_config.json": "period_data",
+    "models_config.json": "model_data",
+    "bonus_rules.json": "bonus_rules_data",
+    "display_settings.json": "display_settings_data",
+    "commission_settings.json": "commission_settings_data",
+    "earnings.json": "earnings_data",
     # Add more mappings as needed
 }
 
