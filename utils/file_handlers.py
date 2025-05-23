@@ -1,3 +1,4 @@
+from calendar import c
 import os
 import json
 import shutil
@@ -43,6 +44,29 @@ async def load_json(filename: str, default: Optional[Union[Dict, List]] = None) 
     print(f"Extracted server ID (guild ID): {server_id}")
     print("================================")
 
+    if collection_name == "earnings":
+        # Load earnings data from MongoDB
+        try:
+            client = get_current_mongo_client()
+            data = load_from_mongodb(client, "earnings")
+            if data:
+                return data
+            logger.info(f"No data found in MongoDB for collection: {collection_name}. Returning default.")
+        except Exception as e:
+            logger.error(f"Error loading data from MongoDB for {collection_name}: {e}")
+        return await load_json_from_file(filename, default)
+    else:
+        # Load config data from MongoDB
+        try:
+            client = get_current_mongo_client()
+            data = load_from_mongodb(client, collection_name)
+            if data:
+                return data
+            logger.info(f"No data found in MongoDB for collection: {collection_name}. Returning default.")
+        except Exception as e:
+            logger.error(f"Error loading data from MongoDB for {collection_name}: {e}")
+        return await load_json_from_file(filename, default)
+
     # if collection_name:
     #     try:
     #         client = get_current_mongo_client()
@@ -55,7 +79,7 @@ async def load_json(filename: str, default: Optional[Union[Dict, List]] = None) 
     #     return default
 
     # Fallback to file system
-    return await load_json_from_file(filename, default)
+    # return await load_json_from_file(filename, default)
 
 async def load_json_from_file(filename: str, default: Optional[Union[Dict, List]] = None) -> Union[Dict, List]:
     """
