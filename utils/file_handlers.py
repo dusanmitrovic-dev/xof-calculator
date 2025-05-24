@@ -186,10 +186,9 @@ async def save_json(filename: str, data: Union[Dict, List], pretty: bool = True,
                     db_success = True
                 else:
                     logger.error("Invalid data type for earnings. Expected a dictionary grouped by user_mention.") 
-            else:
+            else: 
                 print(data)
                 # Handle configuration collections
-                # if isinstance(data, dict):
                 db["guild_configs"].update_one(
                     {"guild_id": guild_id},
                     {"$set": {collection_name: data}},
