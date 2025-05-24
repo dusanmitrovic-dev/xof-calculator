@@ -53,25 +53,19 @@ async def load_json(filename: str, default: Optional[Union[Dict, List]] = None) 
     """
     Load data from a JSON file or MongoDB if applicable.
     """
-    print(f"=================================================================")
-    print(f"Starting load_json for file: {filename}")
     if default is None:
         default = {}
-    print(f"Default value: {default}")
 
     guild_id = os.path.basename(os.path.dirname(filename))
     collection_name = MONGO_COLLECTION_MAPPING.get(os.path.basename(filename))
-    print(f"Determined guild_id: {guild_id}, collection_name: {collection_name}")
 
     if collection_name:
         try:
             client = get_current_mongo_client()
             db = client.get_database()
-            print(f"Connected to MongoDB for collection: {collection_name}")
 
             if collection_name == "earnings":
                 data = list(db[collection_name].find({"guild_id": guild_id}))
-                print(f"Fetched data from MongoDB: {data}")
                 for entry in data:
                     entry.pop("_id", None)
                     entry["models"] = entry["models"] if isinstance(entry["models"], list) else [entry["models"]]
@@ -93,10 +87,8 @@ async def load_json(filename: str, default: Optional[Union[Dict, List]] = None) 
                     return earnings_dict
 
             elif collection_name != "earnings":
-                # Fetch the guild configuration document
                 guild_config = db["guild_configs"].find_one({"guild_id": guild_id})
                 if guild_config:
-                    logger.debug(f"Fetched guild configuration: {guild_config}")
                     if collection_name in guild_config:
                         logger.info(f"Data successfully loaded for field: {collection_name}")
                         return guild_config[collection_name]
@@ -107,12 +99,9 @@ async def load_json(filename: str, default: Optional[Union[Dict, List]] = None) 
                     logger.warning(f"No guild configuration found for guild_id: {guild_id}")
                     return default
 
-            else:
-                print(f"Collection {collection_name} is not handled explicitly.")
         except Exception as e:
             logger.error(f"Error loading data from MongoDB for {collection_name}: {e}")
 
-    print(f"Falling back to loading data from file: {filename}")
     return await load_json_from_file(filename, default)
 
 async def load_json_from_file(filename: str, default: Optional[Union[Dict, List]] = None) -> Union[Dict, List]:
@@ -170,14 +159,8 @@ async def save_json(filename: str, data: Union[Dict, List], pretty: bool = True,
     """
     Save data to both a JSON file and MongoDB if applicable.
     """
-    print(f"=================================================================")
-    print(f"Starting save_json for file: {filename}")
-    print(f"Data to save: {data}")
-    print(f"Pretty: {pretty}, Make Backup: {make_backup}")
-
     guild_id = os.path.basename(os.path.dirname(filename))
     collection_name = MONGO_COLLECTION_MAPPING.get(os.path.basename(filename))
-    print(f"Determined guild_id: {guild_id}, collection_name: {collection_name}")
 
     db_success = False
     file_success = False
@@ -186,27 +169,15 @@ async def save_json(filename: str, data: Union[Dict, List], pretty: bool = True,
         try:
             client = get_current_mongo_client()
             db = client.get_database()
-            print(f"Connected to MongoDB for collection: {collection_name}")
 
             if collection_name == "earnings":
                 if isinstance(data, dict):
                     for user_mention, entries in data.items():
-                        print(f"Processing user_mention: {user_mention}, entries: {entries}")
                         for entry in entries:
-                            # Add the user_mention field to the entry
-                            entry["user_mention"] = user_mention  # Ensure this field is present
-
-                            # Validate and transform data
+                            entry["user_mention"] = user_mention
                             entry["guild_id"] = guild_id
                             entry["models"] = entry["models"] if isinstance(entry["models"], list) else [entry["models"]]
-                            required_fields = ["id", "date", "total_cut", "gross_revenue", "period", "shift", "role", "models", "hours_worked", "user_mention"]
-                            missing_fields = [field for field in required_fields if field not in entry]
-                            if missing_fields:
-                                logger.error(f"Cannot save earnings entry. Missing fields: {missing_fields}")
-                                continue
 
-                            print(f"Upserting entry into MongoDB: {entry}")
-                            # Upsert into MongoDB
                             db[collection_name].update_one(
                                 {"id": entry["id"], "guild_id": guild_id},
                                 {"$set": entry},
@@ -215,20 +186,16 @@ async def save_json(filename: str, data: Union[Dict, List], pretty: bool = True,
                     db_success = True
                 else:
                     logger.error("Invalid data type for earnings. Expected a dictionary grouped by user_mention.")
-            else:
-                print(f"Collection {collection_name} is not handled explicitly.")
         except Exception as e:
             logger.error(f"Error saving data to MongoDB for {collection_name}: {e}")
 
     try:
-        print(f"Saving data to file: {filename}")
         file_success = await save_json_to_file(filename, data, pretty, make_backup)
         if file_success:
             logger.info(f"Data successfully saved to file: {filename}")
     except Exception as e:
         logger.error(f"Error saving data to file: {filename}: {e}")
 
-    print(f"Save result - DB Success: {db_success}, File Success: {file_success}")
     return db_success or file_success
 
 async def save_json_to_file(filename: str, data: Union[Dict, List], pretty: bool = True, make_backup: bool = True) -> bool:
