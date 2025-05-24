@@ -185,7 +185,18 @@ async def save_json(filename: str, data: Union[Dict, List], pretty: bool = True,
                             )
                     db_success = True
                 else:
-                    logger.error("Invalid data type for earnings. Expected a dictionary grouped by user_mention.")
+                    logger.error("Invalid data type for earnings. Expected a dictionary grouped by user_mention.") 
+            else:
+                # Handle configuration collections
+                if isinstance(data, dict):
+                    db["guild_configs"].update_one(
+                        {"guild_id": guild_id},
+                        {"$set": {collection_name: data}},
+                        upsert=True
+                    )
+                    db_success = True
+                else:
+                    logger.error(f"Invalid data type for {collection_name}. Expected a dictionary.")
         except Exception as e:
             logger.error(f"Error saving data to MongoDB for {collection_name}: {e}")
 
