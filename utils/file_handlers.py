@@ -195,8 +195,6 @@ async def save_json(filename: str, data: Union[Dict, List], pretty: bool = True,
                     upsert=True
                 )
                 db_success = True
-                # else:
-                #     logger.error(f"Invalid data type for {collection_name}. Expected a dictionary.")
         except Exception as e:
             logger.error(f"Error saving data to MongoDB for {collection_name}: {e}")
 
