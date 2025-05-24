@@ -51,64 +51,52 @@ def normalize_date_format(date_str: str) -> str:
 
 async def load_json(filename: str, default: Optional[Union[Dict, List]] = None) -> Union[Dict, List]:
     """
-    Safely load a JSON file or data from MongoDB if applicable.
+    Load data from a JSON file or MongoDB if applicable.
     """
+    logger.debug(f"=================================================================")
+    logger.debug(f"Starting load_json for file: {filename}")
     if default is None:
         default = {}
+    logger.debug(f"Default value: {default}")
 
-    # Extract the guild ID from the file path
     guild_id = os.path.basename(os.path.dirname(filename))
-
-    # Determine the MongoDB collection or key
     collection_name = MONGO_COLLECTION_MAPPING.get(os.path.basename(filename))
-
-    print("================================")
-    print(f"Loading data from {filename} with collection name: {collection_name}")
-    print(f"Extracted guild ID: {guild_id}")
-    print("================================")
+    logger.debug(f"Determined guild_id: {guild_id}, collection_name: {collection_name}")
 
     if collection_name:
         try:
             client = get_current_mongo_client()
             db = client.get_database()
+            logger.debug(f"Connected to MongoDB for collection: {collection_name}")
 
-            # Handle earnings collection
             if collection_name == "earnings":
-                # Load all earnings for the guild
                 data = list(db[collection_name].find({"guild_id": guild_id}))
-                # Remove MongoDB-specific fields like `_id`
+                logger.debug(f"Fetched data from MongoDB: {data}")
                 for entry in data:
                     entry.pop("_id", None)
-
-                    # Normalize the date format
+                    entry["models"] = entry["models"] if isinstance(entry["models"], list) else [entry["models"]]
                     try:
                         entry["date"] = normalize_date_format(entry["date"])
-                    except (ValueError, TypeError) as e:
+                    except ValueError as e:
                         logger.error(f"Skipping entry with invalid date: {entry}. Error: {e}")
                         continue
 
-                # Transform the list into a dictionary grouped by `user_mention`
                 earnings_dict = {}
                 for entry in data:
-                    sender = entry.get("user_mention", "unknown_sender")
-                    if sender not in earnings_dict:
-                        earnings_dict[sender] = []
-                    earnings_dict[sender].append(entry)
-
-                print("================================")
-                print(f"Loaded {len(data)} earnings entries for guild {guild_id} from MongoDB.")
-                print(f"Transformed Data: {earnings_dict}")
-                print("================================")
+                    user_mention = entry.get("user_mention", "unknown_sender")
+                    if user_mention not in earnings_dict:
+                        earnings_dict[user_mention] = []
+                    earnings_dict[user_mention].append(entry)
 
                 if earnings_dict:
-                    logger.info(f"Data successfully loaded and transformed from MongoDB collection: {collection_name}")
+                    logger.info(f"Data successfully loaded from MongoDB collection: {collection_name}")
                     return earnings_dict
-
-            logger.info(f"No data found in MongoDB for collection: {collection_name}. Returning default.")
+            else:
+                logger.debug(f"Collection {collection_name} is not handled explicitly.")
         except Exception as e:
             logger.error(f"Error loading data from MongoDB for {collection_name}: {e}")
 
-    # Fallback to file system
+    logger.debug(f"Falling back to loading data from file: {filename}")
     return await load_json_from_file(filename, default)
 
 async def load_json_from_file(filename: str, default: Optional[Union[Dict, List]] = None) -> Union[Dict, List]:
@@ -122,6 +110,8 @@ async def load_json_from_file(filename: str, default: Optional[Union[Dict, List]
     Returns:
         The loaded JSON data or the default value
     """
+    logger.debug(f"===================================================================")
+    
     if default is None:
         default = {}
     
@@ -165,77 +155,62 @@ async def save_json(filename: str, data: Union[Dict, List], pretty: bool = True,
     """
     Save data to both a JSON file and MongoDB if applicable.
     """
-    # Extract the guild ID from the file path
+    logger.debug(f"=================================================================")
+    logger.debug(f"Starting save_json for file: {filename}")
+    logger.debug(f"Data to save: {data}")
+    logger.debug(f"Pretty: {pretty}, Make Backup: {make_backup}")
+
     guild_id = os.path.basename(os.path.dirname(filename))
-
-    # Determine the MongoDB collection or key
     collection_name = MONGO_COLLECTION_MAPPING.get(os.path.basename(filename))
+    logger.debug(f"Determined guild_id: {guild_id}, collection_name: {collection_name}")
 
-    print("================================")
-    print(f"Saving data to {filename} with collection name: {collection_name}")
-    print(f"Extracted guild ID: {guild_id}")
-    print("================================")
-
-    # Initialize success flags
     db_success = False
     file_success = False
 
-    # Save to MongoDB if applicable
     if collection_name:
         try:
             client = get_current_mongo_client()
             db = client.get_database()
+            logger.debug(f"Connected to MongoDB for collection: {collection_name}")
 
-            # Handle earnings collection
             if collection_name == "earnings":
-                # Ensure the entry has the guild_id
                 if isinstance(data, dict):
-                    # Validate required fields
-                    required_fields = [
-                        "id", "date", "total_cut", "gross_revenue", "period",
-                        "shift", "role", "models", "hours_worked", "user_mention"
-                    ]
-                    missing_fields = [field for field in required_fields if not data.get(field)]
-                    if missing_fields:
-                        logger.error(f"Cannot save earnings entry. Missing or invalid fields: {missing_fields}")
-                        return False
+                    for user_mention, entries in data.items():
+                        logger.debug(f"Processing user_mention: {user_mention}, entries: {entries}")
+                        for entry in entries:
+                            # Validate and transform data
+                            entry["guild_id"] = guild_id
+                            entry["models"] = entry["models"] if isinstance(entry["models"], list) else [entry["models"]]
+                            required_fields = ["id", "date", "total_cut", "gross_revenue", "period", "shift", "role", "models", "hours_worked", "user_mention"]
+                            missing_fields = [field for field in required_fields if field not in entry]
+                            if missing_fields:
+                                logger.error(f"Cannot save earnings entry. Missing fields: {missing_fields}")
+                                continue
 
-                    # Transform the data to match the schema
-                    transformed_data = {
-                        "id": data.get("id"),
-                        "guild_id": guild_id,
-                        "date": data.get("date"),
-                        "total_cut": data.get("total_cut"),
-                        "gross_revenue": data.get("gross_revenue"),
-                        "period": data.get("period"),
-                        "shift": data.get("shift"),
-                        "role": data.get("role"),
-                        "models": data.get("models") if isinstance(data.get("models"), list) else [data.get("models")],
-                        "hours_worked": data.get("hours_worked"),
-                        "user_mention": data.get("user_mention")
-                    }
-
-                    # Insert the transformed data into MongoDB
-                    db[collection_name].insert_one(transformed_data)
-                    logger.info(f"Single earning entry successfully added to MongoDB collection: {collection_name}")
+                            logger.debug(f"Upserting entry into MongoDB: {entry}")
+                            # Upsert into MongoDB
+                            db[collection_name].update_one(
+                                {"id": entry["id"], "guild_id": guild_id},
+                                {"$set": entry},
+                                upsert=True
+                            )
+                    db_success = True
                 else:
-                    logger.error("Invalid data type for earnings. Expected a single dictionary entry.")
-                    return False
-
-                db_success = True
-
+                    logger.error("Invalid data type for earnings. Expected a dictionary grouped by user_mention.")
+            else:
+                logger.debug(f"Collection {collection_name} is not handled explicitly.")
         except Exception as e:
             logger.error(f"Error saving data to MongoDB for {collection_name}: {e}")
 
-    # Save to file system
     try:
+        logger.debug(f"Saving data to file: {filename}")
         file_success = await save_json_to_file(filename, data, pretty, make_backup)
         if file_success:
             logger.info(f"Data successfully saved to file: {filename}")
     except Exception as e:
         logger.error(f"Error saving data to file: {filename}: {e}")
 
-    # Return True if either operation succeeded
+    logger.debug(f"Save result - DB Success: {db_success}, File Success: {file_success}")
     return db_success or file_success
 
 async def save_json_to_file(filename: str, data: Union[Dict, List], pretty: bool = True, make_backup: bool = True) -> bool:
