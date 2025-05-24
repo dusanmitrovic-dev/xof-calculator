@@ -9,8 +9,7 @@ import inspect
 
 from datetime import datetime
 from typing import Dict, List, Any, Optional, Union
-from config import settings
-from utils.db import get_current_mongo_client, MONGO_COLLECTION_MAPPING, load_from_mongodb, save_to_mongodb
+from utils.db import get_current_mongo_client, MONGO_COLLECTION_MAPPING
 
 logger = logging.getLogger("xof_calculator.file_handlers")
 
@@ -25,6 +24,30 @@ async def get_file_lock(filename: str) -> asyncio.Lock:
     if filename not in _file_locks:
         _file_locks[filename] = asyncio.Lock()
     return _file_locks[filename]
+
+def normalize_date_format(date_str: str) -> str:
+    """
+    Normalize the date format to dd/mm/yyyy.
+
+    Args:
+        date_str: The date string to normalize.
+
+    Returns:
+        The normalized date string in dd/mm/yyyy format.
+
+    Raises:
+        ValueError: If the date format is invalid.
+    """
+    try:
+        # Try parsing the date in various common formats
+        parsed_date = datetime.strptime(date_str, "%d/%m/%Y")
+        return parsed_date.strftime("%d/%m/%Y")
+    except ValueError:
+        try:
+            parsed_date = datetime.strptime(date_str, "%Y-%m-%d")
+            return parsed_date.strftime("%d/%m/%Y")
+        except ValueError:
+            raise ValueError(f"Invalid date format: {date_str}. Use dd/mm/yyyy.")
 
 async def load_json(filename: str, default: Optional[Union[Dict, List]] = None) -> Union[Dict, List]:
     """
@@ -49,21 +72,37 @@ async def load_json(filename: str, default: Optional[Union[Dict, List]] = None) 
             client = get_current_mongo_client()
             db = client.get_database()
 
-            # Handle guild_configs keys
-            if collection_name in ["models", "shifts", "periods", "bonus_rules", "display_settings", "commission_settings", "roles"]:
-                # Query the guild_configs collection for the specific key
-                guild_config = db["guild_configs"].find_one({"guild_id": guild_id})
-                if guild_config and collection_name in guild_config:
-                    logger.info(f"Data successfully loaded for key '{collection_name}' in guild_configs.")
-                    return guild_config[collection_name]
-
             # Handle earnings collection
             if collection_name == "earnings":
                 # Load all earnings for the guild
                 data = list(db[collection_name].find({"guild_id": guild_id}))
-                if data:
-                    logger.info(f"Data successfully loaded from MongoDB collection: {collection_name}")
-                    return data
+                # Remove MongoDB-specific fields like `_id`
+                for entry in data:
+                    entry.pop("_id", None)
+
+                    # Normalize the date format
+                    try:
+                        entry["date"] = normalize_date_format(entry["date"])
+                    except (ValueError, TypeError) as e:
+                        logger.error(f"Skipping entry with invalid date: {entry}. Error: {e}")
+                        continue
+
+                # Transform the list into a dictionary grouped by `user_mention`
+                earnings_dict = {}
+                for entry in data:
+                    sender = entry.get("user_mention", "unknown_sender")
+                    if sender not in earnings_dict:
+                        earnings_dict[sender] = []
+                    earnings_dict[sender].append(entry)
+
+                print("================================")
+                print(f"Loaded {len(data)} earnings entries for guild {guild_id} from MongoDB.")
+                print(f"Transformed Data: {earnings_dict}")
+                print("================================")
+
+                if earnings_dict:
+                    logger.info(f"Data successfully loaded and transformed from MongoDB collection: {collection_name}")
+                    return earnings_dict
 
             logger.info(f"No data found in MongoDB for collection: {collection_name}. Returning default.")
         except Exception as e:
@@ -147,24 +186,42 @@ async def save_json(filename: str, data: Union[Dict, List], pretty: bool = True,
             client = get_current_mongo_client()
             db = client.get_database()
 
-            # Handle guild_configs keys
-            if collection_name in ["models", "shifts", "periods", "bonus_rules", "display_settings", "commission_settings", "roles"]:
-                # Update the specific key in the guild_configs document
-                db["guild_configs"].update_one(
-                    {"guild_id": guild_id},
-                    {"$set": {collection_name: data}},
-                    upsert=True
-                )
-                logger.info(f"Data successfully saved for key '{collection_name}' in guild_configs.")
-                db_success = True
-
             # Handle earnings collection
-            elif collection_name == "earnings":
+            if collection_name == "earnings":
                 # Ensure the entry has the guild_id
-                data["guild_id"] = guild_id
-                # Insert the new earning entry
-                db[collection_name].insert_one(data)
-                logger.info(f"Earning entry successfully added to MongoDB collection: {collection_name}")
+                if isinstance(data, dict):
+                    # Validate required fields
+                    required_fields = [
+                        "id", "date", "total_cut", "gross_revenue", "period",
+                        "shift", "role", "models", "hours_worked", "user_mention"
+                    ]
+                    missing_fields = [field for field in required_fields if not data.get(field)]
+                    if missing_fields:
+                        logger.error(f"Cannot save earnings entry. Missing or invalid fields: {missing_fields}")
+                        return False
+
+                    # Transform the data to match the schema
+                    transformed_data = {
+                        "id": data.get("id"),
+                        "guild_id": guild_id,
+                        "date": data.get("date"),
+                        "total_cut": data.get("total_cut"),
+                        "gross_revenue": data.get("gross_revenue"),
+                        "period": data.get("period"),
+                        "shift": data.get("shift"),
+                        "role": data.get("role"),
+                        "models": data.get("models") if isinstance(data.get("models"), list) else [data.get("models")],
+                        "hours_worked": data.get("hours_worked"),
+                        "user_mention": data.get("user_mention")
+                    }
+
+                    # Insert the transformed data into MongoDB
+                    db[collection_name].insert_one(transformed_data)
+                    logger.info(f"Single earning entry successfully added to MongoDB collection: {collection_name}")
+                else:
+                    logger.error("Invalid data type for earnings. Expected a single dictionary entry.")
+                    return False
+
                 db_success = True
 
         except Exception as e:
