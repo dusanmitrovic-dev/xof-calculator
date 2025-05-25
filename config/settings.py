@@ -123,3 +123,14 @@ def get_guild_display_path(guild_id: int) -> str:
 def get_guild_earnings_path(guild_id: int) -> str:
     """Get path to guild's earnings file"""
     return get_guild_earnings_file(guild_id, EARNINGS_FILE)
+
+MONGO_COLLECTION_MAPPING = {
+    "role_percentages.json": "roles",
+    "shift_config.json": "shifts",
+    "period_config.json": "periods",
+    "models_config.json": "models",
+    "bonus_rules.json": "bonus_rules",
+    "display_settings.json": "display_settings",
+    "commission_settings.json": "commission_settings",
+    "earnings.json": "earnings",
+}

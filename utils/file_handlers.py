@@ -9,7 +9,8 @@ import inspect
 
 from datetime import datetime
 from typing import Dict, List, Any, Optional, Union
-from utils.db import get_current_mongo_client, MONGO_COLLECTION_MAPPING
+from utils.db import get_current_mongo_client
+from config.settings import MONGO_COLLECTION_MAPPING
 
 logger = logging.getLogger("xof_calculator.file_handlers")
 
@@ -65,7 +66,7 @@ async def load_json(filename: str, default: Optional[Union[Dict, List]] = None) 
             db = client.get_database()
 
             if collection_name == "earnings":
-                data = list(db[collection_name].find({"guild_id": guild_id}))
+                data = list(db[collection_name].find({"guild_id": str(guild_id)}))
                 for entry in data:
                     entry.pop("_id", None)
                     entry["models"] = entry["models"] if isinstance(entry["models"], list) else [entry["models"]]
@@ -86,7 +87,7 @@ async def load_json(filename: str, default: Optional[Union[Dict, List]] = None) 
                     logger.info(f"Data successfully loaded from MongoDB collection: {collection_name}")
                     return earnings_dict
 
-            elif collection_name != "earnings":
+            else:
                 guild_config = db["guild_configs"].find_one({"guild_id": guild_id})
                 if guild_config:
                     if collection_name in guild_config:

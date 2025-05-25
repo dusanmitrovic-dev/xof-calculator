@@ -24,14 +24,3 @@ def get_current_mongo_client() -> MongoClient:
     if not client:
         raise RuntimeError("No MongoDB client is set for the current context.")
     return client
-
-MONGO_COLLECTION_MAPPING = {
-    "role_percentages.json": "roles",
-    "shift_config.json": "shifts",
-    "period_config.json": "periods",
-    "models_config.json": "models",
-    "bonus_rules.json": "bonus_rules",
-    "display_settings.json": "display_settings",
-    "commission_settings.json": "commission_settings",
-    "earnings.json": "earnings",
-}

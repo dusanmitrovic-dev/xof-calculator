@@ -10,6 +10,7 @@ from datetime import datetime
 from discord import app_commands
 from discord.ext import commands
 from typing import Optional
+from cogs.admin_sync import push_config, push_earnings
 from config import settings
 from utils import file_handlers, validators
 
@@ -1092,6 +1093,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
 
         async def confirm_callback(interaction):
             await self.reset_earnings(interaction)
+            await push_earnings(interaction.guild.id)
             await interaction.response.edit_message(content=f"✅ All earnings data for the guild ({guild_name}) has been successfully cleared.", view=None)
 
         async def cancel_callback(interaction):
@@ -1442,6 +1444,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
 
             # Prepare the response content
             if failed_count == 0:
+                await push_config(interaction.guild.id)
                 content = f"✅ Successfully restored {restored_count} backup files."
             else:
                 content = f"⚠️ Restored {restored_count} files, but {failed_count} failed. Check console for details."
@@ -1643,6 +1646,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             backup_file = f"{file_path}.bak"
             if os.path.exists(backup_file):
                 shutil.copy2(backup_file, file_path)
+                await push_config(interaction.guild.id)
                 await interaction.response.edit_message(content="✅ Shift configuration backup restored successfully.", view=None)
             else:
                 await interaction.response.edit_message(content="❌ No shift configuration backup found.", view=None)
@@ -1666,6 +1670,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             
             if os.path.exists(backup_file):
                 shutil.copy2(backup_file, period_file)
+                await push_config(interaction.guild.id)
                 await interaction.response.edit_message(
                     content="✅ Period configuration backup restored successfully.", 
                     view=None
@@ -1695,6 +1700,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             
             if os.path.exists(backup_file):
                 shutil.copy2(backup_file, role_file)
+                await push_config(interaction.guild.id)
                 await interaction.response.edit_message(
                     content="✅ Role configuration backup restored successfully.", 
                     view=None
@@ -1724,6 +1730,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             
             if os.path.exists(backup_file):
                 shutil.copy2(backup_file, bonus_file)
+                await push_config(interaction.guild.id)
                 await interaction.response.edit_message(
                     content="✅ Bonus rules configuration backup restored successfully.", 
                     view=None
@@ -1751,6 +1758,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             backup_file = f"{file_path}.bak"
             if os.path.exists(backup_file):
                 shutil.copy2(backup_file, file_path)
+                await push_earnings(interaction.guild.id)
                 await interaction.response.edit_message(content="✅ Earnings configuration backup restored successfully.", view=None)
             else:
                 await interaction.response.edit_message(content="❌ No earnings configuration backup found.", view=None)
@@ -1776,6 +1784,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
                 if os.path.exists(backup_file):
                     # Restore from guild-specific backup
                     shutil.copy2(backup_file, file_path)
+                    await push_config(interaction.guild.id)
                     await interaction.response.edit_message(content="✅ Models configuration backup restored successfully.", view=None)
                 else:
                     await interaction.response.edit_message(content="❌ No models configuration backup found.", view=None)
@@ -1801,6 +1810,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
             backup_file = f"{file_path}.bak"
             if os.path.exists(backup_file):
                 shutil.copy2(backup_file, file_path)
+                await push_config(interaction.guild.id)
                 await interaction.response.edit_message(content="✅ Compensation configuration backup restored successfully.", view=None)
             else:
                 await interaction.response.edit_message(content="❌ No compensation configuration backup found.", view=None)
@@ -1825,6 +1835,7 @@ class AdminSlashCommands(commands.Cog, name="admin"):
 
             if os.path.exists(backup_file):
                 shutil.copy2(backup_file, file_path)
+                await push_config(interaction.guild.id)
                 await interaction.response.edit_message(content="✅ Display configuration backup restored successfully.", view=None)
             else:
                 await interaction.response.edit_message(content="❌ No display configuration backup found.", view=None)
