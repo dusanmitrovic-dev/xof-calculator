@@ -191,11 +191,11 @@ async def save_json(filename: str, data: Union[Dict, List], pretty: bool = True,
                 print(data)
                 # Handle configuration collections
                 db["guild_configs"].update_one(
-                    {"guild_id": guild_id},
-                    {"$set": {collection_name: data}},
-                    upsert=True
-                )
-                db_success = True
+                {"guild_id": guild_id},
+                {"$set": {"guild_id": guild_id, "id": guild_id, collection_name: data}},
+                upsert=True
+            )
+            db_success = True
         except Exception as e:
             logger.error(f"Error saving data to MongoDB for {collection_name}: {e}")
 
