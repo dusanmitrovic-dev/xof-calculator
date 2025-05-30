@@ -10,6 +10,8 @@ from discord.ext import commands
 from discord import app_commands
 from logging.handlers import RotatingFileHandler
 from utils.db import set_current_mongo_client
+from threading import Thread
+from flask import Flask
 
 # Create logs directory if it doesn't exist
 os.makedirs("logs", exist_ok=True)
@@ -205,7 +207,17 @@ async def main():
     ]
     await asyncio.gather(*(bot.start() for bot in bots))
 
+def run_web():
+    app = Flask(__name__)
+
+    @app.route("/")
+    def home():
+        return "Bot is running!"
+
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
+
 if __name__ == "__main__":
+    Thread(target=run_web).start()
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
