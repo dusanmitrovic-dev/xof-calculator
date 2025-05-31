@@ -192,7 +192,7 @@ async def main():
         for k, v in os.environ.items() if k.startswith("DISCORD_TOKEN_")
     }
 
-    print("Tokens and URIs:", tokens_and_uris)  # Debugging line
+    print("Tokens and URIs:", tokens_and_uris) 
 
     if not tokens_and_uris:
         logger.critical("No Discord tokens or MongoDB URIs found. Please update your .env file.")
