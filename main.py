@@ -32,7 +32,6 @@ logging.basicConfig(
 
 logger = logging.getLogger("xof_calculator")
 
-# Load environment variables
 load_dotenv()
 
 class BotInstance:
