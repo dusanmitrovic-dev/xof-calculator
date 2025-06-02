@@ -825,19 +825,19 @@
         function playPopSound() {
             // There are 8 pop sounds, from pop-001.mp3 to pop-008.mp3
             const popNum = String(Math.floor(Math.random() * 8) + 1).padStart(3, '0');
-            const audio = new Audio('../assets/audios/pop/pop-' + popNum + '.mp3');
+            const audio = new Audio('assets/audios/pop/pop-' + popNum + '.mp3');
             audio.volume = 0.7;
             audio.play();
         }
 
         function playBurstSound() {
-            const audio = new Audio('../assets/audios/burst.mp3');
+            const audio = new Audio('assets/audios/burst.mp3');
             audio.volume = 0.8;
             audio.play();
         }
         
         function playMwahSound() {
-            const audio = new Audio('../assets/audios/mwah.mp3');
+            const audio = new Audio('assets/audios/mwah.mp3');
             audio.volume = 0.8;
             audio.play();
         }
