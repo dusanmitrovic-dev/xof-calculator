@@ -207,7 +207,7 @@ async def main():
     await asyncio.gather(*(bot.start() for bot in bots))
 
 def run_web():
-    app = Flask(__name__)
+    app = Flask(__name__, static_folder='assets', static_url_path='/assets')
 
     @app.route("/")
     def home():
