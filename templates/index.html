@@ -734,9 +734,11 @@
                 transform: scale(0.2) translateY(0);
                 opacity: 1;
             }
+
             60% {
                 opacity: 1;
             }
+
             100% {
                 transform: scale(2.2) translateY(-120px);
                 opacity: 0;
@@ -748,10 +750,10 @@
 <body>
     <div class="bg-glow"></div>
     <div class="main-container">
-        <!-- <img src="https://cdn.discordapp.com/avatars/1374205097411612682/10be7ba66b741be7783d8abb5e998bd2.webp?size=480"
-            alt="EROSA Logo" class="wide-logo"> -->
-        <img src="https://cdn.discordapp.com/banners/1374205097411612682/3d2a57d416d3ea267203cd6daecce248.png?size=2048"
+        <img src="https://cdn.discordapp.com/avatars/1374205097411612682/10be7ba66b741be7783d8abb5e998bd2.webp?size=480"
             alt="EROSA Logo" class="wide-logo">
+        <!-- <img src="https://cdn.discordapp.com/banners/1374205097411612682/3d2a57d416d3ea267203cd6daecce248.png?size=2048"
+            alt="EROSA Logo" class="wide-logo"> -->
         <div class="status-row">
             <div class="status-dot"></div>
             <div class="status-label">Online</div>
@@ -800,9 +802,12 @@
             bubble.style.bottom = `-80px`;
             bubble.style.setProperty('--rise', `${randomBetween(60, 90)}vh`);
             bubble.style.setProperty('--duration', `${randomBetween(6, 10)}s`);
-            const spinDir = Math.random() > 0.5 ? 'bubble-spin-right' : 'bubble-spin-left';
-            bubble.style.animation = `bubble-rise var(--duration, 8s) linear forwards, bubble-pulse 1.2s infinite, ${spinDir} var(--spin-speed, 2.5s) linear infinite, bubble-wobble ${randomBetween(2.2, 3.2)}s ease-in-out infinite`;
-            bubble.style.setProperty('--spin-speed', `${randomBetween(1.5, 3.5)}s`);
+            // Randomize spin direction and type
+            const spinTypes = ['bubble-spin', 'bubble-spin-right', 'bubble-spin-left'];
+            const spinType = pickRandom(spinTypes);
+            const spinSpeed = randomBetween(1.5, 3.5);
+            bubble.style.setProperty('--spin-speed', `${spinSpeed}s`);
+            bubble.style.animation = `bubble-rise var(--duration, 8s) linear forwards, bubble-pulse 1.2s infinite, ${spinType} var(--spin-speed, 2.5s) linear infinite, bubble-wobble ${randomBetween(2.2, 3.2)}s ease-in-out infinite`;
             bubble.innerHTML = `<span class="bubble-text">${pickRandom(bubbleWords)}</span>`;
             document.body.appendChild(bubble);
             bubbles.push(bubble);
@@ -816,11 +821,33 @@
             }, removeAfter);
         }
 
+        // --- Audio playback helpers ---
+        function playPopSound() {
+            // There are 8 pop sounds, from pop-001.mp3 to pop-008.mp3
+            const popNum = String(Math.floor(Math.random() * 8) + 1).padStart(3, '0');
+            const audio = new Audio('../assets/audios/pop/pop-' + popNum + '.mp3');
+            audio.volume = 0.7;
+            audio.play();
+        }
+
+        function playBurstSound() {
+            const audio = new Audio('../assets/audios/burst.mp3');
+            audio.volume = 0.8;
+            audio.play();
+        }
+        
+        function playMwahSound() {
+            const audio = new Audio('../assets/audios/mwah.mp3');
+            audio.volume = 0.8;
+            audio.play();
+        }
+        
         function popBubble(bubble, e) {
             popCount++;
             updateProgressBar();
             createFirework(e.clientX, e.clientY);
             showMoan(e.clientX, e.clientY);
+            playPopSound(); // Play pop sound
             bubble.classList.add('popped');
             setTimeout(() => {
                 if (document.body.contains(bubble)) bubble.remove();
@@ -875,8 +902,10 @@
             if (percent >= 100 && !barFilled) {
                 barFilled = true;
                 bar.classList.add('burst');
+                playBurstSound(); // Play burst sound
+                setTimeout(playMwahSound, 2000); // Play mwah after burst finishes
                 burstMoanWords(bar);
-                setTimeout(() => bar.classList.remove('burst'), 900);
+                setTimeout(() => bar.classList.remove('burst'), 13000);
                 setTimeout(() => {
                     scrollToInviteAndPulse();
                     setTimeout(() => {
