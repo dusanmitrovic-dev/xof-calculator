@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EROSA – Seduction, Systemized</title>
+    <link rel="icon" type="image/png" href="https://cdn.discordapp.com/avatars/1374205097411612682/10be7ba66b741be7783d8abb5e998bd2.webp?size=480">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(120deg, #18131d 0%, #2d1b2e 100%);
+            color: #fff;
+            font-family: 'Inter', 'Montserrat', 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+            /* Add animated background particles */
+        }
+        .bg-glow {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            pointer-events: none;
+            z-index: 0;
+            background: radial-gradient(circle at 70% 20%, #ff4e8e33 0%, transparent 60%),
+                        radial-gradient(circle at 20% 80%, #e2555533 0%, transparent 60%);
+            animation: bgmove 12s ease-in-out infinite alternate;
+        }
+        @keyframes bgmove {
+            0% { background-position: 70% 20%, 20% 80%; }
+            100% { background-position: 60% 30%, 30% 70%; }
+        }
+        .main-container {
+            background: rgba(30, 18, 38, 0.82);
+            border-radius: 2.5rem;
+            box-shadow: 0 8px 40px 0 rgba(200, 0, 80, 0.22), 0 1.5px 12px 0 rgba(0,0,0,0.12);
+            padding: 3.5rem 2.5rem 2.5rem 2.5rem;
+            max-width: 500px;
+            width: 95vw;
+            text-align: center;
+            margin: 2.5rem 0;
+            position: relative;
+            z-index: 2;
+            backdrop-filter: blur(16px) saturate(160%);
+            border: 1.5px solid #ff4e8e33;
+            animation: fadein 1.2s cubic-bezier(.77,0,.18,1) 0.2s both;
+            overflow: hidden;
+        }
+        @keyframes fadein {
+            0% { opacity: 0; transform: translateY(40px) scale(0.98); }
+            100% { opacity: 1; transform: none; }
+        }
+        .wide-logo {
+            width: 100%;
+            height: auto;
+            max-width: 100%;
+            min-width: 0;
+            max-height: 180px;
+            object-fit: cover;
+            margin-bottom: 1.2rem;
+            margin-top: 0;
+            border-top-left-radius: 2.5rem;
+            border-top-right-radius: 2.5rem;
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+            display: block;
+            margin-left: 0;
+            margin-right: 0;
+            filter: drop-shadow(0 2px 32px #ff4e8e88);
+            background: transparent;
+            animation: logoPop 1.2s cubic-bezier(.77,0,.18,1) 0.4s both;
+        }
+        @keyframes logoPop {
+            0% { opacity: 0; transform: scale(0.8) rotate(-6deg); }
+            80% { opacity: 1; transform: scale(1.08) rotate(2deg); }
+            100% { opacity: 1; transform: scale(1) rotate(0); }
+        }
+        .status-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6em;
+            margin-bottom: 1.2em;
+        }
+        .status-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #27ff60 0%, #1ed760 100%);
+            box-shadow: 0 0 16px 4px #27ff60cc;
+            border: 2.5px solid #fff2;
+            animation: pulse 1.2s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 16px 4px #27ff60cc; }
+            50% { box-shadow: 0 0 32px 10px #27ff6099; }
+            100% { box-shadow: 0 0 16px 4px #27ff60cc; }
+        }
+        .status-label {
+            font-size: 1.08rem;
+            font-weight: 700;
+            color: #b6ffcb;
+            letter-spacing: 0.5px;
+            text-shadow: 0 1px 8px #1ed76033;
+            text-transform: uppercase;
+        }
+        h1 {
+            font-size: 2.6rem;
+            font-weight: 900;
+            margin-bottom: 0.15em;
+            letter-spacing: 2px;
+            background: linear-gradient(90deg, #ff4e8e 0%, #e25555 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 2px 12px #ff4e8e44);
+            animation: fadein 1.2s cubic-bezier(.77,0,.18,1) 0.6s both;
+        }
+        .tagline {
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: 1.2px;
+            margin-bottom: 0.7em;
+            background: linear-gradient(90deg,#ff4e8e 0%,#e25555 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 2px 12px #ff4e8e22;
+            animation: fadein 1.2s cubic-bezier(.77,0,.18,1) 0.7s both;
+        }
+        .about {
+            font-size: 1.18rem;
+            color: #e0b3d0;
+            margin-bottom: 2.2em;
+            line-height: 1.8;
+            letter-spacing: 0.2px;
+            animation: fadein 1.2s cubic-bezier(.77,0,.18,1) 0.8s both;
+        }
+        .features {
+            text-align: left;
+            margin: 0 auto 2em auto;
+            max-width: 340px;
+            color: #f7d6e6;
+            font-size: 1.12rem;
+            background: rgba(255, 78, 142, 0.07);
+            border-radius: 1.2em;
+            padding: 1.1em 1.2em 1.1em 1.2em;
+            box-shadow: 0 2px 12px 0 #ff4e8e11;
+            animation: fadein 1.2s cubic-bezier(.77,0,.18,1) 1s both;
+        }
+        .features strong {
+            color: #ff4e8e;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+        }
+        .features-list {
+            margin: 0.7em 0 0 0;
+            padding: 0;
+            list-style: none;
+        }
+        .features-list li {
+            margin-bottom: 0.7em;
+            position: relative;
+            padding-left: 1.5em;
+            font-weight: 500;
+            letter-spacing: 0.1px;
+        }
+        .features-list li::before {
+            content: '⟶';
+            position: absolute;
+            left: 0;
+            color: #ff4e8e;
+            font-size: 1.1em;
+            top: 0.1em;
+            filter: drop-shadow(0 1px 4px #ff4e8e44);
+        }
+        .invite-btn {
+            display: inline-block;
+            background: linear-gradient(90deg, #ff4e8e 0%, #e25555 100%);
+            color: #fff;
+            font-weight: 800;
+            font-size: 1.18rem;
+            padding: 1.1em 2.6em;
+            border: none;
+            border-radius: 999px;
+            text-decoration: none;
+            box-shadow: 0 4px 18px 0 rgba(255, 78, 142, 0.18);
+            transition: background 0.2s, transform 0.2s, box-shadow 0.2s, filter 0.2s;
+            margin-bottom: 1.5em;
+            position: relative;
+            overflow: hidden;
+            animation: fadein 1.2s cubic-bezier(.77,0,.18,1) 1.2s both;
+            aria-label: "Invite EROSA to your Discord";
+        }
+        .invite-btn::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 180%;
+            height: 180%;
+            background: radial-gradient(circle, #ff4e8e44 0%, transparent 80%);
+            transform: translate(-50%, -50%) scale(0.7);
+            opacity: 0.7;
+            z-index: 0;
+            pointer-events: none;
+            animation: btnpulse 2.2s infinite;
+        }
+        @keyframes btnpulse {
+            0% { opacity: 0.7; transform: translate(-50%, -50%) scale(0.7); }
+            50% { opacity: 0.3; transform: translate(-50%, -50%) scale(1.1); }
+            100% { opacity: 0.7; transform: translate(-50%, -50%) scale(0.7); }
+        }
+        .invite-btn:hover {
+            background: linear-gradient(90deg, #e25555 0%, #ff4e8e 100%);
+            transform: translateY(-2px) scale(1.045);
+            box-shadow: 0 8px 32px 0 rgba(255, 78, 142, 0.28);
+            filter: brightness(1.08) saturate(1.2);
+        }
+        .footer {
+            margin-top: 2.5em;
+            font-size: 1.05em;
+            color: #b98cb3;
+            letter-spacing: 0.7px;
+            text-shadow: 0 1px 8px #ff4e8e22;
+            animation: fadein 1.2s cubic-bezier(.77,0,.18,1) 1.4s both;
+        }
+        .footer .heart {
+            color: #ff4e8e;
+            animation: heartBeat 1.6s infinite;
+        }
+        @keyframes heartBeat {
+            0%, 100% { transform: scale(1); }
+            10% { transform: scale(1.18); }
+            20% { transform: scale(0.92); }
+            30% { transform: scale(1.12); }
+            40% { transform: scale(0.98); }
+            50% { transform: scale(1.08); }
+            60% { transform: scale(1); }
+        }
+        @media (max-width: 600px) {
+            .main-container {
+                padding: 1.2rem 0.5rem 1.5rem 0.5rem;
+            }
+            .wide-logo {
+                max-width: 100%;
+                width: 100%;
+            }
+            h1 {
+                font-size: 1.3rem;
+            }
+            .tagline {
+                font-size: 1.01rem;
+            }
+            .features {
+                font-size: 1.01rem;
+                padding: 0.7em 0.7em 0.7em 0.7em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-glow"></div>
+    <div class="main-container">
+        <img class="wide-logo" src="https://cdn.discordapp.com/banners/1374205097411612682/3d2a57d416d3ea267203cd6daecce248.png?size=2048" alt="EROSA Brand Logo" loading="lazy" />
+        <div class="status-row">
+            <span class="status-dot"></span>
+            <span class="status-label">Online</span>
+        </div>
+        <h1>EROSA</h1>
+        <h2 class="tagline">Seduction, Systemized.</h2>
+        <div class="about">
+            EROSA isn’t just a CRM — it’s a control panel for lust-fueled domination.<br><br>
+            Built for <strong>OnlyFans agencies</strong>, <strong>chatter teams</strong>, and <strong>creators</strong> who don’t just play the game — they bend it — EROSA turns every message into momentum, every simp into a systemized transaction.
+        </div>
+        <div class="features">
+            <strong>Behind its sleek, dripping-heart interface lies a beast:</strong>
+            <ul class="features-list">
+                <li>Track every shift, click, moan, and message.</li>
+                <li>Automate your empire with AI-driven workflows.</li>
+                <li>Real-time dashboards that pulse with your power.</li>
+                <li>Customizable roles, commissions, and bonuses.</li>
+                <li>Lightning-fast, ultra-secure, always online.</li>
+                <li>Designed to seduce — built to dominate.</li>
+            </ul>
+        </div>
+        <a class="invite-btn" href="https://discord.com/oauth2/authorize?client_id=1348713136307568770&permissions=8&integration_type=0&scope=bot+applications.commands" target="_blank" rel="noopener" aria-label="Invite EROSA to your Discord">
+            Invite EROSA to your Discord
+        </a>
+        <div class="footer">
+            &copy; 2025 Vixen Agency &mdash; <span class="heart">&#10084;</span> EROSA
+        </div>
+    </div>
+    <script>
+        // Add a little entrance animation for the main container and logo
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelector('.main-container').classList.add('show');
+            document.querySelector('.wide-logo').classList.add('show');
+        });
+    </script>
+</body>
+</html>

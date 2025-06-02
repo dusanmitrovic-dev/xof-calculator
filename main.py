@@ -11,7 +11,7 @@ from discord import app_commands
 from logging.handlers import RotatingFileHandler
 from utils.db import set_current_mongo_client
 from threading import Thread
-from flask import Flask
+from flask import Flask, render_template
 
 # Create logs directory if it doesn't exist
 os.makedirs("logs", exist_ok=True)
@@ -211,7 +211,7 @@ def run_web():
 
     @app.route("/")
     def home():
-        return "Bot is running!"
+        return render_template("index.html")
 
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
 
