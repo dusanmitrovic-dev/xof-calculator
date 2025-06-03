@@ -13,7 +13,14 @@
         body {
             background: linear-gradient(120deg, #18131d 0%, #2d1b2e 100%);
             color: #fff;
-            font-family: 'Inter', 'Montserrat', 'Segoe UI', Arial, sans-serif;
+            font-family: 'Montserrat', 'Inter', 'Segoe UI', Arial, sans-serif;
+            font-size: 1.13rem;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+            line-height: 1.7;
+            text-rendering: optimizeLegibility;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
             margin: 0;
             padding: 0;
             min-height: 100vh;
@@ -158,9 +165,10 @@
             font-size: 2.6rem;
             font-weight: 900;
             margin-bottom: 0.15em;
-            letter-spacing: 2px;
+            letter-spacing: 0.08em;
             font-family: 'Montserrat', 'Inter', 'Segoe UI', Arial, sans-serif;
-            font-variation-settings: 'wght' 700, 'ital' 0;
+            text-shadow: 0 2px 24px #ff4e8e33, 0 1px 0 #fff1, 0 0 2px #fff8;
+            filter: drop-shadow(0 2px 12px #ff4e8e44);
             font-style: italic;
             background: linear-gradient(90deg, #ff4e8e 0%, #e25555 40%, #fff 50%, #ff4e8e 60%, #e25555 100%);
             background-size: 200% 100%;
@@ -170,10 +178,6 @@
             background-clip: text;
             color: transparent;
             animation: lightning-text 2.2s cubic-bezier(.77, 0, .18, 1) infinite;
-            filter: drop-shadow(0 2px 12px #ff4e8e44);
-            animation: fadein 1.2s cubic-bezier(.77, 0, .18, 1) 0.6s both, lightning-text 2.2s cubic-bezier(.77, 0, .18, 1) infinite;
-            text-shadow: 0 2px 24px #ff4e8e33, 0 1px 0 #fff1;
-            letter-spacing: 0.08em;
             position: relative;
             overflow: hidden;
         }
@@ -195,16 +199,14 @@
         .tagline {
             font-size: 1.35rem;
             font-family: 'Montserrat', 'Inter', 'Segoe UI', Arial, sans-serif;
-            font-style: italic;
-            font-weight: 600;
-            letter-spacing: 0.12em;
+            font-weight: 700;
+            letter-spacing: 0.13em;
+            text-shadow: 0 2px 12px #ff4e8e22, 0 1px 0 #fff1, 0 0 2px #fff8;
             margin-bottom: 0.7em;
             background: linear-gradient(90deg, #ff4e8e 0%, #e25555 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            text-shadow: 0 2px 12px #ff4e8e22, 0 1px 0 #fff1;
-            animation: fadein 1.2s cubic-bezier(.77, 0, .18, 1) 0.7s both;
             position: relative;
             overflow: hidden;
         }
@@ -250,11 +252,14 @@
         }
 
         .about {
-            font-size: 1.18rem;
-            color: #e0b3d0;
+            font-size: 1.22rem;
+            font-family: 'Inter', 'Montserrat', 'Segoe UI', Arial, sans-serif;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            color: #f7d6e6;
+            text-shadow: 0 1px 8px #ff4e8e22, 0 1px 0 #fff1;
             margin-bottom: 2.2em;
             line-height: 1.8;
-            letter-spacing: 0.2px;
             animation: fadein 1.2s cubic-bezier(.77, 0, .18, 1) 0.8s both;
         }
 
@@ -262,8 +267,11 @@
             text-align: left;
             margin: 0 auto 2em auto;
             max-width: 340px;
+            font-family: 'Montserrat', 'Inter', 'Segoe UI', Arial, sans-serif;
+            font-size: 1.15rem;
+            font-weight: 600;
+            letter-spacing: 0.03em;
             color: #f7d6e6;
-            font-size: 1.12rem;
             background: rgba(255, 78, 142, 0.07);
             border-radius: 1.2em;
             padding: 1.1em 1.2em 1.1em 1.2em;
@@ -273,8 +281,9 @@
 
         .features strong {
             color: #ff4e8e;
-            font-weight: 800;
-            letter-spacing: 0.5px;
+            font-weight: 900;
+            letter-spacing: 0.07em;
+            text-shadow: 0 1px 8px #ff4e8e44;
         }
 
         .features-list {
@@ -287,8 +296,11 @@
             margin-bottom: 0.7em;
             position: relative;
             padding-left: 1.5em;
-            font-weight: 500;
-            letter-spacing: 0.1px;
+            font-family: 'Inter', 'Montserrat', 'Segoe UI', Arial, sans-serif;
+            font-size: 1.08rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            text-shadow: 0 1px 4px #ff4e8e22;
         }
 
         .features-list li::before {
@@ -305,8 +317,11 @@
             display: inline-block;
             background: linear-gradient(90deg, #ff4e8e 0%, #e25555 100%);
             color: #fff;
-            font-weight: 800;
-            font-size: 1.18rem;
+            font-family: 'Montserrat', 'Inter', 'Segoe UI', Arial, sans-serif;
+            font-size: 1.22rem;
+            font-weight: 900;
+            letter-spacing: 0.09em;
+            text-shadow: 0 2px 12px #ff4e8e22, 0 1px 0 #fff1;
             padding: 1.1em 2.6em;
             border: none;
             border-radius: 999px;
@@ -361,10 +376,12 @@
 
         .footer {
             margin-top: 2.5em;
-            font-size: 1.05em;
+            font-size: 1.09em;
+            font-family: 'Montserrat', 'Inter', 'Segoe UI', Arial, sans-serif;
+            font-weight: 600;
+            letter-spacing: 0.09em;
             color: #b98cb3;
-            letter-spacing: 0.7px;
-            text-shadow: 0 1px 8px #ff4e8e22;
+            text-shadow: 0 1px 8px #ff4e8e22, 0 1px 0 #fff1;
             animation: fadein 1.2s cubic-bezier(.77, 0, .18, 1) 1.4s both;
         }
 
@@ -701,11 +718,12 @@
             font-size: 1.5em;
             font-family: 'Montserrat', 'Inter', sans-serif;
             font-weight: 900;
+            letter-spacing: 0.07em;
+            text-shadow: 0 2px 24px #ff4e8e99, 0 1px 0 #fff8, 0 0 2px #fff8;
             color: #ff4e8e;
             pointer-events: none;
             opacity: 0;
             transform: scale(0.7) rotate(-8deg);
-            text-shadow: 0 2px 24px #ff4e8e99, 0 1px 0 #fff8;
             transition: opacity 0.2s, transform 0.2s;
             filter: blur(1px) brightness(1.2);
         }
