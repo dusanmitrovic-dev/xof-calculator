@@ -918,7 +918,12 @@
                 return moan;
             }
             function removeBubble(bubble) {
-                if (document.body.contains(bubble)) bubble.remove();
+                // Remove all event listeners by cloning and replacing
+                if (bubble.parentNode) {
+                    const clone = bubble.cloneNode(true);
+                    bubble.parentNode.replaceChild(clone, bubble);
+                    clone.remove();
+                }
                 bubbles = bubbles.filter(b => b !== bubble);
             }
             function getRandomPopSound() {
@@ -949,7 +954,8 @@
                 bubble.innerHTML = `<span class=\"bubble-text\">${pickRandom(bubbleWords)}</span>`;
                 document.body.appendChild(bubble);
                 bubbles.push(bubble);
-                bubble.addEventListener('click', e => popBubble(bubble, e));
+                // Use { once: true } to ensure pop handler is only called once
+                bubble.addEventListener('click', e => popBubble(bubble, e), { once: true });
                 const removeAfter = parseFloat(bubble.style.getPropertyValue('--duration')) * 1000 + 500;
                 setRemoveTimeout(bubble, removeAfter);
             }
