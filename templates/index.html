@@ -885,19 +885,29 @@
         <div class="bubble-progress-bar-inner" id="bubbleProgressBarInner"></div>
     </div>
     <script>
+        'use strict';
+        // EROSA Interactive Bubble & Progress Bar Logic
         (function () {
             // --- Utility Functions ---
             const randomBetween = (a, b) => a + Math.random() * (b - a);
             const pickRandom = arr => arr[Math.floor(Math.random() * arr.length)];
-            function playSound(file, volume = 0.7) {
+            const setRemoveTimeout = (el, ms) => setTimeout(() => el.remove(), ms);
+            const playSound = (file, volume = 0.7) => {
                 const audio = new Audio(file);
                 audio.volume = volume;
                 audio.play();
-            }
-            function removeBubble(bubble) {
-                if (document.body.contains(bubble)) bubble.remove();
-                bubbles = bubbles.filter(b => b !== bubble);
-            }
+            };
+            // --- Bubble & Moan Data ---
+            const bubbleWords = ["POP ME", "BURST ME", "COME"];
+            const moanWords = ["moan", "mmm", "mhmmm", "baby", "yes", "oh!", "more", "harder", "deeper"];
+            const fireworkColors = ["#ff4e8e", "#e25555", "#fff", "#f7d6e6", "#b6ffcb", "#ffb347", "#b98cb3"];
+            // --- State ---
+            let popCount = 0;
+            let bubbles = [];
+            const MAX_BUBBLES = 12;
+            const POPS_TO_FILL = 12;
+            let barFilled = false;
+            // --- DOM Helpers ---
             function createMoanWord(text, x, y, extraClass = "") {
                 const moan = document.createElement('div');
                 moan.className = 'moan-word' + (extraClass ? ' ' + extraClass : '');
@@ -907,26 +917,15 @@
                 document.body.appendChild(moan);
                 return moan;
             }
-
-            // --- Sexy Soap Bubbles ---
-            const bubbleWords = ["POP ME", "BURST ME", "COME"];
-            const moanWords = ["moan", "mmm", "mhmmm", "baby", "yes", "oh!", "more", "harder", "deeper"];
-            const fireworkColors = ["#ff4e8e", "#e25555", "#fff", "#f7d6e6", "#b6ffcb", "#ffb347", "#b98cb3"];
-            let popCount = 0;
-            let bubbles = [];
-            const MAX_BUBBLES = 12;
-            const POPS_TO_FILL = 12;
-            let barFilled = false;
-
+            function removeBubble(bubble) {
+                if (document.body.contains(bubble)) bubble.remove();
+                bubbles = bubbles.filter(b => b !== bubble);
+            }
             function getRandomPopSound() {
                 const idx = Math.floor(Math.random() * 8) + 1;
                 return `assets/audios/pop/pop-${String(idx).padStart(3, '0')}.mp3`;
             }
-
-            function setRemoveTimeout(el, ms) {
-                setTimeout(() => el.remove(), ms);
-            }
-
+            // --- Bubble Creation & Animation ---
             function createBubble() {
                 const bubble = document.createElement('div');
                 bubble.className = 'sexy-bubble';
@@ -936,7 +935,6 @@
                 bubble.style.bottom = `-80px`;
                 bubble.style.setProperty('--rise', `${randomBetween(60, 90)}vh`);
                 bubble.style.setProperty('--duration', `${randomBetween(6, 10)}s`);
-                // Randomize spin direction and type
                 const spinTypes = ['bubble-spin', 'bubble-spin-right', 'bubble-spin-left'];
                 const spinType = pickRandom(spinTypes);
                 const spinSpeed = randomBetween(1.5, 3.5);
@@ -948,14 +946,18 @@
                     `${spinType} var(--spin-speed, 2.5s) linear infinite`,
                     `bubble-wobble ${wobbleDuration}s ease-in-out infinite`
                 ].join(', ');
-                bubble.innerHTML = `<span class="bubble-text">${pickRandom(bubbleWords)}</span>`;
+                bubble.innerHTML = `<span class=\"bubble-text\">${pickRandom(bubbleWords)}</span>`;
                 document.body.appendChild(bubble);
                 bubbles.push(bubble);
                 bubble.addEventListener('click', e => popBubble(bubble, e));
                 const removeAfter = parseFloat(bubble.style.getPropertyValue('--duration')) * 1000 + 500;
                 setRemoveTimeout(bubble, removeAfter);
             }
-
+            function spawnBubbles() {
+                while (bubbles.length < MAX_BUBBLES) createBubble();
+                setTimeout(spawnBubbles, 350);
+            }
+            // --- Bubble Pop Logic ---
             function popBubble(bubble, e) {
                 popCount++;
                 updateProgressBar();
@@ -965,14 +967,13 @@
                 bubble.classList.add('popped');
                 setTimeout(() => removeBubble(bubble), 400);
             }
-
+            // --- Moan & Firework Effects ---
             function showMoan(x, y) {
                 const moan = createMoanWord(pickRandom(moanWords), x + randomBetween(-30, 30), y + randomBetween(-30, 30));
                 setTimeout(() => moan.classList.add('show'), 10);
                 setTimeout(() => moan.classList.remove('show'), 900);
                 setRemoveTimeout(moan, 1200);
             }
-
             function createFirework(x, y) {
                 const fw = document.createElement('div');
                 fw.className = 'firework';
@@ -988,22 +989,13 @@
                 document.body.appendChild(fw);
                 setRemoveTimeout(fw, 1400);
             }
-
-            function spawnBubbles() {
-                while (bubbles.length < MAX_BUBBLES) {
-                    createBubble();
-                }
-                setTimeout(spawnBubbles, 350);
-            }
-            spawnBubbles();
-
             // --- Progress Bar Logic ---
             function updateProgressBar() {
                 const bar = document.getElementById('bubbleProgressBar');
                 const inner = document.getElementById('bubbleProgressBarInner');
                 if (!bar || !inner) return;
                 bar.style.display = 'flex';
-                let percent = Math.min(popCount / POPS_TO_FILL, 1) * 100;
+                const percent = Math.min(popCount / POPS_TO_FILL, 1) * 100;
                 inner.style.width = percent + '%';
                 if (percent >= 100 && !barFilled) {
                     barFilled = true;
@@ -1022,14 +1014,12 @@
                     }, 1200);
                 }
             }
-
             // --- Falling Moan Words Burst ---
             function burstMoanWords(bar) {
                 const rect = bar.getBoundingClientRect();
                 const barCenterX = rect.left + rect.width / 2;
                 const barTop = rect.top + window.scrollY;
-                const numWords = 18;
-                for (let i = 0; i < numWords; i++) {
+                for (let i = 0; i < 18; i++) {
                     const spread = randomBetween(-rect.width / 2 + 20, rect.width / 2 - 20);
                     const word = createMoanWord(pickRandom(moanWords), barCenterX + spread, barTop + 6, 'falling');
                     word.style.opacity = 1;
@@ -1045,39 +1035,29 @@
                     setRemoveTimeout(word, 1800);
                 }
             }
-
+            // --- Invite Button Pulse & Scroll ---
             function scrollToInviteAndPulse() {
                 const btn = document.querySelector('.invite-btn');
                 if (btn) {
-                    // Check if the button is already in view
                     const rect = btn.getBoundingClientRect();
                     const inView = rect.top >= 0 && rect.bottom <= (window.innerHeight || document.documentElement.clientHeight);
                     if (!inView) {
-                        // Try scrollIntoView with smooth, fallback to window.scroll if needed
                         try {
                             btn.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
                         } catch (e) {
-                            // Fallback for older browsers
                             const y = rect.top + window.pageYOffset - (window.innerHeight / 2) + (rect.height / 2);
                             window.scroll({ top: y, behavior: 'smooth' });
                         }
                     }
-                    setTimeout(() => {
-                        startContinuousPulse(btn);
-                    }, 700);
+                    setTimeout(() => btn.classList.add('pulse-continuous'), 700);
                 }
             }
-
-            function startContinuousPulse(btn) {
-                btn.classList.add('pulse-continuous');
-            }
-
-            // --- Add CSS for continuous pulse and falling moan words ---
+            // --- Add CSS for continuous pulse and falling moan words (only once) ---
             (function addBurstStyles() {
                 if (document.getElementById('burst-style')) return;
                 const style = document.createElement('style');
                 style.id = 'burst-style';
-                style.innerHTML = `
+                style.textContent = `
 .moan-word.falling {
     z-index: 5000;
     font-size: 1.6em;
@@ -1100,6 +1080,8 @@
 `;
                 document.head.appendChild(style);
             })();
+            // --- Start the fun! ---
+            spawnBubbles();
         })();
     </script>
 </body>
