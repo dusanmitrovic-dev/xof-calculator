@@ -805,6 +805,9 @@
             position: relative;
             width: 112px;
             height: 112px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .profile-avatar {
@@ -816,7 +819,6 @@
             box-shadow: 0 4px 32px #ff4e8e44, 0 1.5px 12px 0 #fff2;
             object-fit: cover;
             position: relative;
-            right: 140px;
             z-index: 2;
             transition: box-shadow 0.2s;
         }
@@ -827,7 +829,7 @@
 
         .profile-status-dot {
             position: absolute;
-            right: 140px;
+            right: 12px;
             bottom: 8px;
             width: 17px;
             height: 17px;
@@ -902,7 +904,7 @@
             </ul>
         </div>
         <a href="https://discord.com/oauth2/authorize?client_id=1374205097411612682&scope=bot&permissions=8"
-            class="invite-btn">Invite EROSA to your Discord</a>
+            class="invite-btn" aria-label="Invite EROSA to your Discord">Invite EROSA to your Discord</a>
         <div class="footer">Made with <span class="heart">❤️</span> by EROSA Team</div>
     </div>
     <div class="bubble-progress-bar" id="bubbleProgressBar">
@@ -910,7 +912,7 @@
     </div>
     <script>
         // --- Sexy Soap Bubbles ---
-        const bubbleWords = ["POP ME", "BURST ME", "COME"]; // Deduplicated
+        const bubbleWords = ["POP ME", "BURST ME", "COME"];
         const moanWords = ["moan", "mmm", "mhmmm", "baby", "yes", "oh!", "more", "harder", "deeper"];
         const fireworkColors = ["#ff4e8e", "#e25555", "#fff", "#f7d6e6", "#b6ffcb", "#ffb347", "#b98cb3"];
         let popCount = 0;
@@ -921,6 +923,27 @@
 
         const randomBetween = (a, b) => a + Math.random() * (b - a);
         const pickRandom = arr => arr[Math.floor(Math.random() * arr.length)];
+
+        function playSound(file, volume = 0.7) {
+            const audio = new Audio(file);
+            audio.volume = volume;
+            audio.play();
+        }
+
+        function removeBubble(bubble) {
+            if (document.body.contains(bubble)) bubble.remove();
+            bubbles = bubbles.filter(b => b !== bubble);
+        }
+
+        function createMoanWord(text, x, y, extraClass = "") {
+            const moan = document.createElement('div');
+            moan.className = 'moan-word' + (extraClass ? ' ' + extraClass : '');
+            moan.textContent = text;
+            moan.style.left = `${x}px`;
+            moan.style.top = `${y}px`;
+            document.body.appendChild(moan);
+            return moan;
+        }
 
         function createBubble() {
             const bubble = document.createElement('div');
@@ -942,55 +965,21 @@
             bubbles.push(bubble);
             bubble.addEventListener('click', e => popBubble(bubble, e));
             const removeAfter = parseFloat(bubble.style.getPropertyValue('--duration')) * 1000 + 500;
-            setTimeout(() => {
-                if (document.body.contains(bubble)) {
-                    bubble.remove();
-                    bubbles = bubbles.filter(b => b !== bubble);
-                }
-            }, removeAfter);
+            setTimeout(() => removeBubble(bubble), removeAfter);
         }
 
-        // --- Audio playback helpers ---
-        function playPopSound() {
-            // There are 8 pop sounds, from pop-001.mp3 to pop-008.mp3
-            const popNum = String(Math.floor(Math.random() * 8) + 1).padStart(3, '0');
-            const audio = new Audio('assets/audios/pop/pop-' + popNum + '.mp3');
-            audio.volume = 0.7;
-            audio.play();
-        }
-
-        function playBurstSound() {
-            const audio = new Audio('assets/audios/burst.mp3');
-            audio.volume = 0.8;
-            audio.play();
-        }
-        
-        function playMwahSound() {
-            const audio = new Audio('assets/audios/mwah.mp3');
-            audio.volume = 0.8;
-            audio.play();
-        }
-        
         function popBubble(bubble, e) {
             popCount++;
             updateProgressBar();
             createFirework(e.clientX, e.clientY);
             showMoan(e.clientX, e.clientY);
-            playPopSound(); // Play pop sound
+            playSound('assets/audios/pop/pop-' + String(Math.floor(Math.random() * 8) + 1).padStart(3, '0') + '.mp3', 0.7);
             bubble.classList.add('popped');
-            setTimeout(() => {
-                if (document.body.contains(bubble)) bubble.remove();
-                bubbles = bubbles.filter(b => b !== bubble);
-            }, 400);
+            setTimeout(() => removeBubble(bubble), 400);
         }
 
         function showMoan(x, y) {
-            const moan = document.createElement('div');
-            moan.className = 'moan-word';
-            moan.textContent = pickRandom(moanWords);
-            moan.style.left = `${x + randomBetween(-30, 30)}px`;
-            moan.style.top = `${y + randomBetween(-30, 30)}px`;
-            document.body.appendChild(moan);
+            const moan = createMoanWord(pickRandom(moanWords), x + randomBetween(-30, 30), y + randomBetween(-30, 30));
             setTimeout(() => moan.classList.add('show'), 10);
             setTimeout(() => moan.classList.remove('show'), 900);
             setTimeout(() => moan.remove(), 1200);
@@ -1031,8 +1020,8 @@
             if (percent >= 100 && !barFilled) {
                 barFilled = true;
                 bar.classList.add('burst');
-                playBurstSound(); // Play burst sound
-                setTimeout(playMwahSound, 2000); // Play mwah after burst finishes
+                playSound('assets/audios/burst.mp3', 0.8);
+                setTimeout(() => playSound('assets/audios/mwah.mp3', 0.8), 2000);
                 burstMoanWords(bar);
                 setTimeout(() => bar.classList.remove('burst'), 13000);
                 setTimeout(() => {
@@ -1053,12 +1042,8 @@
             const barTop = rect.top + window.scrollY;
             const numWords = 18;
             for (let i = 0; i < numWords; i++) {
-                const word = document.createElement('div');
-                word.className = 'moan-word falling';
-                word.textContent = pickRandom(moanWords);
                 const spread = randomBetween(-rect.width / 2 + 20, rect.width / 2 - 20);
-                word.style.left = `${barCenterX + spread}px`;
-                word.style.top = `${barTop + 6}px`;
+                const word = createMoanWord(pickRandom(moanWords), barCenterX + spread, barTop + 6, 'falling');
                 word.style.opacity = 1;
                 word.style.pointerEvents = 'none';
                 word.animate([
@@ -1069,7 +1054,6 @@
                     easing: 'cubic-bezier(.77,0,.18,1)',
                     fill: 'forwards',
                 });
-                document.body.appendChild(word);
                 setTimeout(() => word.remove(), 1800);
             }
         }
