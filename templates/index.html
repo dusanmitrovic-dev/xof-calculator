@@ -600,6 +600,14 @@
         }
 
         .firework .fw-part {
+            box-shadow: 0 0 18px 6px #fff8, 0 0 8px 2px currentColor;
+            will-change: transform, opacity;
+            pointer-events: none;
+            mix-blend-mode: lighten;
+            transition: none;
+        }
+
+        .firework .fw-part {
             position: absolute;
             left: 0;
             top: 0;
@@ -985,12 +993,34 @@
                 fw.className = 'firework';
                 fw.style.left = `${x}px`;
                 fw.style.top = `${y}px`;
-                for (let i = 0; i < 28; i++) {
+                const numParticles = 22 + Math.floor(Math.random() * 8); // 22-29
+                for (let i = 0; i < numParticles; i++) {
                     const p = document.createElement('span');
                     p.className = 'fw-part';
-                    p.style.background = pickRandom(fireworkColors);
-                    p.style.transform = `rotate(${i * (360 / 28)}deg) translateY(-18px)`;
+                    // Randomize color, size, and distance
+                    const color = pickRandom(fireworkColors);
+                    const size = randomBetween(7, 18);
+                    const angle = (i * (360 / numParticles)) + randomBetween(-8, 8);
+                    const distance = randomBetween(60, 120);
+                    const duration = randomBetween(700, 1200);
+                    p.style.background = color;
+                    p.style.width = `${size}px`;
+                    p.style.height = `${size}px`;
+                    p.style.borderRadius = '50%';
+                    p.style.opacity = 0.92;
+                    p.style.position = 'absolute';
+                    p.style.left = '0px';
+                    p.style.top = '0px';
+                    p.animate([
+                        { transform: 'scale(0.5) translate(0,0)', opacity: 1 },
+                        { transform: `scale(1.2) translate(${Math.cos(angle * Math.PI / 180) * distance}px, ${Math.sin(angle * Math.PI / 180) * distance}px)`, opacity: 0 }
+                    ], {
+                        duration: duration,
+                        easing: 'cubic-bezier(.77,0,.18,1)',
+                        fill: 'forwards',
+                    });
                     fw.appendChild(p);
+                    setTimeout(() => p.remove(), duration + 100);
                 }
                 document.body.appendChild(fw);
                 setRemoveTimeout(fw, 1400);
