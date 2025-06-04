@@ -1025,6 +1025,7 @@
                 updateProgressBar();
                 showMoan(e.clientX, e.clientY);
                 playPopSound();
+                createFirework(e.clientX, e.clientY); // Firework at click location
                 bubble.classList.add('popped');
                 setTimeout(() => removeBubble(bubble), 400);
                 // Remove bubble after pop animation ends (snappier)
@@ -1045,11 +1046,24 @@
                 const p = document.createElement('span');
                 p.className = 'fw-part';
                 p.style.background = pickRandom(FIREWORK_COLORS);
-                p.style.transform = `rotate(${i * (360 / NUM_FIREWORK_PARTS)}deg) translateY(-18px)`;
+                // Calculate angle and random distance for explosion
+                const angle = (i * (360 / NUM_FIREWORK_PARTS)) + randomBetween(-8, 8); // add some spread
+                const rad = angle * Math.PI / 180;
+                const distance = randomBetween(60, 120); // px, explosion radius
+                const tx = Math.cos(rad) * distance;
+                const ty = Math.sin(rad) * distance;
+                p.animate([
+                    { transform: 'translate(0, 0) scale(0.2)', opacity: 1 },
+                    { transform: `translate(${tx}px, ${ty}px) scale(1.2)`, opacity: 0 }
+                ], {
+                    duration: 900,
+                    easing: 'cubic-bezier(.77,0,.18,1)',
+                    fill: 'forwards',
+                });
                 fw.appendChild(p);
             }
             document.body.appendChild(fw);
-            setTimeout(() => fw.remove(), 1400);
+            setTimeout(() => fw.remove(), 1000);
         }
         function burstMoanWords(bar) {
             const rect = bar.getBoundingClientRect();
