@@ -687,7 +687,7 @@
         }
 
         .sexy-bubble.popped {
-            animation: bubble-pop 0.4s cubic-bezier(.77, 0, .18, 1) forwards;
+            animation: bubble-pop 0.1s cubic-bezier(.77, 0, .18, 1) forwards;
             filter: blur(2px) brightness(2);
             pointer-events: none;
         }
@@ -961,9 +961,9 @@
         const BUBBLE_WORDS = ["POP ME", "BURST ME", "COME"];
         const MOAN_WORDS = ["moan", "mmm", "mhmmm", "baby", "yes", "oh!", "more", "harder", "deeper"];
         const FIREWORK_COLORS = ["#ff4e8e", "#e25555", "#fff", "#f7d6e6", "#b6ffcb", "#ffb347", "#b98cb3"];
-        let MAX_BUBBLES = 12;
+        let MAX_BUBBLES = 6;
         if (window.innerWidth < 600) {
-            MAX_BUBBLES = 6;
+            MAX_BUBBLES = 3;
         }
         const POPS_TO_FILL = 12;
         const NUM_FIREWORK_PARTS = 28;
@@ -1027,6 +1027,13 @@
                 playPopSound();
                 bubble.classList.add('popped');
                 setTimeout(() => removeBubble(bubble), 400);
+                // Remove bubble after pop animation ends (snappier)
+                // bubble.addEventListener('animationend', function handler(ev) {
+                //     if (ev.animationName === 'bubble-pop') {
+                //         removeBubble(bubble);
+                //         bubble.removeEventListener('animationend', handler);
+                //     }
+                // });
             }
         }
         function createFirework(x, y) {
@@ -1057,6 +1064,7 @@
                 word.style.top = `${barTop + 6}px`;
                 word.style.opacity = 1;
                 word.style.pointerEvents = 'none';
+                word.style.zIndex = 5000;
                 word.animate([
                     { transform: `translateY(0px) scale(1.1)`, opacity: 1 },
                     { transform: `translateY(${randomBetween(120, 220)}px) scale(1.25) rotate(${randomBetween(-18, 18)}deg)`, opacity: 0.1 }
@@ -1073,6 +1081,7 @@
             const moan = document.createElement('div');
             moan.className = 'moan-word';
             moan.textContent = pickRandom(MOAN_WORDS);
+            moan.style.zIndex = 9999;
             moan.style.left = `${x + randomBetween(-30, 30)}px`;
             moan.style.top = `${y + randomBetween(-30, 30)}px`;
             document.body.appendChild(moan);
