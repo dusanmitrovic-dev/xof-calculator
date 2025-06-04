@@ -888,6 +888,11 @@
     <div class="starfield" aria-hidden="true"></div>
     <!-- Star Effect End -->
     <script>
+        // Prevent browser from restoring scroll position on reload
+        if ('scrollRestoration' in history) {
+            history.scrollRestoration = 'manual';
+        }
+
         // --- Utility Functions ---
         const randomBetween = (a, b) => a + Math.random() * (b - a);
         const pickRandom = arr => arr[Math.floor(Math.random() * arr.length)];
@@ -1048,22 +1053,22 @@
             }
         }
         function scrollToInviteAndPulse() {
-            const btn = document.querySelector('.invite-btn');
-            if (btn) {
-                const rect = btn.getBoundingClientRect();
-                const inView = rect.top >= 0 && rect.bottom <= (window.innerHeight || document.documentElement.clientHeight);
-                if (!inView) {
-                    try {
-                        btn.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
-                    } catch (e) {
-                        const y = rect.top + window.pageYOffset - (window.innerHeight / 2) + (rect.height / 2);
-                        window.scroll({ top: y, behavior: 'smooth' });
-                    }
-                }
-                setTimeout(() => {
-                    startContinuousPulse(btn);
-                }, 700);
-            }
+            // const btn = document.querySelector('.invite-btn');
+            // if (btn) {
+            //     const rect = btn.getBoundingClientRect();
+            //     const inView = rect.top >= 0 && rect.bottom <= (window.innerHeight || document.documentElement.clientHeight);
+            //     if (!inView) {
+            //         try {
+            //             btn.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+            //         } catch (e) {
+            //             const y = rect.top + window.pageYOffset - (window.innerHeight / 2) + (rect.height / 2);
+            //             window.scroll({ top: y, behavior: 'smooth' });
+            //         }
+            //     }
+            //     setTimeout(() => {
+            //         startContinuousPulse(btn);
+            //     }, 700);
+            // }
         }
         function startContinuousPulse(btn) {
             btn.classList.add('pulse-continuous');
