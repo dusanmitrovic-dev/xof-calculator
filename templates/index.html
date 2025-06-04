@@ -972,7 +972,10 @@
             bubble.className = 'sexy-bubble bubble-spin';
             // Randomize spin direction
             bubble.style.setProperty('--spin-angle', pickRandom([12, -12]) + 'deg');
-            const size = randomBetween(44, 92);
+            let size = randomBetween(65, 110);
+            if (window.innerWidth < 600) {
+                size*=0.8;
+            }
             bubble.style.setProperty('--bubble-size', `${size}px`);
             bubble.style.left = `${randomBetween(10, 90)}vw`;
             bubble.style.bottom = `-80px`;
