@@ -904,6 +904,27 @@
                 margin-top: 4.15em;
             }
         }
+
+        /* Diagonal Falling Star Styles */
+        .diagonal-star {
+            position: fixed;
+            z-index: 3;
+            border-radius: 50%;
+            pointer-events: none;
+            filter: blur(1.5px) brightness(1.7) drop-shadow(0 0 12px #fff8);
+            will-change: transform, filter;
+            transition: filter 0.2s;
+        }
+
+        .diagonal-star-trail {
+            position: fixed;
+            z-index: 2;
+            border-radius: 50%;
+            pointer-events: none;
+            filter: blur(2.5px) brightness(1.2) drop-shadow(0 0 8px #ff4e8e88);
+            will-change: opacity, filter;
+            transition: opacity 0.5s linear;
+        }
     </style>
 </head>
 
@@ -1207,6 +1228,95 @@
             }
         });
         // Cleaned up: no need to check for .bubble-spin-right/left, only .sexy-bubble
+
+        // --- Diagonal Falling Stars with Glowing Trail (Random Speed, Fewer, Perf) ---
+        (function createDiagonalFallingStars() {
+            const STAR_COLORS = [
+                'rgba(255,255,255,0.95)',
+                'rgba(255,78,142,0.85)',
+                'rgba(182,255,203,0.85)',
+                'rgba(185,140,179,0.85)',
+                'rgba(255,179,71,0.85)'
+            ];
+            const TRAIL_LENGTH = 4; // even shorter trail for perf
+            const TRAIL_FADE = 0.22;
+            // 135deg, top right to bottom left: left decreases, top increases
+            const ANGLE = Math.PI * 3 / 4; 
+            const SPAWN_INTERVAL = 1700; // less frequent
+            const MAX_STARS = 3; // even fewer at a time
+            const starfield = document.querySelector('.starfield');
+            if (!starfield) return;
+            let activeStars = 0;
+            function spawnDiagonalStar() {
+                if (activeStars >= MAX_STARS) return;
+                activeStars++;
+                const star = document.createElement('div');
+                star.className = 'diagonal-star';
+                const size = Math.random() * 0.18 + 0.18;
+                star.style.width = `${size}em`;
+                star.style.height = `${size}em`;
+                star.style.background = pickRandom(STAR_COLORS);
+                star.style.boxShadow = `0 0 16px 4px #fff8, 0 0 32px 8px #ff4e8e44`;
+                // Start along top or right edge (top right corner bias)
+                let startX = window.innerWidth - Math.random() * window.innerWidth * 0.7;
+                let startY = -24;
+                if (Math.random() < 0.5) {
+                    // Right edge
+                    startX = window.innerWidth + 24;
+                    startY = Math.random() * window.innerHeight * 0.3;
+                }
+                star.style.left = `${startX}px`;
+                star.style.top = `${startY}px`;
+                starfield.appendChild(star);
+                // Animate
+                let trail = [];
+                let x = startX, y = startY;
+                // Random speed: slow (1.2), normal (2.5), fast (5.5) px/ms
+                const speedOptions = [5.5, 10.10, 15.15];
+                const velocity = pickRandom(speedOptions) * (Math.random() * 0.7 + 0.7);
+                let running = true;
+                function animate() {
+                    if (!running) return;
+                    x += Math.cos(ANGLE) * velocity; // left decreases
+                    y += Math.sin(ANGLE) * velocity; // top increases
+                    star.style.left = `${x}px`;
+                    star.style.top = `${y}px`;
+                    // Trail logic (no DOM leak)
+                    const trailDot = document.createElement('div');
+                    trailDot.className = 'diagonal-star-trail';
+                    trailDot.style.left = `${x}px`;
+                    trailDot.style.top = `${y}px`;
+                    trailDot.style.width = star.style.width;
+                    trailDot.style.height = star.style.height;
+                    trailDot.style.background = star.style.background;
+                    trailDot.style.opacity = 1;
+                    starfield.appendChild(trailDot);
+                    trail.push(trailDot);
+                    if (trail.length > TRAIL_LENGTH) {
+                        const faded = trail.shift();
+                        faded.style.transition = 'opacity 0.3s linear';
+                        faded.style.opacity = 0;
+                        setTimeout(() => faded.remove(), 350);
+                    }
+                    // Fade older trail
+                    for (let i = 0; i < trail.length; i++) {
+                        trail[i].style.opacity = (1 - (i + 1) * TRAIL_FADE).toFixed(2);
+                    }
+                    // Remove if out of bounds (bottom or left)
+                    if (x < -40 || y > window.innerHeight + 40) {
+                        star.remove();
+                        trail.forEach(dot => dot.remove());
+                        running = false;
+                        activeStars--;
+                        return;
+                    }
+                    requestAnimationFrame(animate);
+                }
+                animate();
+            }
+            setInterval(spawnDiagonalStar, SPAWN_INTERVAL);
+        })();
+        // --- End Diagonal Falling Stars ---
     </script>
 </body>
 
