@@ -38,7 +38,7 @@
             100% { background-position: 60% 30%, 30% 70%; }
         }
 
-        /* Consolidated bubble spin keyframes */
+        /* --- Bubble Spin Animation (Single Definition) --- */
         @keyframes bubble-spin {
             0% { transform: rotate(0deg) scale(1); }
             30% { transform: rotate(var(--spin-angle,12deg)) scale(1.04); }
@@ -46,9 +46,10 @@
             100% { transform: rotate(360deg) scale(1); }
         }
 
-        .bubble-spin { --spin-angle: 12deg; animation: bubble-spin var(--spin-speed,2.5s) linear infinite; }
-        .bubble-spin-right { --spin-angle: 12deg; animation: bubble-spin var(--spin-speed,2.5s) linear infinite; }
-        .bubble-spin-left { --spin-angle: -12deg; animation: bubble-spin var(--spin-speed,2.5s) linear infinite; }
+        .bubble-spin {
+            animation: bubble-spin var(--spin-speed,2.5s) linear infinite;
+        }
+        /* Use --spin-angle: 12deg or -12deg for direction */
 
         .main-container {
             background: rgba(30, 18, 38, 0.82);
@@ -465,28 +466,26 @@
             }
         }
 
+        /* --- Invite Button Pulse Animation (Consolidated) --- */
+        .invite-btn.pulse,
+        .invite-btn.pulse-continuous {
+            animation: btnpulse-strong 0.9s cubic-bezier(.77,0,.18,1) infinite, fadein 1.2s cubic-bezier(.77,0,.18,1) 1.2s both;
+            filter: brightness(1.3) saturate(1.5) drop-shadow(0 0 32px #ff4e8e);
+        }
+        @keyframes btnpulse-strong {
+            0% { filter: brightness(1.2) saturate(1.2) drop-shadow(0 0 16px #ff4e8e); transform: scale(1); }
+            40% { filter: brightness(1.5) saturate(1.5) drop-shadow(0 0 32px #ff4e8e); transform: scale(1.08); }
+            60% { filter: brightness(1.6) saturate(1.7) drop-shadow(0 0 40px #ff4e8e); transform: scale(1.13); }
+            100% { filter: brightness(1.2) saturate(1.2) drop-shadow(0 0 16px #ff4e8e); transform: scale(1); }
+        }
+
+        /* --- Bubble Wobble Animation (for dynamic assignment) --- */
         @keyframes bubble-wobble {
-
-            0%,
-            100% {
-                transform: translateX(0) scale(1);
-            }
-
-            20% {
-                transform: translateX(-8px) scale(1.03);
-            }
-
-            40% {
-                transform: translateX(8px) scale(0.97);
-            }
-
-            60% {
-                transform: translateX(-6px) scale(1.04);
-            }
-
-            80% {
-                transform: translateX(6px) scale(0.96);
-            }
+            0%, 100% { transform: translateX(0) scale(1); }
+            20% { transform: translateX(-8px) scale(1.03); }
+            40% { transform: translateX(8px) scale(0.97); }
+            60% { transform: translateX(-6px) scale(1.04); }
+            80% { transform: translateX(6px) scale(0.96); }
         }
 
         .sexy-bubble .bubble-text {
@@ -892,7 +891,6 @@
         // --- Utility Functions ---
         const randomBetween = (a, b) => a + Math.random() * (b - a);
         const pickRandom = arr => arr[Math.floor(Math.random() * arr.length)];
-        const SPIN_CLASSES = ['bubble-spin', 'bubble-spin-right', 'bubble-spin-left'];
         const BUBBLE_WORDS = ["POP ME", "BURST ME", "COME"];
         const MOAN_WORDS = ["moan", "mmm", "mhmmm", "baby", "yes", "oh!", "more", "harder", "deeper"];
         const FIREWORK_COLORS = ["#ff4e8e", "#e25555", "#fff", "#f7d6e6", "#b6ffcb", "#ffb347", "#b98cb3"];
@@ -906,8 +904,9 @@
 
         function createBubble() {
             const bubble = document.createElement('div');
-            const spinClass = pickRandom(SPIN_CLASSES);
-            bubble.className = 'sexy-bubble ' + spinClass;
+            bubble.className = 'sexy-bubble bubble-spin';
+            // Randomize spin direction
+            bubble.style.setProperty('--spin-angle', pickRandom([12, -12]) + 'deg');
             const size = randomBetween(44, 92);
             bubble.style.setProperty('--bubble-size', `${size}px`);
             bubble.style.left = `${randomBetween(10, 90)}vw`;
@@ -916,6 +915,7 @@
             const duration = randomBetween(6, 10);
             bubble.style.setProperty('--duration', `${duration}s`);
             bubble.style.setProperty('--spin-speed', `${randomBetween(1.5, 3.5)}s`);
+            // Only add bubble-wobble dynamically
             bubble.style.animation = `bubble-rise var(--duration, 8s) linear forwards, bubble-pulse 1.2s infinite, bubble-wobble ${randomBetween(2.2, 3.2)}s ease-in-out infinite`;
             bubble.innerHTML = `<span class="bubble-text">${pickRandom(BUBBLE_WORDS)}</span>`;
             document.body.appendChild(bubble);
@@ -1043,7 +1043,6 @@
                         inner.style.width = '0%';
                         popCount = 0;
                         barFilled = false;
-                        resetPulse();
                     }, 1200);
                 }, 1200);
             }
@@ -1069,10 +1068,7 @@
         function startContinuousPulse(btn) {
             btn.classList.add('pulse-continuous');
         }
-        function resetPulse() {
-            const btn = document.querySelector('.invite-btn');
-            if (btn) btn.classList.remove('pulse-continuous');
-        }
+        // Removed duplicate .pulse style logic, now handled by consolidated CSS
         // --- Add CSS for continuous pulse and falling moan words ---
         (function addBurstStyles() {
             const style = document.createElement('style');
@@ -1086,16 +1082,7 @@
         transition: none;
         animation: none;
     }
-    .invite-btn.pulse-continuous {
-        animation: btnpulse-strong 0.9s cubic-bezier(.77,0,.18,1) infinite, fadein 1.2s cubic-bezier(.77,0,.18,1) 1.2s both;
-        filter: brightness(1.3) saturate(1.5) drop-shadow(0 0 32px #ff4e8e);
-    }
-    @keyframes btnpulse-strong {
-        0% { filter: brightness(1.2) saturate(1.2) drop-shadow(0 0 16px #ff4e8e); transform: scale(1); }
-        40% { filter: brightness(1.5) saturate(1.5) drop-shadow(0 0 32px #ff4e8e); transform: scale(1.08); }
-        60% { filter: brightness(1.6) saturate(1.7) drop-shadow(0 0 40px #ff4e8e); transform: scale(1.13); }
-        100% { filter: brightness(1.2) saturate(1.2) drop-shadow(0 0 16px #ff4e8e); transform: scale(1); }
-    }
+    /* .invite-btn.pulse-continuous now handled in main CSS */
     `;
             document.head.appendChild(style);
         })();
@@ -1123,6 +1110,7 @@
                 popBubble(e.target, e);
             }
         });
+        // Cleaned up: no need to check for .bubble-spin-right/left, only .sexy-bubble
     </script>
 </body>
 
