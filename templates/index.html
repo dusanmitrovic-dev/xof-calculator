@@ -38,7 +38,7 @@
             100% { background-position: 60% 30%, 30% 70%; }
         }
 
-        /* Consolidate bubble spin keyframes */
+        /* Consolidated bubble spin keyframes */
         @keyframes bubble-spin {
             0% { transform: rotate(0deg) scale(1); }
             30% { transform: rotate(var(--spin-angle,12deg)) scale(1.04); }
@@ -465,42 +465,6 @@
             }
         }
 
-        @keyframes bubble-spin-right {
-            0% {
-                transform: rotate(0deg) scale(1);
-            }
-
-            30% {
-                transform: rotate(12deg) scale(1.04);
-            }
-
-            60% {
-                transform: rotate(-10deg) scale(1.08);
-            }
-
-            100% {
-                transform: rotate(360deg) scale(1);
-            }
-        }
-
-        @keyframes bubble-spin-left {
-            0% {
-                transform: rotate(0deg) scale(1);
-            }
-
-            30% {
-                transform: rotate(-12deg) scale(1.04);
-            }
-
-            60% {
-                transform: rotate(10deg) scale(1.08);
-            }
-
-            100% {
-                transform: rotate(-360deg) scale(1);
-            }
-        }
-
         @keyframes bubble-wobble {
 
             0%,
@@ -596,14 +560,6 @@
         /* --- Refactored Firework and Bubble Animations --- */
         .bubble-spin {
             animation: bubble-spin var(--spin-speed, 2.5s) linear infinite;
-        }
-
-        .bubble-spin-right {
-            animation: bubble-spin-right var(--spin-speed, 2.5s) linear infinite;
-        }
-
-        .bubble-spin-left {
-            animation: bubble-spin-left var(--spin-speed, 2.5s) linear infinite;
         }
 
         .firework {
@@ -950,23 +906,27 @@
 
         function createBubble() {
             const bubble = document.createElement('div');
-            bubble.className = 'sexy-bubble ' + pickRandom(SPIN_CLASSES);
+            const spinClass = pickRandom(SPIN_CLASSES);
+            bubble.className = 'sexy-bubble ' + spinClass;
             const size = randomBetween(44, 92);
             bubble.style.setProperty('--bubble-size', `${size}px`);
             bubble.style.left = `${randomBetween(10, 90)}vw`;
             bubble.style.bottom = `-80px`;
             bubble.style.setProperty('--rise', `${randomBetween(60, 90)}vh`);
-            bubble.style.setProperty('--duration', `${randomBetween(6, 10)}s`);
+            const duration = randomBetween(6, 10);
+            bubble.style.setProperty('--duration', `${duration}s`);
             bubble.style.setProperty('--spin-speed', `${randomBetween(1.5, 3.5)}s`);
             bubble.style.animation = `bubble-rise var(--duration, 8s) linear forwards, bubble-pulse 1.2s infinite, bubble-wobble ${randomBetween(2.2, 3.2)}s ease-in-out infinite`;
             bubble.innerHTML = `<span class="bubble-text">${pickRandom(BUBBLE_WORDS)}</span>`;
             document.body.appendChild(bubble);
             bubbles.push(bubble);
-            const removeAfter = parseFloat(bubble.style.getPropertyValue('--duration')) * 1000 + 500;
-            setTimeout(() => {
-                if (bubble.parentNode) bubble.remove();
-                bubbles = bubbles.filter(b => b !== bubble);
-            }, removeAfter);
+            const removeAfter = duration * 1000 + 500;
+            setTimeout(() => removeBubble(bubble), removeAfter);
+        }
+
+        function removeBubble(bubble) {
+            if (bubble.parentNode) bubble.remove();
+            bubbles = bubbles.filter(b => b !== bubble);
         }
 
         // --- Audio playback helpers ---
@@ -987,15 +947,14 @@
             audio.play();
         }
         function popBubble(bubble, e) {
-            popCount++;
-            updateProgressBar();
-            showMoan(e.clientX, e.clientY);
-            playPopSound();
-            bubble.classList.add('popped');
-            setTimeout(() => {
-                if (bubble.parentNode) bubble.remove();
-                bubbles = bubbles.filter(b => b !== bubble);
-            }, 400);
+            if (!bubble.classList.contains('popped')) {
+                popCount++;
+                updateProgressBar();
+                showMoan(e.clientX, e.clientY);
+                playPopSound();
+                bubble.classList.add('popped');
+                setTimeout(() => removeBubble(bubble), 400);
+            }
         }
         function createFirework(x, y) {
             const fw = document.createElement('div');
@@ -1084,6 +1043,7 @@
                         inner.style.width = '0%';
                         popCount = 0;
                         barFilled = false;
+                        resetPulse();
                     }, 1200);
                 }, 1200);
             }
@@ -1108,6 +1068,10 @@
         }
         function startContinuousPulse(btn) {
             btn.classList.add('pulse-continuous');
+        }
+        function resetPulse() {
+            const btn = document.querySelector('.invite-btn');
+            if (btn) btn.classList.remove('pulse-continuous');
         }
         // --- Add CSS for continuous pulse and falling moan words ---
         (function addBurstStyles() {
