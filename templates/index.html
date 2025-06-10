@@ -448,18 +448,18 @@
             width: var(--bubble-size);
             height: var(--bubble-size);
             border-radius: 50%;
-            background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.8), rgba(255, 78, 142, 0.4));
+            background: radial-gradient(circle at 30% 30%, #fff8 0%, #ff4e8e33 60%, #e2555533 100%);
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             z-index: 5;
             box-shadow: 0 0 25px rgba(255, 78, 142, 0.3),
-                        inset 0 0 20px rgba(255, 255, 255, 0.4);
+                inset 0 0 20px rgba(255, 255, 255, 0.4);
             user-select: none;
-            animation: bubble-rise var(--duration) linear forwards, 
-                       bubble-pulse 1.2s infinite, 
-                       bubble-wobble 2.5s ease-in-out infinite;
+            animation: bubble-rise var(--duration) linear forwards,
+                bubble-pulse 1.2s infinite,
+                bubble-wobble 2.5s ease-in-out infinite;
         }
 
         @keyframes bubble-spin {
@@ -532,7 +532,7 @@
             80% {
                 transform: translateX(6px) scale(0.96);
             }
-        } 
+        }
 
         .sexy-bubble .bubble-text {
             width: 100%;
@@ -1040,6 +1040,25 @@
                 left: auto;
                 font-size: 0.98em;
                 padding: 0.5em 0.7em;
+            }
+
+            .bubble-progress-bar {
+                position: fixed;
+                left: 50%;
+                top: 0;
+                transform: translateX(-50%);
+                width: 90vw;
+                max-width: 420px;
+                height: 14px;
+                background: rgba(255, 255, 255, 0.08);
+                border-radius: 8px;
+                box-shadow: 0 2px 12px #ff4e8e22;
+                z-index: 4000;
+                overflow: hidden;
+                margin-top: 12px;
+                border: 1.5px solid #ff4e8e33;
+                display: flex;
+                align-items: center;
             }
         }
     </style>
