@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>EROSA – Seduction, Systemized</title>
     <link rel="icon" type="image/png"
         href="https://cdn.discordapp.com/avatars/1374205097411612682/10be7ba66b741be7783d8abb5e998bd2.webp?size=480">
@@ -321,6 +321,7 @@
             letter-spacing: 0.18px;
             color: #ffe6f7;
             text-shadow: 0 2px 12px #ff4e8e33, 0 1px 0 #fff2;
+            line-height: 1.6;
         }
 
         .features-list li::before {
@@ -333,54 +334,15 @@
             filter: drop-shadow(0 1px 4px #ff4e8e44);
         }
 
+        /* Invite button: gradient, shadow, and hover for premium look */
         .invite-btn {
-            display: inline-block;
             background: linear-gradient(90deg, #ff4e8e 0%, #e25555 100%);
             color: #fff;
             font-weight: 800;
-            font-size: 1.18rem;
-            padding: 1.1em 2.6em;
             border: none;
             border-radius: 999px;
-            text-decoration: none;
             box-shadow: 0 4px 18px 0 rgba(255, 78, 142, 0.18);
             transition: background 0.2s, transform 0.2s, box-shadow 0.2s, filter 0.2s;
-            margin-bottom: 1.5em;
-            position: relative;
-            overflow: hidden;
-            animation: fadein 1.2s cubic-bezier(.77, 0, .18, 1) 1.2s both;
-        }
-
-        .invite-btn::after {
-            content: '';
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            width: 180%;
-            height: 180%;
-            background: radial-gradient(circle, #ff4e8e44 0%, transparent 80%);
-            transform: translate(-50%, -50%) scale(0.7);
-            opacity: 0.7;
-            z-index: 0;
-            pointer-events: none;
-            animation: btnpulse 2.2s infinite;
-        }
-
-        @keyframes btnpulse {
-            0% {
-                opacity: 0.7;
-                transform: translate(-50%, -50%) scale(0.7);
-            }
-
-            50% {
-                opacity: 0.3;
-                transform: translate(-50%, -50%) scale(1.1);
-            }
-
-            100% {
-                opacity: 0.7;
-                transform: translate(-50%, -50%) scale(0.7);
-            }
         }
 
         .invite-btn:hover {
@@ -436,644 +398,293 @@
             }
         }
 
+        @media (max-width: 900px) {
+            .main-container {
+                max-width: 98vw;
+                padding: 1.2rem 0.7rem 1.5rem 0.7rem;
+                border-radius: 1.5rem;
+                margin: 1.5rem auto 2rem auto;
+            }
+
+            .features {
+                max-width: 98vw;
+                font-size: 1em;
+                padding: 1.2em 0.8em;
+                border-radius: 1em;
+            }
+
+            .bubble-progress-bar {
+                max-width: 98vw;
+            }
+
+            .discord-profile-preview {
+                max-width: 98vw;
+            }
+        }
+
         @media (max-width: 600px) {
             .main-container {
-                padding: 1.2rem 0.5rem 1.5rem 0.5rem;
+                padding: 0.7rem 0.1rem 1.2rem 0.1rem;
                 max-width: 100vw;
+                border-radius: 1rem;
+                margin: 0.7rem auto 1.2rem auto;
+                box-shadow: 0 2px 16px 0 rgba(200, 0, 80, 0.10);
+            }
+
+            .features {
+                max-width: 100vw;
+                font-size: 1em;
+                padding: 1em 0.2em 1em 0.2em;
+                border-radius: 0.7em;
+                margin-bottom: 1.2em;
+                background: rgba(255, 78, 142, 0.10);
+                box-shadow: 0 2px 12px 0 #ff4e8e11;
+            }
+
+            .bubble-progress-bar {
+                max-width: 100vw;
+                height: 9px;
+                margin-top: 6px;
+                border-radius: 6px;
+            }
+
+            .discord-profile-preview {
+                max-width: 100vw;
+                border-radius: 1rem 1rem 0 0;
+                margin-bottom: 0.7rem;
+                background: none;
+            }
+
+            .profile-banner {
+                height: 38px;
+                border-radius: 1rem 1rem 0 0;
+                box-shadow: 0 1px 8px #ff4e8e22;
+            }
+
+            .profile-avatar-row {
+                margin-top: -24px;
+            }
+
+            .profile-avatar-wrapper {
+                width: 54px;
+                height: 54px;
+                left: 50%;
+                bottom: -27px;
+                transform: translateX(-50%);
+            }
+
+            .profile-avatar {
+                width: 54px;
+                height: 54px;
+                border-width: 2px;
+                right: 0;
+                top: 0;
+                box-shadow: 0 2px 8px #ff4e8e44;
+            }
+
+            .profile-status-dot {
+                width: 11px;
+                height: 11px;
+                left: 18px;
+                top: -2px;
+                transform: translateX(4px);
+                border-width: 1.5px;
+            }
+
+            .erosa-title {
+                margin-top: 1.1em;
+                font-size: 1.5em;
+                letter-spacing: 0.04em;
+            }
+
+            .erosa-title-small {
+                font-size: 1.1em;
+            }
+
+            .bend-impact {
+                font-size: 1.1em;
+                margin: 0.2em 0 0.5em 0;
+            }
+
+            .tagline {
+                font-size: 1.08em;
+                margin-bottom: 0.5em;
+            }
+
+            .about {
+                font-size: 1em;
+                margin-bottom: 1em;
+            }
+
+            .features-list li {
+                font-size: 1em;
+                margin-bottom: 0.5em;
+                padding-left: 1.1em;
+            }
+
+            .features-list li::before {
+                font-size: 1.2em;
+                left: -0.2em;
+            }
+
+            .invite-btn {
+                font-size: 1.08em;
+                padding: 1em 0;
+                width: 100%;
+                border-radius: 1.5em;
+                margin-bottom: 1.2em;
+                margin-top: 0.7em;
+                box-shadow: 0 2px 12px #ff4e8e33;
+            }
+
+            .footer {
+                font-size: 0.95em;
+                margin-top: 1.2em;
+                text-align: center;
             }
         }
 
-        .sexy-bubble {
-            position: fixed;
-            z-index: 3000;
-            width: var(--bubble-size, 68px);
-            height: var(--bubble-size, 68px);
-            min-width: 44px;
-            min-height: 44px;
-            background: radial-gradient(circle at 30% 30%, rgba(30, 18, 38, 0.92) 70%, rgba(255, 78, 142, 0.10) 100%);
-            border: 2.5px solid #ff4e8e;
-            box-shadow: 0 0 32px 0 #ff4e8e88, 0 2px 32px 0 rgba(255, 78, 142, 0.22), 0 0 0 2px rgba(255, 78, 142, 0.18) inset, 0 1.5px 12px 0 rgba(255, 255, 255, 0.12) inset;
-            opacity: 0.82;
-            border-radius: 50%;
-            cursor: pointer;
-            user-select: none;
-            font-family: 'Montserrat', 'Inter', sans-serif;
-            font-weight: 700;
-            font-size: 1.15em;
-            color: #ff4e8e;
-            text-shadow: 0 2px 12px #fff, 0 1px 0 #ff4e8e;
-            animation: bubble-rise var(--duration, 8s) linear forwards, bubble-pulse 1.2s infinite, bubble-spin var(--spin-speed, 2.5s) linear infinite;
-            transition: box-shadow 0.2s, filter 0.2s, transform 0.2s;
-            will-change: transform, filter;
-            pointer-events: auto;
-        }
-
-        @keyframes bubble-spin {
-            0% {
-                transform: rotate(0deg) scale(1);
+        @media (max-width: 400px) {
+            .main-container {
+                padding: 0.2rem 0.01rem 0.5rem 0.01rem;
+                border-radius: 0.6rem;
             }
 
-            30% {
-                transform: rotate(12deg) scale(1.04);
+            .features {
+                font-size: 0.92em;
+                border-radius: 0.4em;
             }
 
-            60% {
-                transform: rotate(-10deg) scale(1.08);
-            }
-
-            100% {
-                transform: rotate(360deg) scale(1);
+            .invite-btn {
+                font-size: 0.92em;
+                padding: 0.7em 0.2em;
             }
         }
 
-        /* --- Invite Button Pulse Animation (Consolidated) --- */
-        .invite-btn.pulse,
-        .invite-btn.pulse-continuous {
-            animation: btnpulse-strong 0.9s cubic-bezier(.77, 0, .18, 1) infinite, fadein 1.2s cubic-bezier(.77, 0, .18, 1) 1.2s both;
-            filter: brightness(1.3) saturate(1.5) drop-shadow(0 0 32px #ff4e8e);
-        }
-
-        @keyframes btnpulse-strong {
-            0% {
-                filter: brightness(1.2) saturate(1.2) drop-shadow(0 0 16px #ff4e8e);
-                transform: scale(1);
-            }
-
-            40% {
-                filter: brightness(1.5) saturate(1.5) drop-shadow(0 0 32px #ff4e8e);
-                transform: scale(1.08);
-            }
-
-            60% {
-                filter: brightness(1.6) saturate(1.7) drop-shadow(0 0 40px #ff4e8e);
-                transform: scale(1.13);
-            }
-
-            100% {
-                filter: brightness(1.2) saturate(1.2) drop-shadow(0 0 16px #ff4e8e);
-                transform: scale(1);
-            }
-        }
-
-        /* --- Bubble Wobble Animation (for dynamic assignment) --- */
-        @keyframes bubble-wobble {
-
-            0%,
-            100% {
-                transform: translateX(0) scale(1);
-            }
-
-            20% {
-                transform: translateX(-8px) scale(1.03);
-            }
-
-            40% {
-                transform: translateX(8px) scale(0.97);
-            }
-
-            60% {
-                transform: translateX(-6px) scale(1.04);
-            }
-
-            80% {
-                transform: translateX(6px) scale(0.96);
-            }
-        }
-
-        .sexy-bubble .bubble-text {
-            width: 100%;
-            text-align: center;
-            font-size: 1em;
-            font-weight: 700;
-            color: #ff4e8e;
-            text-shadow: 0 2px 12px #fff, 0 1px 0 #ff4e8e;
-            pointer-events: none;
-            user-select: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-        }
-
-        .erosa-title-small {
-            font-size: 1.6rem;
-            font-weight: 300;
-            margin-bottom: 0.15em;
-            letter-spacing: 2px;
-            font-family: 'Montserrat', 'Inter', 'Segoe UI', Arial, sans-serif;
-            font-variation-settings: 'wght' 700, 'ital' 0;
-            font-style: italic;
-            background: linear-gradient(90deg, #ff4e8e 0%, #fff 40%, #ff4e8e 100%);
-            filter: drop-shadow(0 0 24px #ff4e8e88);
-            background-size: 200% 100%;
-            background-position: 0 0;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            color: transparent;
-            animation: lightning-text 2.2s cubic-bezier(.77, 0, .18, 1) infinite;
-            filter: drop-shadow(0 2px 12px #ff4e8e44);
-            animation: fadein 1.2s cubic-bezier(.77, 0, .18, 1) 0.6s both, lightning-text 2.2s cubic-bezier(.77, 0, .18, 1) infinite;
-            text-shadow: 0 2px 24px #ff4e8e33, 0 1px 0 #fff1;
-            letter-spacing: 0.08em;
-            position: relative;
-            overflow: hidden;
-        }
-
-        @media (max-width: 600px) {
-            .sexy-bubble {
-                min-width: 32px;
-                min-height: 32px;
-            }
-        }
-
-        /* Progress Bar */
-        .bubble-progress-bar {
-            position: fixed;
-            left: 50%;
-            top: 0;
-            transform: translateX(-50%);
-            width: 90vw;
-            max-width: 420px;
-            height: 14px;
-            background: rgba(255, 255, 255, 0.08);
-            border-radius: 8px;
-            box-shadow: 0 2px 12px #ff4e8e22;
-            z-index: 4000;
-            overflow: hidden;
-            margin-top: 12px;
-            border: 1.5px solid #ff4e8e33;
-            display: flex;
-            align-items: center;
-        }
-
-        .bubble-progress-bar-inner {
-            height: 100%;
-            background: linear-gradient(90deg, #ff4e8e 0%, #e25555 100%);
-            border-radius: 8px;
-            box-shadow: 0 2px 12px #ff4e8e44;
-            transition: width 0.35s cubic-bezier(.77, 0, .18, 1);
-        }
-
-        .bubble-progress-bar.burst {
-            animation: bar-burst 0.7s cubic-bezier(.77, 0, .18, 1);
-        }
-
-        @keyframes bar-burst {
-            0% {
-                filter: brightness(1.2) drop-shadow(0 0 16px #ff4e8e);
-            }
-
-            60% {
-                filter: brightness(2.2) drop-shadow(0 0 32px #fff);
-            }
-
-            100% {
-                filter: none;
-            }
-        }
-
-        /* --- Refactored Firework and Bubble Animations --- */
-        .bubble-spin {
-            animation: bubble-spin var(--spin-speed, 2.5s) linear infinite;
-        }
-
-        .firework {
-            position: fixed;
-            z-index: 120;
-            pointer-events: none;
-            left: 0;
-            top: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .firework .fw-part {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 10px;
-            height: 4px;
-            border-radius: 2px;
-            opacity: 0.85;
-            animation: fw-pop 0.8s cubic-bezier(.77, 0, .18, 1) forwards;
-        }
-
-        @keyframes fw-pop {
-            0% {
-                transform: scale(0.2) translateY(0);
-                opacity: 1;
-            }
-
-            60% {
-                opacity: 1;
-            }
-
-            100% {
-                transform: scale(2.2) translateY(-120px);
-                opacity: 0;
-            }
-        }
-
-        .invite-btn.pulse {
-            animation: btnpulse 0.7s infinite, fadein 1.2s cubic-bezier(.77, 0, .18, 1) 1.2s both;
-            filter: brightness(1.2) saturate(1.3) drop-shadow(0 0 16px #ff4e8e);
-        }
-
-        @keyframes bubble-rise {
-            0% {
-                bottom: -80px;
-                opacity: 0.7;
-            }
-
-            10% {
-                opacity: 1;
-            }
-
-            90% {
-                opacity: 1;
-            }
-
-            100% {
-                bottom: var(--rise, 90vh);
-                opacity: 0;
-            }
-        }
-
-        @keyframes bubble-pulse {
-
-            0%,
-            100% {
-                filter: brightness(1.1) saturate(1.2) drop-shadow(0 2px 16px #ff4e8e44);
-            }
-
-            50% {
-                filter: brightness(1.3) saturate(1.5) drop-shadow(0 4px 32px #ff4e8e99) blur(1px);
-            }
-        }
-
-        .sexy-bubble.popped {
-            animation: bubble-pop 0.1s cubic-bezier(.77, 0, .18, 1) forwards;
-            filter: blur(2px) brightness(2);
-            pointer-events: none;
-        }
-
-        @keyframes bubble-pop {
-            0% {
-                transform: scale(1.1);
-                opacity: 1;
-            }
-
-            60% {
-                transform: scale(1.25) rotate(8deg);
-                opacity: 0.7;
-            }
-
-            100% {
-                transform: scale(0.7) rotate(-12deg);
-                opacity: 0;
-            }
-        }
-
-        .moan-word {
-            position: fixed;
-            z-index: 100;
-            font-size: 1.5em;
-            font-family: 'Montserrat', 'Inter', sans-serif;
-            font-weight: 900;
-            color: #ff4e8e;
-            pointer-events: none;
-            opacity: 0;
-            transform: scale(0.7) rotate(-8deg);
-            text-shadow: 0 2px 24px #ff4e8e99, 0 1px 0 #fff8;
-            transition: opacity 0.2s, transform 0.2s;
-            filter: blur(1px) brightness(1.2);
-        }
-
-        .moan-word.show {
-            opacity: 1;
-            transform: scale(1.18) rotate(2deg);
-            filter: blur(0) brightness(1.5);
-        }
-
-        .discord-profile-preview {
-            width: 100%;
-            max-width: 420px;
-            margin: 0 auto 1.2rem auto;
-            position: relative;
-            border-top-left-radius: 2.5rem;
-            border-top-right-radius: 2.5rem;
-            overflow: visible;
-            z-index: 999;
-        }
-
-        .profile-banner {
-            width: 100%;
-            height: 120px;
-            /* background: #23272a; */
-            border-top-left-radius: 2.5rem;
-            border-top-right-radius: 2.5rem;
-            position: relative;
-            box-shadow: 0 2px 24px #ff4e8e22;
-            animation: bannerPop 1.1s cubic-bezier(.77, 0, .18, 1) 0.2s both;
-        }
-
-        .profile-avatar-row {
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            position: static;
-            margin-top: 0;
-            z-index: 4;
-        }
-
-        .profile-avatar-wrapper {
-            position: absolute;
-            left: 50%;
-            bottom: -56px;
-            transform: translateX(-50%);
-            width: 112px;
-            height: 112px;
-            z-index: 5;
-        }
-
-        .profile-avatar {
-            width: 112px;
-            height: 112px;
-            border-radius: 50%;
-            border: 6px solid #23272a;
-            background: #23272a;
-            box-shadow: 0 4px 32px #ff4e8e44, 0 1.5px 12px 0 #fff2;
-            object-fit: cover;
-            position: relative;
-            left: 133;
-            top: 0;
-            transform: none;
-            z-index: 2;
-            transition: box-shadow 0.2s;
-        }
-
-        .profile-avatar-wrapper:hover .profile-avatar {
-            box-shadow: 0 8px 40px #ff4e8e88, 0 2px 16px #fff4;
-        }
-
-        .profile-status-dot {
-            position: absolute;
-            left: 50%;
-            bottom: 12px;
-            transform: translateX(30px);
-            width: 17px;
-            height: 17px;
-            background: linear-gradient(135deg, #27ff60 0%, #1ed760 100%);
-            border: 2px solid #23272a;
-            border-radius: 50%;
-            box-shadow: 0 0 16px 4px #27ff60cc;
-            z-index: 6;
-            animation: pulse 1.2s infinite;
-        }
-
-
-
-        /* Starfield Effect */
+        /* Starfield: always subtle, never above content */
         .starfield {
+            pointer-events: none;
+            z-index: 0 !important;
+            opacity: 0.5;
             position: fixed;
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
-            pointer-events: none;
-            z-index: 1;
             overflow: hidden;
         }
 
         .star {
             position: absolute;
-            background: rgba(255, 255, 255, 0.8);
             border-radius: 50%;
-            filter: blur(2px);
-            animation: twinkle 2s infinite;
-        }
-
-        .profile-avatar {
-            right: 134px;
-            top: 17px;
-        }
-
-        @keyframes twinkle {
-            0% {
-                transform: scale(1);
-                opacity: 0.8;
-            }
-
-            50% {
-                transform: scale(1.2);
-                opacity: 1;
-            }
-
-            100% {
-                transform: scale(1);
-                opacity: 0.8;
-            }
-        }
-
-        /* Accessibility improvements for images */
-        .profile-banner img,
-        .profile-avatar {
-            outline: none;
-        }
-
-        .profile-status-dot {
-            width: 15%;
-            height: 15%;
-            position: relative;
-            display: block;
-            left: -79px;
-            top: -21px;
-        }
-
-        .erosa-title {
-            margin-top: 2.15em;
-        }
-
-        @media (max-width: 600px) {
-            .discord-profile-preview {
-                max-width: 100vw;
-            }
-
-            .profile-banner {
-                height: 80px;
-            }
-
-            .profile-avatar-wrapper {
-                width: 72px;
-                height: 72px;
-            }
-
-            .profile-avatar {
-                width: 110px;
-                height: 110px;
-                border-width: 4px;
-                right: 25px;
-                top: 34px;
-            }
-
-            .profile-status-dot {
-                width: 16px;
-                height: 16px;
-                left: 44px;
-                top: -4px;
-                transform: translateX(18px);
-                border-width: 2.5px;
-            }
-
-            .erosa-title {
-                margin-top: 4.15em;
-            }
-        }
-
-        /* Diagonal Falling Star Styles */
-        .diagonal-star {
-            position: fixed;
-            z-index: 3;
-            border-radius: 50%;
+            background: linear-gradient(135deg, #fff 60%, #ff4e8e 100%);
+            box-shadow: 0 0 8px 2px #fff8, 0 0 16px 4px #ff4e8e33;
             pointer-events: none;
-            filter: blur(1.5px) brightness(1.7) drop-shadow(0 0 12px #fff8);
-            will-change: transform, filter;
-            transition: filter 0.2s;
+            transition: opacity 0.3s;
+        }
+
+        .diagonal-star {
+            position: absolute;
+            border-radius: 50%;
+            box-shadow: 0 0 16px 4px #fff8, 0 0 32px 8px #ff4e8e44;
+            pointer-events: none;
+            z-index: 1;
         }
 
         .diagonal-star-trail {
-            position: fixed;
-            z-index: 2;
+            position: absolute;
             border-radius: 50%;
             pointer-events: none;
-            filter: blur(2.5px) brightness(1.2) drop-shadow(0 0 8px #ff4e8e88);
-            will-change: opacity, filter;
-            transition: opacity 0.5s linear;
+            z-index: 0;
+            filter: blur(1.5px);
         }
 
-        /* --- Low Performance Toggle Styling --- */
-        #lowPerfToggleContainer {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            z-index: 9999;
-            background: rgba(30, 18, 38, 0.92);
-            border-radius: 1em;
-            padding: 0.7em 1.2em;
-            /* box-shadow: 0 2px 12px #ff4e8e44; */
-            font-size: 1em;
-            font-weight: 700;
-            color: #ff4e8e;
-            user-select: none;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 0.5em;
+        /* Invite button: continuous pulse for call-to-action */
+        .pulse-continuous {
+            animation: pulse-continuous 1.2s infinite cubic-bezier(.77, 0, .18, 1);
         }
 
-        #lowPerfToggleContainer label {
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 0.5em;
-        }
-
-        #lowPerfToggle {
-            appearance: none;
-            width: 2.4em;
-            height: 1.3em;
-            background: #1e1226;
-            border: 2px solid #ff4e8e;
-            border-radius: 1em;
-            position: relative;
-            outline: none;
-            cursor: pointer;
-            transition: background 0.2s, border-color 0.2s;
-            margin-right: 0.7em;
-            box-shadow: 0 1px 6px #ff4e8e22;
-            display: inline-block;
-        }
-
-        #lowPerfToggle:before {
-            content: '';
-            position: absolute;
-            left: 0em;
-            top: 0em;
-            width: 0.95em;
-            height: 0.95em;
-            background: #fff;
-            border-radius: 50%;
-            box-shadow: 0 1px 6px #ff4e8e33;
-            transition: left 0.22s cubic-bezier(.77, 0, .18, 1), background 0.2s;
-        }
-
-        #lowPerfToggle:checked {
-            background: linear-gradient(90deg, #ff4e8e 0%, #e25555 100%);
-            border-color: #e25555;
-        }
-
-        #lowPerfToggle:checked:before {
-            left: 1.22em;
-            background: #fff;
-        }
-
-        #lowPerfToggle:focus {
-            box-shadow: 0 0 0 2px #ff4e8e88;
-        }
-
-        /* Optional: subtle hover effect */
-        #lowPerfToggle:hover {
-            border-color: #fff;
-        }
-
-        .bend-impact {
-            display: block;
-            text-align: center;
-            font-size: 2.6em;
-            font-weight: 700;
-            font-style: italic;
-            letter-spacing: 0.06em;
-            margin: 0.5em 0 0.7em 0;
-            background: linear-gradient(90deg, #ff4e8e 0%, #e25555 60%, #fff 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            color: transparent;
-            text-shadow: 0 4px 32px #ff4e8e88, 0 1px 0 #fff2;
-            animation: fadein 1.2s cubic-bezier(.77, 0, .18, 1) 1.1s both, lightning-text 2.2s cubic-bezier(.77, 0, .18, 1) infinite;
-            filter: drop-shadow(0 2px 24px #ff4e8e44);
-            position: relative;
-            z-index: 2;
-        }
-
-        @media (max-width: 600px) {
-            #lowPerfToggleContainer {
-                top: auto;
-                bottom: 10px;
-                right: 10px;
-                left: auto;
-                font-size: 0.98em;
-                padding: 0.5em 0.7em;
+        @keyframes pulse-continuous {
+            0%,
+            100% {
+                filter: brightness(1.08) saturate(1.2) drop-shadow(0 0 12px #ff4e8e88);
             }
+
+            50% {
+                filter: brightness(1.18) saturate(1.4) drop-shadow(0 0 32px #ff4e8e);
+            }
+        }
+
+        /* Accessibility: focus style for invite button */
+        .invite-btn:focus {
+            outline: 3px solid #ff4e8e;
+            outline-offset: 2px;
+            box-shadow: 0 0 0 4px #ff4e8e44, 0 8px 32px 0 rgba(255, 78, 142, 0.28);
+        }
+
+        .skip-link {
+            position: absolute;
+            left: -999px;
+            top: auto;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            z-index: 10000;
+            background: #ff4e8e;
+            color: #fff;
+            padding: 0.7em 1.2em;
+            border-radius: 1em;
+            font-weight: 700;
+            font-size: 1em;
+            transition: left 0.2s;
+        }
+
+        .skip-link:focus {
+            left: 10px;
+            top: 10px;
+            width: auto;
+            height: auto;
+            outline: 3px solid #fff;
+            box-shadow: 0 0 0 4px #ff4e8e;
+            background: #18131d;
+            color: #ff4e8e;
+        }
+
+        .main-container:focus {
+            outline: 3px solid #ff4e8e;
+            outline-offset: 4px;
+        }
+
+        .visually-hidden {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
         }
     </style>
 </head>
 
 <body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
     <div class="bg-glow" aria-hidden="true"></div>
-    <div class="main-container">
+    <main id="main-content" class="main-container" tabindex="0">
         <!-- Discord Profile Preview Start -->
-        <div class="discord-profile-preview">
+        <div class="discord-profile-preview" aria-label="EROSA Discord profile preview">
+            <span class="visually-hidden" lang="en">EROSA Discord profile preview</span>
             <div class="profile-banner">
                 <img src="https://cdn.discordapp.com/banners/1374205097411612682/3d2a57d416d3ea267203cd6daecce248.png?size=2048"
-                    alt="Discord profile banner for EROSA bot" class="wide-logo" loading="lazy" />
+                    alt="Discord profile banner for EROSA bot" class="wide-logo" loading="lazy" decoding="async" aria-hidden="true" />
             </div>
             <div class="profile-avatar-row">
                 <div class="profile-avatar-wrapper">
                     <img src="https://cdn.discordapp.com/avatars/1374205097411612682/10be7ba66b741be7783d8abb5e998bd2.webp?size=480"
-                        alt="Discord avatar for EROSA bot" class="profile-avatar" loading="lazy" />
-                    <span class="profile-status-dot" aria-label="Online"></span>
+                        alt="Discord avatar for EROSA bot" class="profile-avatar" loading="lazy" decoding="async" aria-hidden="true" />
+                    <span class="profile-status-dot" role="img" aria-label="Online status: online"></span>
                 </div>
             </div>
         </div>
@@ -1085,7 +696,7 @@
         <div class="about"><span class="erosa-title-small">EROSA</span> turns every message into momentum, every simp
             into a
             systemized transaction.</div>
-        <div class="features">
+        <section class="features">
             <div><strong>Behind its sleek, dripping-heart interface lies a beast:</strong></div>
             <ul class="features-list">
                 <li>Track every shift, click, moan, and message.</li>
@@ -1093,12 +704,12 @@
                 <li>Lightning-fast, ultra-secure, always online.</li>
                 <li>Designed to seduce — built to dominate.</li>
             </ul>
-        </div>
+        </section>
         <a href="https://discord.com/oauth2/authorize?client_id=1374205097411612682&scope=bot&permissions=8"
-            class="invite-btn">Invite <span class="erosa-title">EROSA</span> to your Discord</a>
-        <div class="footer">Made with <span class="heart">❤️</span> by <span class="erosa-title-small">EROSA</span> Team
+            class="invite-btn" aria-label="Invite EROSA bot to your Discord server" rel="noopener noreferrer" aria-current="page">Invite <span class="erosa-title">EROSA</span> to your Discord</a>
+        <div class="footer" role="status" aria-live="polite" tabindex="0">Made with <span class="heart">❤️</span> by <span class="erosa-title-small">EROSA</span> Team
         </div>
-    </div>
+    </main>
     <div class="bubble-progress-bar" id="bubbleProgressBar" aria-label="Bubble progress bar">
         <div class="bubble-progress-bar-inner" id="bubbleProgressBarInner"></div>
     </div>
@@ -1120,7 +731,6 @@
 
         // --- Low Performance Mode Detection & Toggle ---
         function detectLowPerf() {
-            // Heuristic: low RAM, few cores, or old Android/iOS
             const mem = navigator.deviceMemory || 0;
             const cores = navigator.hardwareConcurrency || 0;
             const ua = navigator.userAgent;
@@ -1134,11 +744,9 @@
             localStorage.setItem('lowPerfMode', enabled ? '1' : '0');
             window.LOW_PERF_MODE = !!enabled;
             document.getElementById('lowPerfToggle').checked = !!enabled;
-            // Reload to apply changes
             location.reload();
         }
 
-        // On load, set mode from storage or auto-detect
         (function () {
             let stored = localStorage.getItem('lowPerfMode');
             if (stored === null) {
@@ -1158,33 +766,124 @@
             });
         })();
 
-        if (!window.LOW_PERF_MODE) {
+        // --- Feature Functions (real or ultra-lightweight for low perf mode) ---
+        const Features = (function() {
+            if (window.LOW_PERF_MODE) {
+                // --- Ultra-lightweight static starfield ---
+                document.addEventListener('DOMContentLoaded', function () {
+                    const starfield = document.querySelector('.starfield');
+                    if (!starfield) return;
+                    // Remove any animation from .star via style
+                    const style = document.createElement('style');
+                    style.innerHTML = `.star { animation: none !important; }`;
+                    document.head.appendChild(style);
+                    // Render a few static stars
+                    for (let i = 0; i < 18; i++) {
+                        const star = document.createElement('div');
+                        star.className = 'star';
+                        const size = Math.random() * 0.18 + 0.12;
+                        star.style.width = `${size}em`;
+                        star.style.height = `${size}em`;
+                        star.style.left = `${Math.random() * 100}%`;
+                        star.style.top = `${Math.random() * 100}%`;
+                        star.style.opacity = (Math.random() * 0.5 + 0.3).toFixed(2);
+                        starfield.appendChild(star);
+                    }
+                });
+                // --- No-op for all heavy features ---
+                const noop = function(){};
+                // --- Progress bar: only fill, no burst, no moan, no scroll ---
+                let popCount = 0;
+                const POPS_TO_FILL = 8;
+                function updateProgressBar() {
+                    const bar = document.getElementById('bubbleProgressBar');
+                    const inner = document.getElementById('bubbleProgressBarInner');
+                    if (!bar || !inner) return;
+                    bar.style.display = 'flex';
+                    let percent = Math.min(popCount / POPS_TO_FILL, 1) * 100;
+                    inner.style.width = percent + '%';
+                }
+                // --- Bubble pop: just increment progress bar ---
+                document.body.addEventListener('click', function (e) {
+                    const bubble = e.target.closest('.sexy-bubble');
+                    if (bubble && !bubble.classList.contains('popped')) {
+                        popCount++;
+                        updateProgressBar();
+                        bubble.classList.add('popped');
+                        setTimeout(() => { if (bubble.parentNode) bubble.remove(); }, 300);
+                    }
+                });
+                // --- No bubble spawn, no fireworks, no moan, no diagonal stars ---
+                return {
+                    createBubble: noop,
+                    removeBubble: noop,
+                    playSound: noop,
+                    popBubble: noop,
+                    createFirework: noop,
+                    burstMoanWords: noop,
+                    showMoan: noop,
+                    spawnBubbles: noop,
+                    updateProgressBar,
+                    scrollToInviteAndPulse: noop,
+                    startContinuousPulse: noop
+                };
+            }
+            // --- Config Object for Constants ---
+            const CONFIG = {
+                BUBBLE_WORDS: ["POP ME", "BURST ME", "COME"],
+                MOAN_WORDS: ["moan", "mmm", "mhmmm", "baby", "yes", "oh!", "more", "harder", "deeper"],
+                FIREWORK_COLORS: ["#ff4e8e", "#e25555", "#fff", "#f7d6e6", "#b6ffcb", "#ffb347", "#b98cb3"],
+                MAX_BUBBLES: window.innerWidth < 600 ? 3 : 6,
+                POPS_TO_FILL: 12,
+                NUM_FIREWORK_PARTS: 28,
+                NUM_BURST_MOAN_WORDS: 18,
+                STAR_COUNT: 64,
+                DIAGONAL_STAR_COLORS: [
+                    'rgba(255,255,255,0.95)',
+                    'rgba(255,78,142,0.85)',
+                    'rgba(182,255,203,0.85)',
+                    'rgba(185,140,179,0.85)',
+                    'rgba(255,179,71,0.85)'
+                ],
+                DIAGONAL_TRAIL_LENGTH: 4,
+                DIAGONAL_TRAIL_FADE: 0.22,
+                DIAGONAL_SPAWN_INTERVAL: 1700,
+                DIAGONAL_MAX_STARS: 3
+            };
             // --- Utility Functions ---
             const randomBetween = (a, b) => a + Math.random() * (b - a);
             const pickRandom = arr => arr[Math.floor(Math.random() * arr.length)];
-            const BUBBLE_WORDS = ["POP ME", "BURST ME", "COME"];
-            const MOAN_WORDS = ["moan", "mmm", "mhmmm", "baby", "yes", "oh!", "more", "harder", "deeper"];
-            const FIREWORK_COLORS = ["#ff4e8e", "#e25555", "#fff", "#f7d6e6", "#b6ffcb", "#ffb347", "#b98cb3"];
-            let MAX_BUBBLES = 6;
-            if (window.innerWidth < 600) {
-                MAX_BUBBLES = 3;
+            // --- Unified Sound Function ---
+            function playSound(type) {
+                let src = '';
+                let volume = 0.7;
+                if (type === 'pop') {
+                    const popNum = String(Math.floor(Math.random() * 8) + 1).padStart(3, '0');
+                    src = 'assets/audios/pop/pop-' + popNum + '.mp3';
+                } else if (type === 'burst') {
+                    src = 'assets/audios/burst.mp3';
+                    volume = 0.8;
+                } else if (type === 'mwah') {
+                    src = 'assets/audios/mwah.mp3';
+                    volume = 0.8;
+                }
+                if (src) {
+                    const audio = new Audio(src);
+                    audio.volume = volume;
+                    audio.play();
+                }
             }
-            const POPS_TO_FILL = 12;
-            const NUM_FIREWORK_PARTS = 28;
-            const NUM_BURST_MOAN_WORDS = 18;
+            // --- Bubble Logic ---
             let popCount = 0;
             let bubbles = [];
             let barFilled = false;
-
+            let bubbleSpawnTimeout;
             function createBubble() {
                 const bubble = document.createElement('div');
                 bubble.className = 'sexy-bubble bubble-spin';
-                // Randomize spin direction
                 bubble.style.setProperty('--spin-angle', pickRandom([12, -12]) + 'deg');
                 let size = randomBetween(65, 110);
-                if (window.innerWidth < 600) {
-                    size *= 0.8;
-                }
+                if (window.innerWidth < 600) size *= 0.8;
                 bubble.style.setProperty('--bubble-size', `${size}px`);
                 bubble.style.left = `${randomBetween(10, 90)}vw`;
                 bubble.style.bottom = `-80px`;
@@ -1192,64 +891,57 @@
                 const duration = randomBetween(6, 10);
                 bubble.style.setProperty('--duration', `${duration}s`);
                 bubble.style.setProperty('--spin-speed', `${randomBetween(1.5, 3.5)}s`);
-                // Only add bubble-wobble dynamically
                 bubble.style.animation = `bubble-rise var(--duration, 8s) linear forwards, bubble-pulse 1.2s infinite, bubble-wobble ${randomBetween(2.2, 3.2)}s ease-in-out infinite`;
-                bubble.innerHTML = `<span class="bubble-text">${pickRandom(BUBBLE_WORDS)}</span>`;
+                bubble.innerHTML = `<span class="bubble-text">${pickRandom(CONFIG.BUBBLE_WORDS)}</span>`;
                 document.body.appendChild(bubble);
                 bubbles.push(bubble);
-                const removeAfter = duration * 1000 + 500;
-                setTimeout(() => removeBubble(bubble), removeAfter);
+                setTimeout(() => removeBubble(bubble), duration * 1000 + 500);
             }
-
             function removeBubble(bubble) {
                 if (bubble.parentNode) bubble.remove();
                 bubbles = bubbles.filter(b => b !== bubble);
             }
-
-            function playPopSound() {
-                const popNum = String(Math.floor(Math.random() * 8) + 1).padStart(3, '0');
-                const audio = new Audio('assets/audios/pop/pop-' + popNum + '.mp3');
-                audio.volume = 0.7;
-                audio.play();
+            // --- Throttled Bubble Spawning ---
+            function spawnBubbles() {
+                if (document.hidden) {
+                    bubbleSpawnTimeout = setTimeout(spawnBubbles, 1000);
+                    return;
+                }
+                while (bubbles.length < CONFIG.MAX_BUBBLES) {
+                    createBubble();
+                }
+                bubbleSpawnTimeout = setTimeout(spawnBubbles, 400);
             }
-
-            function playBurstSound() {
-                const audio = new Audio('assets/audios/burst.mp3');
-                audio.volume = 0.8;
-                audio.play();
-            }
-
-            function playMwahSound() {
-                const audio = new Audio('assets/audios/mwah.mp3');
-                audio.volume = 0.8;
-                audio.play();
-            }
-
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden) spawnBubbles();
+                else if (bubbleSpawnTimeout) clearTimeout(bubbleSpawnTimeout);
+            });
+            spawnBubbles();
+            // --- Bubble Pop ---
             function popBubble(bubble, e) {
                 if (!bubble.classList.contains('popped')) {
                     popCount++;
                     updateProgressBar();
                     showMoan(e.clientX, e.clientY);
-                    playPopSound();
-                    createFirework(e.clientX, e.clientY); // Firework at click location
+                    playSound('pop');
+                    createFirework(e.clientX, e.clientY);
                     bubble.classList.add('popped');
                     setTimeout(() => removeBubble(bubble), 400);
                 }
             }
-
+            // --- Firework ---
             function createFirework(x, y) {
                 const fw = document.createElement('div');
                 fw.className = 'firework';
                 fw.style.left = `${x}px`;
                 fw.style.top = `${y}px`;
-                for (let i = 0; i < NUM_FIREWORK_PARTS; i++) {
+                for (let i = 0; i < CONFIG.NUM_FIREWORK_PARTS; i++) {
                     const p = document.createElement('span');
                     p.className = 'fw-part';
-                    p.style.background = pickRandom(FIREWORK_COLORS);
-                    // Calculate angle and random distance for explosion
-                    const angle = (i * (360 / NUM_FIREWORK_PARTS)) + randomBetween(-8, 8); // add some spread
+                    p.style.background = pickRandom(CONFIG.FIREWORK_COLORS);
+                    const angle = (i * (360 / CONFIG.NUM_FIREWORK_PARTS)) + randomBetween(-8, 8);
                     const rad = angle * Math.PI / 180;
-                    const distance = randomBetween(60, 120); // px, explosion radius
+                    const distance = randomBetween(60, 120);
                     const tx = Math.cos(rad) * distance;
                     const ty = Math.sin(rad) * distance;
                     p.animate([
@@ -1265,22 +957,19 @@
                 document.body.appendChild(fw);
                 setTimeout(() => fw.remove(), 1000);
             }
-
+            // --- Moan Words ---
             function burstMoanWords(bar) {
                 const rect = bar.getBoundingClientRect();
                 const barCenterX = rect.left + rect.width / 2;
                 const barTop = rect.top + window.scrollY;
-                const isSmallScreen = window.innerWidth < 600;
-                for (let i = 0; i < NUM_BURST_MOAN_WORDS; i++) {
+                for (let i = 0; i < CONFIG.NUM_BURST_MOAN_WORDS; i++) {
                     const word = document.createElement('div');
                     word.className = 'moan-word falling';
-                    word.textContent = pickRandom(MOAN_WORDS);
+                    word.textContent = pickRandom(CONFIG.MOAN_WORDS);
                     const spread = randomBetween(-rect.width / 2 + 20, rect.width / 2 - 20);
                     word.style.left = `${barCenterX + spread}px`;
                     word.style.pointerEvents = 'none';
                     word.style.zIndex = 5000;
-
-                    // Burst downwards (default)
                     word.style.top = `${barTop + 6}px`;
                     word.animate([
                         { transform: `translateY(0px) scale(1.1)`, opacity: 1 },
@@ -1290,16 +979,14 @@
                         easing: 'cubic-bezier(.77, 0, .18, 1)',
                         fill: 'forwards',
                     });
-
                     document.body.appendChild(word);
                     setTimeout(() => word.remove(), 1800);
                 }
             }
-
             function showMoan(x, y) {
                 const moan = document.createElement('div');
                 moan.className = 'moan-word';
-                moan.textContent = pickRandom(MOAN_WORDS);
+                moan.textContent = pickRandom(CONFIG.MOAN_WORDS);
                 moan.style.zIndex = 9999;
                 moan.style.left = `${x + randomBetween(-30, 30)}px`;
                 moan.style.top = `${y + randomBetween(-30, 30)}px`;
@@ -1308,34 +995,19 @@
                 setTimeout(() => moan.classList.remove('show'), 900);
                 setTimeout(() => moan.remove(), 1200);
             }
-            // --- Optimized Bubble Spawning ---
-            function spawnBubbles() {
-                if (document.hidden) {
-                    setTimeout(spawnBubbles, 1000);
-                    return;
-                }
-                while (bubbles.length < MAX_BUBBLES) {
-                    createBubble();
-                }
-                setTimeout(spawnBubbles, 350);
-            }
-            document.addEventListener('visibilitychange', () => {
-                if (!document.hidden) spawnBubbles();
-            });
-            spawnBubbles();
             // --- Progress Bar Logic ---
             function updateProgressBar() {
                 const bar = document.getElementById('bubbleProgressBar');
                 const inner = document.getElementById('bubbleProgressBarInner');
                 if (!bar || !inner) return;
                 bar.style.display = 'flex';
-                let percent = Math.min(popCount / POPS_TO_FILL, 1) * 100;
+                let percent = Math.min(popCount / CONFIG.POPS_TO_FILL, 1) * 100;
                 inner.style.width = percent + '%';
                 if (percent >= 100 && !barFilled) {
                     barFilled = true;
                     bar.classList.add('burst');
-                    playBurstSound();
-                    setTimeout(playMwahSound, 2000);
+                    playSound('burst');
+                    setTimeout(() => playSound('mwah'), 2000);
                     burstMoanWords(bar);
                     setTimeout(() => bar.classList.remove('burst'), 13000);
                     setTimeout(() => {
@@ -1348,7 +1020,6 @@
                     }, 1200);
                 }
             }
-
             function scrollToInviteAndPulse() {
                 const btn = document.querySelector('.invite-btn');
                 if (btn) {
@@ -1367,33 +1038,14 @@
                     }, 700);
                 }
             }
-
             function startContinuousPulse(btn) {
                 btn.classList.add('pulse-continuous');
             }
-            // --- Add CSS for continuous pulse and falling moan words ---
-            (function addBurstStyles() {
-                const style = document.createElement('style');
-                style.innerHTML = `
-    .moan-word.falling {
-        z-index: 5000;
-        font-size: 1.6em;
-        opacity: 1;
-        pointer-events: none;
-        filter: drop-shadow(0 2px 16px #ff4e8e99) brightness(1.5);
-        transition: none;
-        animation: none;
-    }
-    /* .invite-btn.pulse-continuous now handled in main CSS */
-    `;
-                document.head.appendChild(style);
-            })();
             // --- Starfield Effect ---
             (function createStarfield() {
-                const starCount = 64;
                 const starfield = document.querySelector('.starfield');
                 if (!starfield) return;
-                for (let i = 0; i < starCount; i++) {
+                for (let i = 0; i < CONFIG.STAR_COUNT; i++) {
                     const star = document.createElement('div');
                     star.className = 'star';
                     const size = Math.random() * 0.2 + 0.12;
@@ -1406,65 +1058,49 @@
                     starfield.appendChild(star);
                 }
             })();
-            // --- Event Delegation for Bubble Popping ---
+            // --- Event Delegation for Bubble Popping (robust) ---
             document.body.addEventListener('click', function (e) {
-                if (e.target.classList.contains('sexy-bubble')) {
-                    popBubble(e.target, e);
+                const bubble = e.target.closest('.sexy-bubble');
+                if (bubble) {
+                    popBubble(bubble, e);
                 }
             });
-            // --- Diagonal Falling Stars with Glowing Trail (Random Speed, Fewer, Perf) ---
+            // --- Diagonal Falling Stars with Glowing Trail ---
             (function createDiagonalFallingStars() {
-                const STAR_COLORS = [
-                    'rgba(255,255,255,0.95)',
-                    'rgba(255,78,142,0.85)',
-                    'rgba(182,255,203,0.85)',
-                    'rgba(185,140,179,0.85)',
-                    'rgba(255,179,71,0.85)'
-                ];
-                const TRAIL_LENGTH = 4; // even shorter trail for perf
-                const TRAIL_FADE = 0.22;
-                // 135deg, top right to bottom left: left decreases, top increases
-                const ANGLE = Math.PI * 3 / 4;
-                const SPAWN_INTERVAL = 1700; // less frequent
-                const MAX_STARS = 3; // even fewer at a time
                 const starfield = document.querySelector('.starfield');
                 if (!starfield) return;
                 let activeStars = 0;
+                const ANGLE = Math.PI * 3 / 4;
                 function spawnDiagonalStar() {
-                    if (activeStars >= MAX_STARS) return;
+                    if (activeStars >= CONFIG.DIAGONAL_MAX_STARS) return;
                     activeStars++;
                     const star = document.createElement('div');
                     star.className = 'diagonal-star';
                     const size = Math.random() * 0.18 + 0.18;
                     star.style.width = `${size}em`;
                     star.style.height = `${size}em`;
-                    star.style.background = pickRandom(STAR_COLORS);
+                    star.style.background = pickRandom(CONFIG.DIAGONAL_STAR_COLORS);
                     star.style.boxShadow = `0 0 16px 4px #fff8, 0 0 32px 8px #ff4e8e44`;
-                    // Start along top or right edge (top right corner bias)
                     let startX = window.innerWidth - Math.random() * window.innerWidth * 0.7;
                     let startY = -24;
                     if (Math.random() < 0.5) {
-                        // Right edge
                         startX = window.innerWidth + 24;
                         startY = Math.random() * window.innerHeight * 0.3;
                     }
                     star.style.left = `${startX}px`;
                     star.style.top = `${startY}px`;
                     starfield.appendChild(star);
-                    // Animate
                     let trail = [];
                     let x = startX, y = startY;
-                    // Random speed: slow (1.2), normal (2.5), fast (5.5) px/ms
                     const speedOptions = [5.5, 10.10, 15.15];
                     const velocity = pickRandom(speedOptions) * (Math.random() * 0.7 + 0.7);
                     let running = true;
                     function animate() {
                         if (!running) return;
-                        x += Math.cos(ANGLE) * velocity; // left decreases
-                        y += Math.sin(ANGLE) * velocity; // top increases
+                        x += Math.cos(ANGLE) * velocity;
+                        y += Math.sin(ANGLE) * velocity;
                         star.style.left = `${x}px`;
                         star.style.top = `${y}px`;
-                        // Trail logic (no DOM leak)
                         const trailDot = document.createElement('div');
                         trailDot.className = 'diagonal-star-trail';
                         trailDot.style.left = `${x}px`;
@@ -1475,17 +1111,15 @@
                         trailDot.style.opacity = 1;
                         starfield.appendChild(trailDot);
                         trail.push(trailDot);
-                        if (trail.length > TRAIL_LENGTH) {
+                        if (trail.length > CONFIG.DIAGONAL_TRAIL_LENGTH) {
                             const faded = trail.shift();
                             faded.style.transition = 'opacity 0.3s linear';
                             faded.style.opacity = 0;
                             setTimeout(() => faded.remove(), 350);
                         }
-                        // Fade older trail
                         for (let i = 0; i < trail.length; i++) {
-                            trail[i].style.opacity = (1 - (i + 1) * TRAIL_FADE).toFixed(2);
+                            trail[i].style.opacity = (1 - (i + 1) * CONFIG.DIAGONAL_TRAIL_FADE).toFixed(2);
                         }
-                        // Remove if out of bounds (bottom or left)
                         if (x < -40 || y > window.innerHeight + 40) {
                             star.remove();
                             trail.forEach(dot => dot.remove());
@@ -1497,24 +1131,23 @@
                     }
                     animate();
                 }
-                setInterval(spawnDiagonalStar, SPAWN_INTERVAL);
+                setInterval(spawnDiagonalStar, CONFIG.DIAGONAL_SPAWN_INTERVAL);
             })();
-        } else {
-            // --- No-op versions for low perf mode ---
-            function createBubble() { }
-            function removeBubble() { }
-            function playPopSound() { }
-            function playBurstSound() { }
-            function playMwahSound() { }
-            function popBubble() { }
-            function createFirework() { }
-            function burstMoanWords() { }
-            function showMoan() { }
-            function spawnBubbles() { }
-            function updateProgressBar() { }
-            function scrollToInviteAndPulse() { }
-            function startContinuousPulse() { }
-        }
+            // Expose for use in global scope if needed
+            return {
+                createBubble,
+                removeBubble,
+                playSound,
+                popBubble,
+                createFirework,
+                burstMoanWords,
+                showMoan,
+                spawnBubbles,
+                updateProgressBar,
+                scrollToInviteAndPulse,
+                startContinuousPulse
+            };
+        })();
     </script>
 </body>
 
