@@ -216,7 +216,8 @@ def run_web():
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
 
 if __name__ == "__main__":
-    Thread(target=run_web).start()
+    web_thread = Thread(target=run_web, daemon=True)
+    web_thread.start()
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
