@@ -538,16 +538,25 @@ class ClockInTrackerSlash(commands.Cog, name="clock_in_tracker"):
         
         action_verb = "Added" if item_type == "bonus" else "Applied"
         embed_color = discord.Color.green() if item_type == "bonus" else discord.Color.red()
-        reason_display = f"\nReason: _{discord.utils.escape_markdown(reason)}_ " if reason else ""
-        
+        reason_display = reason or "No reason provided"
+        reason_display = discord.utils.escape_markdown(reason_display)
+        display_name = user.display_name
+        username = user.name
         embed = discord.Embed(
-            title=f"{item_type.capitalize()} {action_verb}",
-            description=f"**${amount:.2f}** {item_type} {action_verb.lower()} to {user.mention}.{reason_display}",
-            color=embed_color, timestamp=datetime.now(timezone.utc)
+            title=f"{display_name} ({username}) — {'Bonus' if item_type == 'bonus' else 'Penalty'}",
+            color=embed_color,
+            timestamp=datetime.now(timezone.utc)
         )
-        embed.add_field(name="ID", value=f"`{item_id[:8]}`", inline=False)
+        if user.display_avatar:
+            embed.set_thumbnail(url=user.display_avatar.url)
+        embed.description = (
+            f"{'Amount:':<9} `${amount:.2f}`\n"
+            f"{'Reason:':<9} `{reason_display}`\n"
+            f"{'ID:':<9} `{item_id[:8]}`"
+        )
         embed.set_footer(text=f"By: {interaction.user.display_name}")
-        await self.send_response(interaction, embed=embed) # Uses guild default ephemeral, likely False for this kind of log
+        await self.send_response(interaction, embed=embed)
+        return
 
     async def _remove_bonus_penalty(self, interaction: discord.Interaction, user: discord.User, item_id_prefix: str, item_type: str):
         # display_settings = await self.get_guild_display_settings(interaction.guild_id)
@@ -605,7 +614,7 @@ class ClockInTrackerSlash(commands.Cog, name="clock_in_tracker"):
                     total = sum(item["amount"] for item in filtered)
                     summary.append((display_name, username, mention, filtered, total))
             if not summary:
-                await self.send_response(interaction, message=f"ℹ️ No users have any active {item_type}s.", ephemeral=ephemeral)
+                await self.send_response(interaction, message=f"ℹ️ No users have any active {item_type}.", ephemeral=ephemeral)
                 return
             summary.sort(key=lambda x: len(x[3]), reverse=True)  # Sort by count desc
             embed_color = discord.Color.green() if item_type == "bonus" else discord.Color.red()
@@ -618,82 +627,54 @@ class ClockInTrackerSlash(commands.Cog, name="clock_in_tracker"):
             for display_name, username, mention, filtered, total in summary[:10]:
                 user_header = f"{display_name} ({username})"
                 user_lines = [f"{user_header}:"]
-                for idx, item in enumerate(filtered, 1):
+                # Sort filtered items by timestamp descending (newest first)
+                filtered_sorted = sorted(filtered, key=lambda x: x['timestamp'], reverse=True)
+                for idx, item in enumerate(filtered_sorted, 1):
                     reason = item.get("reason") or "No reason provided"
                     reason = discord.utils.escape_markdown(reason)
-                    user_lines.append(f"{idx}. ${item['amount']:.2f} - {reason}")
-                user_lines.append(f"`Total: ${total:.2f} ({len(filtered)} items)`")
+                    id_value = item.get("id", "")[:8]
+                    user_lines.append(f"{idx}. `{id_value}` ${item['amount']:.2f} - {reason}")
+                user_lines.append(f"\n`Total: ${total:.2f} ({len(filtered)} items)`")
                 lines.append("\n".join(user_lines))
             embed.description = "\n\n".join(lines)
             if len(summary) > 10:
                 embed.set_footer(text=f"Showing 10 of {len(summary)} users. Top by count.")
             else:
-                embed.set_footer(text=f"Total users with {item_type}s: {len(summary)}.")
+                embed.set_footer(text=f"Total users: {len(summary)}.")
             await self.send_response(interaction, embed=embed, ephemeral=ephemeral)
             return
 
+        # Single user detailed list (same style as all-users, with avatar)
         user_bp_list = sorted(
             [item for item in clock_data["bonuses_penalties"].get(str(target_user.id), []) if item["type"] == item_type],
             key=lambda x: x['timestamp'], reverse=True # Newest first
         )
-
-        display_settings = await self.get_guild_display_settings(interaction.guild_id) # For ephemeral setting
-        ephemeral = display_settings.get('ephemeral_responses', True)
-
-
         if not user_bp_list:
-            await self.send_response(interaction, message=f"ℹ️ {target_user.mention} has no active {item_type}s.", ephemeral=ephemeral) 
+            await self.send_response(interaction, message=f"ℹ️ {target_user.mention} has no active {item_type}.", ephemeral=ephemeral)
             return
-
+        display_name = target_user.display_name
+        username = target_user.name
+        total = sum(item["amount"] for item in user_bp_list)
         embed_color = discord.Color.green() if item_type == "bonus" else discord.Color.red()
-        title_text = f"Active {item_type.capitalize()}s: {target_user.display_name}"
-        if target_user.name and target_user.name.lower() != target_user.display_name.lower(): 
-            title_text += f" ({target_user.name})"
-        
-        embed = discord.Embed(title=title_text, color=embed_color, timestamp=datetime.now(timezone.utc))
+        embed = discord.Embed(
+            title=f"{display_name} ({username}) — {'Bonuses' if item_type == 'bonus' else 'Penalties'}",
+            color=embed_color,
+            timestamp=datetime.now(timezone.utc)
+        )
         if target_user.display_avatar:
             embed.set_thumbnail(url=target_user.display_avatar.url)
-        
-        description_lines = []
-        for i, item in enumerate(user_bp_list[:10], 1): 
-            giver_id_int = int(item["giver_id"])
-            giver_member = interaction.guild.get_member(giver_id_int) if interaction.guild else None # Check if guild exists
-            
-            giver_display_name = "Unknown User"
-            giver_username = ""
-
-            if giver_member:
-                giver_display_name = giver_member.display_name
-                giver_username = giver_member.name
-            else: # Fallback to fetching user if member not in cache or not in guild
-                try:
-                    giver_user_obj = await self.bot.fetch_user(giver_id_int)
-                    giver_display_name = giver_user_obj.display_name # For bots/users not in guild
-                    giver_username = giver_user_obj.name
-                except discord.NotFound:
-                    giver_display_name = f"Unknown User (ID: {giver_id_int})" # if fetch_user fails
-                except Exception as e:
-                    logger.warning(f"Could not fetch giver user {giver_id_int} for bonus/penalty list: {e}")
-                    giver_display_name = f"Error Fetching User (ID: {giver_id_int})"
-
-
-            giver_text = giver_display_name
-            if giver_username and giver_username.lower() != giver_display_name.lower():
-                giver_text += f" ({giver_username})"
-
-            reason_text = f"_{discord.utils.escape_markdown(item['reason'])}_" if item.get('reason') else "_No reason provided_"
-            item_timestamp = datetime.fromisoformat(item['timestamp'])
-            added_at_display = f"<t:{int(item_timestamp.timestamp())}:R>" 
-
-            line = f"**{i}. ${item['amount']:.2f}** - {reason_text}\n   ID: `{item['id'][:8]}` | By: {giver_text} | {added_at_display}"
-            description_lines.append(line)
-        
-        embed.description = "\n\n".join(description_lines)
-        if len(user_bp_list) > 10:
-            embed.set_footer(text=f"Showing {len(description_lines)} of {len(user_bp_list)} total {item_type}s. Newest first.")
+        user_lines = []
+        for idx, item in enumerate(user_bp_list[:20], 1):
+            reason = item.get("reason") or "No reason provided"
+            reason = discord.utils.escape_markdown(reason)
+            id_value = item.get("id", "")[:8]
+            user_lines.append(f"{idx}. `{id_value}` ${item['amount']:.2f} - {reason}")
+        user_lines.append(f"\n`Total: ${total:.2f} ({len(user_bp_list)} items)`")
+        embed.description = "\n".join(user_lines)
+        if len(user_bp_list) > 20:
+            embed.set_footer(text=f"Showing 20 of {len(user_bp_list)} total. Newest first.")
         else:
-            embed.set_footer(text=f"Newest {item_type}s listed first.")
-            
+            embed.set_footer(text=f"Newest listed first.")
         await self.send_response(interaction, embed=embed, ephemeral=ephemeral) # Respects guild ephemeral for list views
 
     # Bonus Commands
