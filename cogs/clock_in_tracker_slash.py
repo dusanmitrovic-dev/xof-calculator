@@ -824,30 +824,54 @@ class ClockInTrackerSlash(commands.Cog, name="clock_in_tracker"):
                             formatted_overstay = format_timedelta(overstay_duration, show_seconds=True)
                             
                             embed_title = "⚠️ Break Overstay Alert"
-                            embed_desc = f"{user_obj.mention}, you have exceeded your allowed break time of **{max_break_min_config} minutes**."
+                            embed_desc = (
+                                f"{user_obj.mention} you have exceeded your allowed break time of "
+                                f"**{max_break_min_config} minutes**."
+                            )
                             embed_color = discord.Color.orange()
 
-                            alert_embed = discord.Embed(title=embed_title, description=embed_desc, color=embed_color, timestamp=now_utc)
-                            alert_embed.add_field(name="Currently Overstayed By", value=f"**{formatted_overstay}**")
+                            alert_embed = discord.Embed(
+                                title=embed_title,
+                                description=embed_desc,
+                                color=embed_color,
+                                timestamp=now_utc
+                            )
+                            alert_embed.add_field(name="", value=f"Exceeded By **{formatted_overstay}**", inline=False)
                             alert_embed.set_footer(text=f"User: {user_obj.display_name} ({user_obj.name})")
 
                             try:
                                 if user_state.get("overstay_alert_message_id"):
+                                    # Try to fetch and edit the existing alert message
                                     msg = await alert_channel.fetch_message(user_state["overstay_alert_message_id"])
-                                    await msg.edit(embed=alert_embed) 
-                                else: 
+                                    await msg.edit(embed=alert_embed)
+                                else:
+                                    # Send a new alert message and store its ID
                                     msg = await alert_channel.send(content=user_obj.mention, embed=alert_embed)
                                     user_state["overstay_alert_message_id"] = msg.id
                                     guild_data_modified = True
+
                             except discord.NotFound:
-                                logger.info(f"Overstay alert message {user_state.get('overstay_alert_message_id')} for user {user_id} not found. Sending a new one.")
+                                # The old message was deleted or not found; send a new alert
+                                logger.info(
+                                    f"Overstay alert message {user_state.get('overstay_alert_message_id')} for user {user_id} not found. Sending a new one."
+                                )
                                 msg = await alert_channel.send(content=user_obj.mention, embed=alert_embed)
                                 user_state["overstay_alert_message_id"] = msg.id
                                 guild_data_modified = True
+
                             except discord.Forbidden:
-                                logger.warning(f"Bot lacks permission to send/edit overstay alert in channel {alert_channel.id} for user {user_id}.")
+                                # Bot lacks permission to send or edit messages in the channel
+                                logger.warning(
+                                    f"Bot lacks permission to send/edit overstay alert in channel {alert_channel.id} for user {user_id}."
+                                )
+
                             except Exception as e:
-                                logger.error(f"Error handling overstay alert for user {user_id} in guild {guild.id}: {e}", exc_info=True)
+                                # Catch-all for unexpected errors
+                                logger.error(
+                                    f"Error handling overstay alert for user {user_id} in guild {guild.id}: {e}",
+                                    exc_info=True
+                                )
+
                 
                 if guild_data_modified:
                     await self.save_clock_data(guild.id, clock_data)
