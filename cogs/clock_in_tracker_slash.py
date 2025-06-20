@@ -36,6 +36,36 @@ def format_timedelta(td: timedelta, show_seconds=True) -> str:
     return " ".join(parts) if parts else ("0s" if show_seconds else "0m")
 
 
+# Helper to safely set embed.description (truncate to 4096 chars)
+def set_safe_embed_description(embed: discord.Embed, description: str):
+    MAX_LEN = 4096
+    if len(description) > MAX_LEN:
+        truncated = description[:MAX_LEN - 32] + "\n... (truncated, too many items)"
+        embed.description = truncated
+    else:
+        embed.description = description
+
+
+def split_long_text(text: str, max_len: int = 4096):
+    """Splits text into chunks <= max_len, preferring to split at line breaks."""
+    lines = text.splitlines(keepends=True)
+    chunks = []
+    current = ''
+    for line in lines:
+        if len(current) + len(line) > max_len:
+            if current:
+                chunks.append(current)
+                current = ''
+            # If a single line is too long, hard split it
+            while len(line) > max_len:
+                chunks.append(line[:max_len])
+                line = line[max_len:]
+        current += line
+    if current:
+        chunks.append(current)
+    return chunks
+
+
 class ClockInTrackerSlash(commands.Cog, name="clock_in_tracker"):
     def __init__(self, bot):
         self.bot = bot
@@ -499,7 +529,7 @@ class ClockInTrackerSlash(commands.Cog, name="clock_in_tracker"):
             ), inline=False)
 
             if overstayed_message:
-                embed.description = overstayed_message.strip()
+                set_safe_embed_description(embed, overstayed_message.strip())
 
             await self.send_response(interaction, embed=embed, ephemeral=False)
         else:
@@ -633,12 +663,23 @@ class ClockInTrackerSlash(commands.Cog, name="clock_in_tracker"):
                     user_lines.append(f"{idx}. `{id_value}` ${item['amount']:.2f} - {reason}")
                 user_lines.append(f"\n`Total: ${total:.2f} ({len(filtered)} items)`")
                 lines.append("\n".join(user_lines))
-            embed.description = "\n\n".join(lines)
+            full_text = "\n\n".join(lines)
+            chunks = split_long_text(full_text)
+            embed.description = chunks[0]
             if len(summary) > 10:
                 embed.set_footer(text=f"Showing 10 of {len(summary)} users. Top by count.")
             else:
                 embed.set_footer(text=f"Total users: {len(summary)}.")
             await self.send_response(interaction, embed=embed, ephemeral=ephemeral)
+            # Send additional chunks as follow-up embeds
+            for chunk in chunks[1:]:
+                followup_embed = discord.Embed(
+                    title=None,
+                    description=chunk,
+                    color=embed_color,
+                    timestamp=datetime.now(timezone.utc)
+                )
+                await interaction.followup.send(embed=followup_embed, ephemeral=ephemeral)
             return
 
         # Single user detailed list (same style as all-users, with avatar)
@@ -667,12 +708,26 @@ class ClockInTrackerSlash(commands.Cog, name="clock_in_tracker"):
             id_value = item.get("id", "")[:8]
             user_lines.append(f"{idx}. `{id_value}` ${item['amount']:.2f} - {reason}")
         user_lines.append(f"\n`Total: ${total:.2f} ({len(user_bp_list)} items)`")
-        embed.description = "\n".join(user_lines)
+        full_text = "\n".join(user_lines)
+        chunks = split_long_text(full_text)
+        embed.description = chunks[0]
         if len(user_bp_list) > 20:
             embed.set_footer(text=f"Showing 20 of {len(user_bp_list)} total. Newest first.")
         else:
             embed.set_footer(text=f"Newest listed first.")
         await self.send_response(interaction, embed=embed, ephemeral=ephemeral) # Respects guild ephemeral for list views
+        # Send additional chunks as follow-up embeds
+        for chunk in chunks[1:]:
+            followup_embed = discord.Embed(
+                title=None,
+                description=chunk,
+                color=embed_color,
+                timestamp=datetime.now(timezone.utc)
+            )
+            if target_user.display_avatar:
+                followup_embed.set_thumbnail(url=target_user.display_avatar.url)
+            await interaction.followup.send(embed=followup_embed, ephemeral=ephemeral)
+        return
 
     # Bonus Commands
     @bonus_group.command(name="add", description="Add a bonus to a user.")
