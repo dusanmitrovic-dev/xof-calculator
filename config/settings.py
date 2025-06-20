@@ -148,4 +148,5 @@ MONGO_COLLECTION_MAPPING = {
     "display_settings.json": "display_settings",
     "commission_settings.json": "commission_settings",
     "earnings.json": "earnings",
+    "clock_data.json": "clock_data"
 }
