@@ -543,17 +543,14 @@ class ClockInTrackerSlash(commands.Cog, name="clock_in_tracker"):
         display_name = user.display_name
         username = user.name
         embed = discord.Embed(
-            title=f"{display_name} ({username}) — {'Bonus' if item_type == 'bonus' else 'Penalty'}",
+            title=f"{display_name} ({username}) — {'✅ Bonus' if item_type == 'bonus' else '❌ Penalty'} [`{item_id[:8]}`]",
             color=embed_color,
             timestamp=datetime.now(timezone.utc)
         )
         if user.display_avatar:
             embed.set_thumbnail(url=user.display_avatar.url)
-        embed.description = (
-            f"{'Amount:':<9} `${amount:.2f}`\n"
-            f"{'Reason:':<9} `{reason_display}`\n"
-            f"{'ID:':<9} `{item_id[:8]}`"
-        )
+        embed.add_field(name="Amount", value=f"${amount:.2f}", inline=False)
+        embed.add_field(name="Reason", value=reason_display, inline=False)
         embed.set_footer(text=f"By: {interaction.user.display_name}")
         await self.send_response(interaction, embed=embed)
         return
