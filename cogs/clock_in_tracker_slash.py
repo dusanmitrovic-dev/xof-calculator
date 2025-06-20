@@ -205,11 +205,30 @@ class ClockInTrackerSlash(commands.Cog, name="clock_in_tracker"):
         display_events_status = "Enabled" if display_public_events else "Disabled"
         max_break_duration_display = f"{max_break_duration_min} minutes" if max_break_duration_min > 0 else "Unlimited"
 
-        embed = discord.Embed(title="⚙️ Clock System Configuration", color=discord.Color.blue(), timestamp=datetime.now(timezone.utc))
-        embed.add_field(name="Max Breaks / Shift", value=f"`{max_breaks_display}`", inline=True)
-        embed.add_field(name="Max Break Duration", value=f"`{max_break_duration_display}`", inline=True)
-        embed.add_field(name="Public Clock Events", value=f"`{display_events_status}`", inline=True)
-        embed.add_field(name="Bonus/Penalty Managers", value=manager_roles_display, inline=False)
+        embed = discord.Embed(
+            title="⚙️ Clock System Configuration",
+            color=discord.Color.blue(),
+            timestamp=datetime.now(timezone.utc)
+        )
+
+        embed.add_field(
+            name="📋 Settings Overview",
+            value=(
+                "```text\n"
+                f"{'Max Breaks Per Shift:':<22} {max_breaks_display}\n"
+                f"{'Max Break Duration:':<22} {max_break_duration_display}\n"
+                f"{'Public Clock Embeds:':<22} {display_events_status}"
+                "\n```"
+            ),
+            inline=False
+        )
+
+        embed.add_field(
+            name="🛠️ Bonus / Penalty Managers",
+            value=manager_roles_display or "`No manager roles assigned.`",
+            inline=False
+        )
+
         
         await self.send_response(interaction, embed=embed) # Uses default ephemeral setting for this info embed
 
@@ -448,13 +467,13 @@ class ClockInTrackerSlash(commands.Cog, name="clock_in_tracker"):
             if now_utc > expected_end_dt_for_calc:
                 overstayed_seconds = (now_utc - expected_end_dt_for_calc).total_seconds()
                 overstayed_td = timedelta(seconds=overstayed_seconds)
-                overstayed_message = f"\n\n🔴 Overstayed by: {format_timedelta(overstayed_td, show_seconds=False)}"
+                overstayed_message = f"\n\n🔴 Overstayed by: {format_timedelta(overstayed_td, show_seconds=True)}"
         elif max_break_duration_minutes > 0: # Fallback if expected_break_end_time_iso wasn't set (should not happen if logic is correct)
             allowed_duration_seconds = max_break_duration_minutes * 60
             if current_break_duration_td.total_seconds() > allowed_duration_seconds:
                 overstayed_seconds = current_break_duration_td.total_seconds() - allowed_duration_seconds
                 overstayed_td = timedelta(seconds=overstayed_seconds)
-                overstayed_message = f"\n\n🔴 Overstayed by: {format_timedelta(overstayed_td, show_seconds=False)}"
+                overstayed_message = f"\n\n🔴 Overstayed by: {format_timedelta(overstayed_td, show_seconds=True)}"
 
 
         max_breaks_config = clock_data.get("settings", {}).get("max_breaks_per_shift", 3)
@@ -466,19 +485,30 @@ class ClockInTrackerSlash(commands.Cog, name="clock_in_tracker"):
 
         if await self.should_display_public_clock_event(interaction.guild_id):
             embed = discord.Embed(
+                title="",
                 description=f"▶️ {interaction.user.mention} is **back from break**.{overstayed_message}",
-                color=discord.Color.from_rgb(100,100,255), # Slightly more vibrant blue/purple
+                color=discord.Color.from_rgb(100, 100, 255),  # Slightly vibrant purple-blue
                 timestamp=now_utc
             )
-            embed.add_field(name="Duration", value=format_timedelta(current_break_duration_td), inline=True)
-            embed.add_field(name="Breaks Taken", value=breaks_display, inline=True)
-            await self.send_response(interaction, embed=embed, ephemeral=False) # Public event
+
+            embed.add_field(name="", value=(
+                "```text\n"
+                f"{'Break Duration:':<16} {format_timedelta(current_break_duration_td)}\n"
+                f"{'Breaks Taken:':<16} {breaks_display}"
+                "\n```"
+            ), inline=False)
+
+            if overstayed_message:
+                embed.description = overstayed_message.strip()
+
+            await self.send_response(interaction, embed=embed, ephemeral=False)
         else:
             await self.send_response(
-                interaction, 
+                interaction,
                 message=f"▶️ Welcome back! Break duration: {format_timedelta(current_break_duration_td)}.{overstayed_message}",
                 ephemeral=ephemeral_default
             )
+
 
     # --- Bonus/Penalty Command Groups ---
     bonus_group = app_commands.Group(name="bonus", description="Manage bonuses for users.")
@@ -543,9 +573,65 @@ class ClockInTrackerSlash(commands.Cog, name="clock_in_tracker"):
         else:
             await self.send_response(interaction, message=f"❌ No {item_type} found for {user.mention} with ID starting with `{item_id_prefix}`.", ephemeral=True) # Error, ephemeral
 
-    async def _list_bonus_penalty(self, interaction: discord.Interaction, target_user: discord.User, item_type: str):
-        # Permission check was intentionally removed as per original TODO: "bonus/penalty list should display for all users"
+    async def _list_bonus_penalty(self, interaction: discord.Interaction, target_user: Optional[discord.User], item_type: str):
+        # If no user is provided, show a summary for all users with at least one bonus/penalty
         clock_data = await self.get_clock_data(interaction.guild_id)
+        display_settings = await self.get_guild_display_settings(interaction.guild_id) # For ephemeral setting
+        ephemeral = display_settings.get('ephemeral_responses', True)
+
+        if target_user is None:
+            # Build a detailed list for all users with at least one bonus/penalty
+            user_items = clock_data["bonuses_penalties"]
+            summary = []
+            for user_id_str, items in user_items.items():
+                filtered = [item for item in items if item["type"] == item_type]
+                if filtered:
+                    user_id = int(user_id_str)
+                    member = interaction.guild.get_member(user_id)
+                    if member:
+                        display_name = member.display_name
+                        username = member.name
+                        mention = member.mention
+                    else:
+                        try:
+                            user_obj = await self.bot.fetch_user(user_id)
+                            display_name = user_obj.display_name
+                            username = user_obj.name
+                            mention = user_obj.mention
+                        except Exception:
+                            display_name = f"User {user_id_str}"
+                            username = f"{user_id_str}"
+                            mention = f"<@{user_id_str}>"
+                    total = sum(item["amount"] for item in filtered)
+                    summary.append((display_name, username, mention, filtered, total))
+            if not summary:
+                await self.send_response(interaction, message=f"ℹ️ No users have any active {item_type}s.", ephemeral=ephemeral)
+                return
+            summary.sort(key=lambda x: len(x[3]), reverse=True)  # Sort by count desc
+            embed_color = discord.Color.green() if item_type == "bonus" else discord.Color.red()
+            embed = discord.Embed(
+                title=f"All Users with Active {'Bonuses' if item_type == 'bonus' else 'Penalties'}",
+                color=embed_color,
+                timestamp=datetime.now(timezone.utc)
+            )
+            lines = []
+            for display_name, username, mention, filtered, total in summary[:10]:
+                user_header = f"{display_name} ({username})"
+                user_lines = [f"{user_header}:"]
+                for idx, item in enumerate(filtered, 1):
+                    reason = item.get("reason") or "No reason provided"
+                    reason = discord.utils.escape_markdown(reason)
+                    user_lines.append(f"{idx}. ${item['amount']:.2f} - {reason}")
+                user_lines.append(f"`Total: ${total:.2f} ({len(filtered)} items)`")
+                lines.append("\n".join(user_lines))
+            embed.description = "\n\n".join(lines)
+            if len(summary) > 10:
+                embed.set_footer(text=f"Showing 10 of {len(summary)} users. Top by count.")
+            else:
+                embed.set_footer(text=f"Total users with {item_type}s: {len(summary)}.")
+            await self.send_response(interaction, embed=embed, ephemeral=ephemeral)
+            return
+
         user_bp_list = sorted(
             [item for item in clock_data["bonuses_penalties"].get(str(target_user.id), []) if item["type"] == item_type],
             key=lambda x: x['timestamp'], reverse=True # Newest first
@@ -621,10 +707,10 @@ class ClockInTrackerSlash(commands.Cog, name="clock_in_tracker"):
     async def remove_bonus(self, interaction: discord.Interaction, user: discord.User, bonus_id_prefix: str):
         await self._remove_bonus_penalty(interaction, user, bonus_id_prefix, "bonus")
 
-    @bonus_group.command(name="list", description="List active bonuses (defaults to self).")
+    @bonus_group.command(name="list", description="List active bonuses (defaults to all if no user).")
     @app_commands.describe(user="User whose bonuses to list.")
     async def list_bonuses(self, interaction: discord.Interaction, user: Optional[discord.User] = None):
-        await self._list_bonus_penalty(interaction, user or interaction.user, "bonus")
+        await self._list_bonus_penalty(interaction, user, "bonus")
 
     # Penalty Commands
     @penalty_group.command(name="add", description="Apply a penalty to a user.")
@@ -637,10 +723,10 @@ class ClockInTrackerSlash(commands.Cog, name="clock_in_tracker"):
     async def remove_penalty(self, interaction: discord.Interaction, user: discord.User, penalty_id_prefix: str):
         await self._remove_bonus_penalty(interaction, user, penalty_id_prefix, "penalty")
 
-    @penalty_group.command(name="list", description="List active penalties (defaults to self).")
+    @penalty_group.command(name="list", description="List active penalties (defaults to all if no user).")
     @app_commands.describe(user="User whose penalties to list.")
     async def list_penalties(self, interaction: discord.Interaction, user: Optional[discord.User] = None):
-        await self._list_bonus_penalty(interaction, user or interaction.user, "penalty")
+        await self._list_bonus_penalty(interaction, user, "penalty")
 
     # --- Background Task for Break Overstays ---
     @tasks.loop(seconds=15.0)
