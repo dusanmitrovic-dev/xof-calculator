@@ -6,7 +6,7 @@ from datetime import datetime, timezone, timedelta
 import uuid # For bonus/penalty IDs
 from typing import Optional, List, Dict, Any
 
-from config import settings # Assuming settings.py has CLOCK_DATA_FILE and get_guild_clock_data_path
+from config import settings # Now settings.py has DEFAULT_CLOCK_DATA and get_guild_clock_data_path
 from utils import file_handlers
 
 logger = logging.getLogger("xof_calculator.clock_in_tracker_slash")

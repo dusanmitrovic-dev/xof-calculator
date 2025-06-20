@@ -47,6 +47,15 @@ DEFAULT_COMMISSION_SETTINGS = {
     "users": {}
 }
 
+DEFAULT_CLOCK_DATA = {
+    "users": {},
+    "settings": {
+        "max_breaks_per_shift": 3,
+        "bonus_penalty_manager_roles": []
+    },
+    "bonuses_penalties": {}
+}
+
 # Formatting
 DATE_FORMAT = "%d/%m/%Y"
 DECIMAL_PLACES = 2
@@ -123,6 +132,12 @@ def get_guild_display_path(guild_id: int) -> str:
 def get_guild_earnings_path(guild_id: int) -> str:
     """Get path to guild's earnings file"""
     return get_guild_earnings_file(guild_id, EARNINGS_FILE)
+
+# NOTE: CLOCK
+
+def get_guild_clock_data_path(guild_id: int) -> str:
+    """Get path to guild's clock data file"""
+    return get_guild_file(guild_id, "clock_data.json")
 
 MONGO_COLLECTION_MAPPING = {
     "role_percentages.json": "roles",
