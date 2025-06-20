@@ -1,13 +1,13 @@
 import discord
 from discord import app_commands, ui
-from discord.ext import commands
+from discord.ext import commands, tasks
 import logging
 from datetime import datetime, timezone, timedelta
 import uuid
 from typing import Optional, List, Dict, Any
 
-from config import settings
-from utils import file_handlers
+from config import settings # Assuming this exists and has DEFAULT_DISPLAY_SETTINGS, DEFAULT_CLOCK_DATA
+from utils import file_handlers # Assuming this exists for load/save JSON
 
 logger = logging.getLogger("xof_calculator.clock_in_tracker_slash")
 
@@ -16,7 +16,10 @@ DEFAULT_USER_CLOCK_STATE = {
     "clock_in_time": None,
     "break_start_time": None,
     "breaks_taken_this_shift": 0,
-    "accumulated_break_duration_seconds_this_shift": 0.0
+    "accumulated_break_duration_seconds_this_shift": 0.0,
+    "expected_break_end_time_iso": None, # For overstay alert
+    "overstay_alert_message_id": None,   # For overstay alert
+    "break_interaction_channel_id": None # For overstay alert, channel where /break was used
 }
 
 def format_timedelta(td: timedelta, show_seconds=True) -> str:
@@ -36,6 +39,10 @@ def format_timedelta(td: timedelta, show_seconds=True) -> str:
 class ClockInTrackerSlash(commands.Cog, name="clock_in_tracker"):
     def __init__(self, bot):
         self.bot = bot
+        self.check_break_overstays.start()
+
+    def cog_unload(self):
+        self.check_break_overstays.cancel()
 
     async def get_guild_display_settings(self, guild_id: int) -> Dict[str, Any]:
         file_path = settings.get_guild_display_path(guild_id)
@@ -53,6 +60,10 @@ class ClockInTrackerSlash(commands.Cog, name="clock_in_tracker"):
         user_id_str = str(user_id)
         if user_id_str not in clock_data["users"]:
             clock_data["users"][user_id_str] = DEFAULT_USER_CLOCK_STATE.copy()
+        # Ensure all keys from default exist for older user data
+        for key, default_value in DEFAULT_USER_CLOCK_STATE.items():
+            if key not in clock_data["users"][user_id_str]:
+                clock_data["users"][user_id_str][key] = default_value
         return clock_data["users"][user_id_str]
 
     async def has_bonus_penalty_permission(self, interaction: discord.Interaction) -> bool:
@@ -74,53 +85,40 @@ class ClockInTrackerSlash(commands.Cog, name="clock_in_tracker"):
         return clock_data.get("settings", {}).get("display_public_clock_embeds", True)
 
     async def send_response(
-        self, interaction: discord.Interaction, message: Optional[str] = None, 
-        embed: Optional[discord.Embed] = None, ephemeral: Optional[bool] = None,
-        is_public_event: bool = False, is_error: bool = False
+        self, interaction: discord.Interaction, message: Optional[str] = None,
+        embed: Optional[discord.Embed] = None, ephemeral: Optional[bool] = None
     ):
-        display_settings = await self.get_guild_display_settings(interaction.guild_id)
-        ephemeral = display_settings.get('ephemeral_responses', True)
-        # Determine the final ephemeral status
-        final_ephemeral: bool
-        if ephemeral is not None: # Explicit ephemeral override
-            final_ephemeral = ephemeral
-        elif is_error: # Errors are always ephemeral
-            final_ephemeral = True
-        elif is_public_event: # Public events are never ephemeral
-            final_ephemeral = False
-        else: # General command responses respect guild setting
+        actual_ephemeral: bool
+        if ephemeral is not None:
+            actual_ephemeral = ephemeral
+        else:
             display_settings = await self.get_guild_display_settings(interaction.guild_id)
-            final_ephemeral = display_settings.get('ephemeral_responses', True)
+            actual_ephemeral = display_settings.get('ephemeral_responses', True)
         
         if not message and not embed:
-            logger.warning("send_response called with no message or embed.")
-            # Send an ephemeral error message if possible, otherwise log
+            logger.warning(f"send_response called for interaction {interaction.id} with no message or embed.")
             try:
-                await interaction.response.send_message("An internal error occurred.", ephemeral=ephemeral)
-            except discord.errors.InteractionResponded:
-                await interaction.followup.send("An internal error occurred.", ephemeral=ephemeral)
+                # Always send this kind of internal error ephemerally
+                if interaction.response.is_done():
+                    await interaction.followup.send("An internal error occurred.", ephemeral=True) # Forced ephemeral
+                else:
+                    await interaction.response.send_message("An internal error occurred.", ephemeral=True) # Forced ephemeral
             except Exception as e:
-                logger.error(f"Failed to send internal error message: {e}")
+                logger.error(f"Failed to send internal error message in send_response for interaction {interaction.id}: {e}", exc_info=True)
             return
 
         try:
             if interaction.response.is_done():
-                if embed:
-                    await interaction.followup.send(embed=embed, ephemeral=final_ephemeral)
-                else:
-                    await interaction.followup.send(content=message, ephemeral=final_ephemeral)
+                await interaction.followup.send(content=message, embed=embed, ephemeral=actual_ephemeral)
             else:
-                if embed:
-                    await interaction.response.send_message(embed=embed, ephemeral=final_ephemeral)
-                else:
-                    await interaction.response.send_message(content=message, ephemeral=final_ephemeral)
+                await interaction.response.send_message(content=message, embed=embed, ephemeral=actual_ephemeral)
         except Exception as e:
-            logger.error(f"Error sending response in send_response: {e}")
-            # Fallback if initial response failed
+            logger.error(f"Error sending response in send_response for interaction {interaction.id}: {e}", exc_info=True)
             try:
-                await interaction.followup.send("There was an issue sending the response.", ephemeral=ephemeral)
+                # Fallback error message, always ephemeral
+                await interaction.followup.send("There was an issue processing your request and sending the response.", ephemeral=True) # Forced ephemeral
             except Exception as followup_e:
-                 logger.error(f"Error sending followup in send_response: {followup_e}")
+                 logger.error(f"Error sending fallback followup in send_response for interaction {interaction.id}: {followup_e}", exc_info=True)
 
 
     # --- Settings Command Group ---
@@ -136,7 +134,7 @@ class ClockInTrackerSlash(commands.Cog, name="clock_in_tracker"):
         clock_data.setdefault("settings", settings.DEFAULT_CLOCK_DATA["settings"].copy())
         clock_data["settings"]["max_breaks_per_shift"] = count
         await self.save_clock_data(interaction.guild_id, clock_data)
-        await self.send_response(interaction, message=f"🛠️ Maximum breaks per shift updated to **{count}**.")
+        await self.send_response(interaction, message=f"🛠️ Maximum breaks per shift updated to **{count if count > 0 else 'unlimited'}**.")
 
     @clock_settings_group.command(name="set-max-break-duration", description="Set max allowed duration for a single break (in minutes).")
     @app_commands.describe(minutes="Max duration in minutes (0 for unlimited).")
@@ -151,6 +149,8 @@ class ClockInTrackerSlash(commands.Cog, name="clock_in_tracker"):
     @clock_settings_group.command(name="add-manager-role", description="Allow a role to manage bonuses and penalties.")
     @app_commands.describe(role="The role to grant manager permissions.")
     async def add_manager_role(self, interaction: discord.Interaction, role: discord.Role):
+        # display_settings = await self.get_guild_display_settings(interaction.guild_id) # Not used for ephemeral here, admin command
+        # ephemeral = display_settings.get('ephemeral_responses', True)
         clock_data = await self.get_clock_data(interaction.guild_id)
         clock_data.setdefault("settings", settings.DEFAULT_CLOCK_DATA["settings"].copy())
         manager_roles = clock_data["settings"].setdefault("bonus_penalty_manager_roles", [])
@@ -159,11 +159,13 @@ class ClockInTrackerSlash(commands.Cog, name="clock_in_tracker"):
             await self.save_clock_data(interaction.guild_id, clock_data)
             await self.send_response(interaction, message=f"🛠️ Role {role.mention} can now manage bonuses/penalties.")
         else:
-            await self.send_response(interaction, message=f"⚠️ Role {role.mention} is already a manager.", is_error=True)
+            await self.send_response(interaction, message=f"⚠️ Role {role.mention} is already a manager.", ephemeral=True) # Explicit ephemeral for warning
 
     @clock_settings_group.command(name="remove-manager-role", description="Revoke manager permissions for bonuses/penalties.")
     @app_commands.describe(role="The role to remove manager permissions from.")
     async def remove_manager_role(self, interaction: discord.Interaction, role: discord.Role):
+        # display_settings = await self.get_guild_display_settings(interaction.guild_id) # Not used for ephemeral here, admin command
+        # ephemeral = display_settings.get('ephemeral_responses', True)
         clock_data = await self.get_clock_data(interaction.guild_id)
         manager_roles = clock_data.get("settings", {}).get("bonus_penalty_manager_roles", [])
         if str(role.id) in manager_roles:
@@ -171,7 +173,7 @@ class ClockInTrackerSlash(commands.Cog, name="clock_in_tracker"):
             await self.save_clock_data(interaction.guild_id, clock_data)
             await self.send_response(interaction, message=f"🛠️ Role {role.mention} can no longer manage bonuses/penalties.")
         else:
-            await self.send_response(interaction, message=f"⚠️ Role {role.mention} was not a manager.", is_error=True)
+            await self.send_response(interaction, message=f"⚠️ Role {role.mention} was not a manager.", ephemeral=True) # Explicit ephemeral for warning
             
     @clock_settings_group.command(name="toggle-public-clock-events", description="Toggle public display of clock-in/out/break embeds.")
     async def toggle_public_clock_events(self, interaction: discord.Interaction):
@@ -189,7 +191,8 @@ class ClockInTrackerSlash(commands.Cog, name="clock_in_tracker"):
         clock_data = await self.get_clock_data(interaction.guild_id)
         settings_data = clock_data.get("settings", settings.DEFAULT_CLOCK_DATA["settings"].copy())
 
-        max_breaks = settings_data.get("max_breaks_per_shift", 3)
+        max_breaks_val = settings_data.get("max_breaks_per_shift", 3)
+        max_breaks_display = str(max_breaks_val) if max_breaks_val > 0 else "Unlimited"
         max_break_duration_min = settings_data.get("max_break_duration_minutes", 0)
         display_public_events = settings_data.get("display_public_clock_embeds", True)
         manager_role_ids = settings_data.get("bonus_penalty_manager_roles", [])
@@ -202,25 +205,27 @@ class ClockInTrackerSlash(commands.Cog, name="clock_in_tracker"):
         display_events_status = "Enabled" if display_public_events else "Disabled"
         max_break_duration_display = f"{max_break_duration_min} minutes" if max_break_duration_min > 0 else "Unlimited"
 
-        embed = discord.Embed(title="Clock System Configuration", color=discord.Color.blue(), timestamp=datetime.now(timezone.utc))
-        embed.add_field(name="Max Breaks / Shift", value=f"`{max_breaks}`", inline=True)
+        embed = discord.Embed(title="⚙️ Clock System Configuration", color=discord.Color.blue(), timestamp=datetime.now(timezone.utc))
+        embed.add_field(name="Max Breaks / Shift", value=f"`{max_breaks_display}`", inline=True)
         embed.add_field(name="Max Break Duration", value=f"`{max_break_duration_display}`", inline=True)
         embed.add_field(name="Public Clock Events", value=f"`{display_events_status}`", inline=True)
         embed.add_field(name="Bonus/Penalty Managers", value=manager_roles_display, inline=False)
         
-        await self.send_response(interaction, embed=embed) # Uses guild ephemeral by default
+        await self.send_response(interaction, embed=embed) # Uses default ephemeral setting for this info embed
 
     # --- Main Clocking Commands ---
     @app_commands.command(name="clock-in", description="Clock in to start your shift.")
     async def clock_in(self, interaction: discord.Interaction):
+        display_settings = await self.get_guild_display_settings(interaction.guild_id)
+        ephemeral_default = display_settings.get('ephemeral_responses', True) # For private messages
         clock_data = await self.get_clock_data(interaction.guild_id)
         user_state = await self.get_user_clock_state(clock_data, interaction.user.id)
 
         if user_state["status"] == "clocked_in":
-            await self.send_response(interaction, message="❌ You are already clocked in.", is_error=True)
+            await self.send_response(interaction, message="❌ You are already clocked in.", ephemeral=ephemeral_default)
             return
         if user_state["status"] == "on_break":
-            await self.send_response(interaction, message="❌ You are on break. Use `/back` first.", is_error=True)
+            await self.send_response(interaction, message="❌ You are on break. Use `/back` first.", ephemeral=ephemeral_default)
             return
 
         user_state["status"] = "clocked_in"
@@ -229,6 +234,10 @@ class ClockInTrackerSlash(commands.Cog, name="clock_in_tracker"):
         user_state["breaks_taken_this_shift"] = 0
         user_state["accumulated_break_duration_seconds_this_shift"] = 0.0
         user_state["break_start_time"] = None
+        # Clear break-specific alert fields
+        user_state["expected_break_end_time_iso"] = None
+        user_state["overstay_alert_message_id"] = None
+        user_state["break_interaction_channel_id"] = None
         await self.save_clock_data(interaction.guild_id, clock_data)
         
         if await self.should_display_public_clock_event(interaction.guild_id):
@@ -236,109 +245,188 @@ class ClockInTrackerSlash(commands.Cog, name="clock_in_tracker"):
                 description=f"✅ {interaction.user.mention} has **clocked in**.",
                 color=discord.Color.green(), timestamp=current_time_utc
             )
-            await self.send_response(interaction, embed=embed, is_public_event=True)
+            await self.send_response(interaction, embed=embed, ephemeral=False) # Public event
         else:
-            await self.send_response(interaction, message=f"✅ Clocked in at <t:{int(current_time_utc.timestamp())}:T>.")
+            await self.send_response(interaction, message=f"✅ Clocked in at <t:{int(current_time_utc.timestamp())}:T>.", ephemeral=ephemeral_default)
 
     @app_commands.command(name="clock-out", description="Clock out to end your shift.")
     async def clock_out(self, interaction: discord.Interaction):
+        display_settings = await self.get_guild_display_settings(interaction.guild_id)
+        ephemeral_default = display_settings.get('ephemeral_responses', True) # For private messages
         clock_data = await self.get_clock_data(interaction.guild_id)
         user_state = await self.get_user_clock_state(clock_data, interaction.user.id)
 
         if user_state["status"] == "clocked_out":
-            await self.send_response(interaction, message="❌ You are not clocked in.", is_error=True)
+            await self.send_response(interaction, message="❌ You are not clocked in.", ephemeral=ephemeral_default)
             return
 
         now_utc = datetime.now(timezone.utc)
+        # Handle ending break if clocking out while on break
         if user_state["status"] == "on_break" and user_state["break_start_time"]:
             break_start_dt = datetime.fromisoformat(user_state["break_start_time"])
             current_break_duration = now_utc - break_start_dt
             user_state["accumulated_break_duration_seconds_this_shift"] += current_break_duration.total_seconds()
-            user_state["break_start_time"] = None
             logger.info(f"User {interaction.user.id} auto-ended break of {format_timedelta(current_break_duration)} during clock-out.")
+            # Attempt to clean up overstay alert message if any
+            await self._cleanup_overstay_alert(interaction.guild_id, interaction.user.id, user_state, clock_data)
 
         if not user_state["clock_in_time"]:
-            await self.send_response(interaction, message="❌ Error: Clock-in time missing.", is_error=True)
+            await self.send_response(interaction, message="❌ Error: Clock-in time missing. Please contact an admin.", ephemeral=True) # Error, likely ephemeral
             logger.error(f"User {interaction.user.id} clock_out error: clock_in_time missing. State: {user_state}")
+            user_state.update(DEFAULT_USER_CLOCK_STATE.copy())
+            await self.save_clock_data(interaction.guild_id, clock_data)
             return
             
         clock_in_dt = datetime.fromisoformat(user_state["clock_in_time"])
         total_shift_duration_td = now_utc - clock_in_dt
-        total_work_duration_seconds = total_shift_duration_td.total_seconds() - user_state["accumulated_break_duration_seconds_this_shift"]
+        # Capture the final break/shift values after any on-break logic
+        original_breaks_taken = user_state.get("breaks_taken_this_shift", 0)
+        original_accumulated_break_duration = user_state.get("accumulated_break_duration_seconds_this_shift", 0.0)
+        total_work_duration_seconds = total_shift_duration_td.total_seconds() - original_accumulated_break_duration
         total_work_duration_td = timedelta(seconds=max(0, total_work_duration_seconds))
 
-        user_state["status"] = "clocked_out"
-        user_state["clock_in_time"] = None
+        user_state.update(DEFAULT_USER_CLOCK_STATE.copy()) 
         await self.save_clock_data(interaction.guild_id, clock_data)
 
         max_breaks_config = clock_data.get("settings", {}).get("max_breaks_per_shift", 3)
-        breaks_display = f"{user_state['breaks_taken_this_shift']}"
+        breaks_display = f"{original_breaks_taken}"
         if max_breaks_config > 0:
             breaks_display += f"/{max_breaks_config}"
+        else: # Unlimited breaks
+             breaks_display += " (Unlimited)"
+
 
         if await self.should_display_public_clock_event(interaction.guild_id):
             embed = discord.Embed(
-                title=f"Shift Ended: {interaction.user.display_name}",
-                color=discord.Color.gold(), timestamp=now_utc
+                title=f"",
+                color=discord.Color.from_rgb(0, 150, 255), # Professional Blue
+                timestamp=now_utc
             )
-            embed.set_thumbnail(url=interaction.user.display_avatar.url if interaction.user.display_avatar else None)
-            embed.add_field(name="Total Time Worked", value=f"**{format_timedelta(total_work_duration_td)}**", inline=False)
-            embed.add_field(name="Shift Duration", value=format_timedelta(total_shift_duration_td), inline=True)
-            embed.add_field(name="Breaks Taken", value=breaks_display, inline=True)
-            embed.add_field(name="Total Break Time", value=format_timedelta(timedelta(seconds=user_state["accumulated_break_duration_seconds_this_shift"])), inline=True)
-            await self.send_response(interaction, embed=embed, is_public_event=True)
+            # embed.set_author(name=interaction.user.display_name, icon_url=interaction.user.display_avatar.url if interaction.user.display_avatar else None)
+            
+            embed.add_field(name="", value=(
+                "```text\n"
+                f"{'Total Shift Duration:':<22} {format_timedelta(total_shift_duration_td)}\n"
+                f"{'Time Worked:':<22} {format_timedelta(total_work_duration_td)}\n"
+                f"{'Total Break Time:':<22} {format_timedelta(timedelta(seconds=original_accumulated_break_duration))}\n"
+                f"{'Breaks Taken:':<22} {breaks_display}"
+                "\n```"
+            ), inline=False)
+            
+            if interaction.user.display_avatar:
+                embed.set_thumbnail(url=interaction.user.display_avatar.url)
+
+            await self.send_response(interaction, embed=embed, ephemeral=False) # Public event
         else:
             await self.send_response(
                 interaction, 
-                message=f"✅ Clocked out. Time worked: **{format_timedelta(total_work_duration_td)}**. Breaks: {breaks_display}."
+                message=f"✅ Clocked out. Time worked: **{format_timedelta(total_work_duration_td)}**. Breaks: {breaks_display}.",
+                ephemeral=ephemeral_default
             )
 
     @app_commands.command(name="break", description="Start a break (must be clocked in).")
     async def start_break(self, interaction: discord.Interaction):
+        display_settings = await self.get_guild_display_settings(interaction.guild_id)
+        ephemeral_default = display_settings.get('ephemeral_responses', True)
         clock_data = await self.get_clock_data(interaction.guild_id)
         user_state = await self.get_user_clock_state(clock_data, interaction.user.id)
-        max_breaks_config = clock_data.get("settings", {}).get("max_breaks_per_shift", 3)
+        guild_settings = clock_data.get("settings", {})
+        max_breaks_config = guild_settings.get("max_breaks_per_shift", 3)
+        max_break_duration_minutes = guild_settings.get("max_break_duration_minutes", 0)
 
         if user_state["status"] == "on_break":
-            await self.send_response(interaction, message="❌ You are already on break.", is_error=True)
+            await self.send_response(interaction, message="❌ You are already on break.", ephemeral=ephemeral_default)
             return
         if user_state["status"] != "clocked_in":
-            await self.send_response(interaction, message="❌ You must be clocked in to start a break.", is_error=True)
+            await self.send_response(interaction, message="❌ You must be clocked in to start a break.", ephemeral=ephemeral_default)
             return
         
         if max_breaks_config > 0 and user_state["breaks_taken_this_shift"] >= max_breaks_config:
-            await self.send_response(interaction, message=f"❌ Max breaks ({max_breaks_config}) reached.", is_error=True)
+            await self.send_response(interaction, message=f"❌ Max breaks ({max_breaks_config}) reached for this shift.", ephemeral=ephemeral_default)
             return
 
         user_state["status"] = "on_break"
         current_time_utc = datetime.now(timezone.utc)
         user_state["break_start_time"] = current_time_utc.isoformat()
         user_state["breaks_taken_this_shift"] += 1
+        user_state["break_interaction_channel_id"] = interaction.channel_id 
+
+        if max_break_duration_minutes > 0:
+            user_state["expected_break_end_time_iso"] = (current_time_utc + timedelta(minutes=max_break_duration_minutes)).isoformat()
+        else:
+            user_state["expected_break_end_time_iso"] = None 
+        user_state["overstay_alert_message_id"] = None 
+
         await self.save_clock_data(interaction.guild_id, clock_data)
 
         if await self.should_display_public_clock_event(interaction.guild_id):
             embed = discord.Embed(
                 description=f"⏸️ {interaction.user.mention} is now **on break**.",
-                color=discord.Color.from_rgb(170, 170, 170), 
+                color=discord.Color.from_rgb(170, 170, 170), # Grey
                 timestamp=current_time_utc
             )
-            await self.send_response(interaction, embed=embed, is_public_event=True)
+            await self.send_response(interaction, embed=embed, ephemeral=False) # Public event
         else:
-            await self.send_response(interaction, message=f"✅ Break started at <t:{int(current_time_utc.timestamp())}:T>.")
+            await self.send_response(interaction, message=f"⏸️ Break started at <t:{int(current_time_utc.timestamp())}:T>.", ephemeral=ephemeral_default)
+
+    async def _cleanup_overstay_alert(self, guild_id: int, user_id: int, user_state: Dict[str, Any], clock_data: Dict[str, Any], save_data: bool = True):
+        updated = False
+        if user_state.get("overstay_alert_message_id") and user_state.get("break_interaction_channel_id"):
+            guild = self.bot.get_guild(guild_id)
+            if guild:
+                # Ensure channel is fetchable and of correct type
+                channel_id = user_state["break_interaction_channel_id"]
+                try:
+                    channel = await guild.fetch_channel(channel_id) # fetch_channel can get any type
+                    if not isinstance(channel, discord.TextChannel): # Explicitly check for TextChannel
+                         logger.warning(f"Break interaction channel {channel_id} for user {user_id} is not a TextChannel. Type: {type(channel)}")
+                         channel = None # Invalidate channel if not TextChannel
+                except (discord.NotFound, discord.Forbidden): # Channel not found or no permissions
+                    logger.warning(f"Could not fetch break interaction channel {channel_id} for user {user_id} during overstay cleanup.")
+                    channel = None # Invalidate channel
+                
+                if channel and isinstance(channel, discord.TextChannel):
+                    try:
+                        msg_to_delete = await channel.fetch_message(user_state["overstay_alert_message_id"])
+                        await msg_to_delete.delete()
+                        logger.info(f"Deleted overstay alert message {user_state['overstay_alert_message_id']} for user {user_id}")
+                    except discord.NotFound:
+                        logger.info(f"Overstay alert message {user_state['overstay_alert_message_id']} for user {user_id} not found during cleanup.")
+                    except discord.Forbidden:
+                        logger.warning(f"Bot lacks permissions to delete overstay alert message {user_state['overstay_alert_message_id']} in channel {channel.id} for user {user_id}.")
+                    except Exception as e:
+                        logger.error(f"Error deleting overstay alert message for user {user_id}: {e}", exc_info=True)
+            user_state["overstay_alert_message_id"] = None
+            updated = True
+        
+        if user_state.get("expected_break_end_time_iso") is not None:
+            user_state["expected_break_end_time_iso"] = None
+            updated = True
+        # break_interaction_channel_id is cleared on clock_out or new clock_in. 
+        # Not clearing it here allows alerts to be re-sent to the same channel if the user goes on break again quickly.
+            
+        if updated and save_data:
+            await self.save_clock_data(guild_id, clock_data)
+        return updated
+
 
     @app_commands.command(name="back", description="Return from your break.")
     async def end_break(self, interaction: discord.Interaction):
+        display_settings = await self.get_guild_display_settings(interaction.guild_id)
+        ephemeral_default = display_settings.get('ephemeral_responses', True)
         clock_data = await self.get_clock_data(interaction.guild_id)
         user_state = await self.get_user_clock_state(clock_data, interaction.user.id)
         settings_data = clock_data.get("settings", {})
         max_break_duration_minutes = settings_data.get("max_break_duration_minutes", 0)
 
         if user_state["status"] != "on_break":
-            await self.send_response(interaction, message="❌ You are not currently on a break.", is_error=True)
+            await self.send_response(interaction, message="❌ You are not currently on a break.", ephemeral=ephemeral_default)
             return
         if not user_state["break_start_time"]:
-            await self.send_response(interaction, message="❌ Error: Break start time missing.", is_error=True)
+            await self.send_response(interaction, message="❌ Error: Break start time missing. Please contact an admin.", ephemeral=True) # Error, likely ephemeral
             logger.error(f"User {interaction.user.id} end_break error: break_start_time missing. State: {user_state}")
+            user_state["status"] = "clocked_in" 
+            await self.save_clock_data(interaction.guild_id, clock_data)
             return
 
         now_utc = datetime.now(timezone.utc)
@@ -348,34 +436,48 @@ class ClockInTrackerSlash(commands.Cog, name="clock_in_tracker"):
         user_state["accumulated_break_duration_seconds_this_shift"] += current_break_duration_td.total_seconds()
         user_state["status"] = "clocked_in"
         user_state["break_start_time"] = None
+        
+        await self._cleanup_overstay_alert(interaction.guild_id, interaction.user.id, user_state, clock_data, save_data=False)
+        
         await self.save_clock_data(interaction.guild_id, clock_data)
         
         overstayed_message = ""
-        if max_break_duration_minutes > 0:
+        if max_break_duration_minutes > 0 and user_state.get("expected_break_end_time_iso"): # Check if expected_break_end_time_iso was set
+            # It was cleaned up by _cleanup_overstay_alert, so re-calculate if needed from original break start
+            expected_end_dt_for_calc = break_start_dt + timedelta(minutes=max_break_duration_minutes)
+            if now_utc > expected_end_dt_for_calc:
+                overstayed_seconds = (now_utc - expected_end_dt_for_calc).total_seconds()
+                overstayed_td = timedelta(seconds=overstayed_seconds)
+                overstayed_message = f"\n\n🔴 Overstayed by: {format_timedelta(overstayed_td, show_seconds=False)}"
+        elif max_break_duration_minutes > 0: # Fallback if expected_break_end_time_iso wasn't set (should not happen if logic is correct)
             allowed_duration_seconds = max_break_duration_minutes * 60
             if current_break_duration_td.total_seconds() > allowed_duration_seconds:
                 overstayed_seconds = current_break_duration_td.total_seconds() - allowed_duration_seconds
                 overstayed_td = timedelta(seconds=overstayed_seconds)
-                overstayed_message = f"\n🔴 Overstayed by: {format_timedelta(overstayed_td, show_seconds=False)}"
+                overstayed_message = f"\n\n🔴 Overstayed by: {format_timedelta(overstayed_td, show_seconds=False)}"
+
 
         max_breaks_config = clock_data.get("settings", {}).get("max_breaks_per_shift", 3)
         breaks_display = f"{user_state['breaks_taken_this_shift']}"
         if max_breaks_config > 0:
             breaks_display += f"/{max_breaks_config}"
+        else:
+            breaks_display += " (Unlimited)"
 
         if await self.should_display_public_clock_event(interaction.guild_id):
             embed = discord.Embed(
                 description=f"▶️ {interaction.user.mention} is **back from break**.{overstayed_message}",
-                color=discord.Color.from_rgb(100,100,100),
+                color=discord.Color.from_rgb(100,100,255), # Slightly more vibrant blue/purple
                 timestamp=now_utc
             )
-            embed.add_field(name="Break Duration", value=format_timedelta(current_break_duration_td), inline=True)
+            embed.add_field(name="Duration", value=format_timedelta(current_break_duration_td), inline=True)
             embed.add_field(name="Breaks Taken", value=breaks_display, inline=True)
-            await self.send_response(interaction, embed=embed, is_public_event=True)
+            await self.send_response(interaction, embed=embed, ephemeral=False) # Public event
         else:
             await self.send_response(
                 interaction, 
-                message=f"✅ Welcome back! Break duration: {format_timedelta(current_break_duration_td)}.{overstayed_message}"
+                message=f"▶️ Welcome back! Break duration: {format_timedelta(current_break_duration_td)}.{overstayed_message}",
+                ephemeral=ephemeral_default
             )
 
     # --- Bonus/Penalty Command Groups ---
@@ -383,11 +485,14 @@ class ClockInTrackerSlash(commands.Cog, name="clock_in_tracker"):
     penalty_group = app_commands.Group(name="penalty", description="Manage penalties for users.")
 
     async def _add_bonus_penalty(self, interaction: discord.Interaction, user: discord.User, amount: float, item_type: str, reason: Optional[str] = None):
+        # Admin commands usually are not ephemeral by default, but this one's response is an embed that might be better public
+        # display_settings = await self.get_guild_display_settings(interaction.guild_id)
+        # ephemeral = display_settings.get('ephemeral_responses', True)
         if not await self.has_bonus_penalty_permission(interaction):
-            await self.send_response(interaction, message="❌ Permission denied.", is_error=True)
+            await self.send_response(interaction, message="❌ You do not have permission to manage bonuses/penalties.", ephemeral=True) # Permission error, ephemeral
             return
         if amount <= 0:
-            await self.send_response(interaction, message=f"❌ Amount must be positive.", is_error=True)
+            await self.send_response(interaction, message=f"❌ Amount must be positive.", ephemeral=True) # Input error, ephemeral
             return
 
         clock_data = await self.get_clock_data(interaction.guild_id)
@@ -403,7 +508,7 @@ class ClockInTrackerSlash(commands.Cog, name="clock_in_tracker"):
         
         action_verb = "Added" if item_type == "bonus" else "Applied"
         embed_color = discord.Color.green() if item_type == "bonus" else discord.Color.red()
-        reason_display = f"\nReason: _{reason}_" if reason else ""
+        reason_display = f"\nReason: _{discord.utils.escape_markdown(reason)}_ " if reason else ""
         
         embed = discord.Embed(
             title=f"{item_type.capitalize()} {action_verb}",
@@ -412,11 +517,13 @@ class ClockInTrackerSlash(commands.Cog, name="clock_in_tracker"):
         )
         embed.add_field(name="ID", value=f"`{item_id[:8]}`", inline=False)
         embed.set_footer(text=f"By: {interaction.user.display_name}")
-        await self.send_response(interaction, embed=embed) # Respects guild ephemeral for admin actions
+        await self.send_response(interaction, embed=embed) # Uses guild default ephemeral, likely False for this kind of log
 
     async def _remove_bonus_penalty(self, interaction: discord.Interaction, user: discord.User, item_id_prefix: str, item_type: str):
+        # display_settings = await self.get_guild_display_settings(interaction.guild_id)
+        # ephemeral = display_settings.get('ephemeral_responses', True)
         if not await self.has_bonus_penalty_permission(interaction):
-            await self.send_response(interaction, message="❌ Permission denied.", is_error=True)
+            await self.send_response(interaction, message="❌ You do not have permission to manage bonuses/penalties.", ephemeral=True) # Permission error, ephemeral
             return
 
         clock_data = await self.get_clock_data(interaction.guild_id)
@@ -432,55 +539,76 @@ class ClockInTrackerSlash(commands.Cog, name="clock_in_tracker"):
                 color=discord.Color.dark_grey(), timestamp=datetime.now(timezone.utc)
             )
             embed.set_footer(text=f"By: {interaction.user.display_name}")
-            await self.send_response(interaction, embed=embed) # Respects guild ephemeral
+            await self.send_response(interaction, embed=embed) # Uses guild default ephemeral
         else:
-            await self.send_response(interaction, message=f"❌ No {item_type} for {user.mention} with ID starting `{item_id_prefix}`.", is_error=True)
+            await self.send_response(interaction, message=f"❌ No {item_type} found for {user.mention} with ID starting with `{item_id_prefix}`.", ephemeral=True) # Error, ephemeral
 
     async def _list_bonus_penalty(self, interaction: discord.Interaction, target_user: discord.User, item_type: str):
-        if target_user.id != interaction.user.id and not await self.has_bonus_penalty_permission(interaction):
-            await self.send_response(interaction, message=f"❌ Permission to view others' {item_type}s denied.", is_error=True)
-            return
-
+        # Permission check was intentionally removed as per original TODO: "bonus/penalty list should display for all users"
         clock_data = await self.get_clock_data(interaction.guild_id)
         user_bp_list = sorted(
             [item for item in clock_data["bonuses_penalties"].get(str(target_user.id), []) if item["type"] == item_type],
-            key=lambda x: x['timestamp'], reverse=True
+            key=lambda x: x['timestamp'], reverse=True # Newest first
         )
 
-        # Determine ephemeral for the list itself (not errors)
-        display_settings = await self.get_guild_display_settings(interaction.guild_id)
-        list_ephemeral = display_settings.get('ephemeral_responses', True)
+        display_settings = await self.get_guild_display_settings(interaction.guild_id) # For ephemeral setting
+        ephemeral = display_settings.get('ephemeral_responses', True)
+
 
         if not user_bp_list:
-            await self.send_response(interaction, message=f"ℹ️ {target_user.mention} has no active {item_type}s.", ephemeral=list_ephemeral)
+            await self.send_response(interaction, message=f"ℹ️ {target_user.mention} has no active {item_type}s.", ephemeral=ephemeral) 
             return
 
         embed_color = discord.Color.green() if item_type == "bonus" else discord.Color.red()
         title_text = f"Active {item_type.capitalize()}s: {target_user.display_name}"
-        if target_user.name and target_user.name.lower() != target_user.display_name.lower():
+        if target_user.name and target_user.name.lower() != target_user.display_name.lower(): 
             title_text += f" ({target_user.name})"
         
         embed = discord.Embed(title=title_text, color=embed_color, timestamp=datetime.now(timezone.utc))
+        if target_user.display_avatar:
+            embed.set_thumbnail(url=target_user.display_avatar.url)
         
         description_lines = []
-        for i, item in enumerate(user_bp_list[:10], 1):
-            giver_member = interaction.guild.get_member(int(item["giver_id"]))
-            giver_display_name = giver_member.display_name if giver_member else "Unknown"
-            giver_username = giver_member.name if giver_member else ""
+        for i, item in enumerate(user_bp_list[:10], 1): 
+            giver_id_int = int(item["giver_id"])
+            giver_member = interaction.guild.get_member(giver_id_int) if interaction.guild else None # Check if guild exists
+            
+            giver_display_name = "Unknown User"
+            giver_username = ""
+
+            if giver_member:
+                giver_display_name = giver_member.display_name
+                giver_username = giver_member.name
+            else: # Fallback to fetching user if member not in cache or not in guild
+                try:
+                    giver_user_obj = await self.bot.fetch_user(giver_id_int)
+                    giver_display_name = giver_user_obj.display_name # For bots/users not in guild
+                    giver_username = giver_user_obj.name
+                except discord.NotFound:
+                    giver_display_name = f"Unknown User (ID: {giver_id_int})" # if fetch_user fails
+                except Exception as e:
+                    logger.warning(f"Could not fetch giver user {giver_id_int} for bonus/penalty list: {e}")
+                    giver_display_name = f"Error Fetching User (ID: {giver_id_int})"
+
+
             giver_text = giver_display_name
-            if giver_member and giver_username and giver_username.lower() != giver_display_name.lower():
+            if giver_username and giver_username.lower() != giver_display_name.lower():
                 giver_text += f" ({giver_username})"
 
-            reason_text = f"_{item['reason']}_" if item.get('reason') else "_No reason_"
-            added_at = f"<t:{int(datetime.fromisoformat(item['timestamp']).timestamp())}:R>"
-            line = f"**{i}. ${item['amount']:.2f}** - {reason_text}\n   ID: `{item['id'][:8]}` | By: {giver_text} | {added_at}"
+            reason_text = f"_{discord.utils.escape_markdown(item['reason'])}_" if item.get('reason') else "_No reason provided_"
+            item_timestamp = datetime.fromisoformat(item['timestamp'])
+            added_at_display = f"<t:{int(item_timestamp.timestamp())}:R>" 
+
+            line = f"**{i}. ${item['amount']:.2f}** - {reason_text}\n   ID: `{item['id'][:8]}` | By: {giver_text} | {added_at_display}"
             description_lines.append(line)
         
         embed.description = "\n\n".join(description_lines)
         if len(user_bp_list) > 10:
-            embed.set_footer(text=f"Showing {len(description_lines)} of {len(user_bp_list)}.")
+            embed.set_footer(text=f"Showing {len(description_lines)} of {len(user_bp_list)} total {item_type}s. Newest first.")
+        else:
+            embed.set_footer(text=f"Newest {item_type}s listed first.")
             
-        await self.send_response(interaction, embed=embed, ephemeral=list_ephemeral)
+        await self.send_response(interaction, embed=embed, ephemeral=ephemeral) # Respects guild ephemeral for list views
 
     # Bonus Commands
     @bonus_group.command(name="add", description="Add a bonus to a user.")
@@ -514,6 +642,117 @@ class ClockInTrackerSlash(commands.Cog, name="clock_in_tracker"):
     async def list_penalties(self, interaction: discord.Interaction, user: Optional[discord.User] = None):
         await self._list_bonus_penalty(interaction, user or interaction.user, "penalty")
 
+    # --- Background Task for Break Overstays ---
+    @tasks.loop(seconds=15.0)
+    async def check_break_overstays(self):
+        if not self.bot.is_ready():
+            return
+
+        now_utc = datetime.now(timezone.utc)
+
+        for guild in self.bot.guilds:
+            try:
+                clock_data = await self.get_clock_data(guild.id)
+                guild_settings = clock_data.get("settings", {})
+                max_break_min_config = guild_settings.get("max_break_duration_minutes", 0)
+
+                if max_break_min_config <= 0: 
+                    continue
+
+                users_data = clock_data.get("users", {})
+                guild_data_modified = False
+
+                for user_id_str, user_state in users_data.items():
+                    user_id = int(user_id_str)
+                    if user_state.get("status") == "on_break" and \
+                       user_state.get("break_start_time") and \
+                       user_state.get("expected_break_end_time_iso") and \
+                       user_state.get("break_interaction_channel_id"):
+                        
+                        expected_end_dt = datetime.fromisoformat(user_state["expected_break_end_time_iso"])
+                        
+                        if now_utc > expected_end_dt:
+                            member = guild.get_member(user_id) 
+                            user_obj = None
+                            if member:
+                                user_obj = member
+                            else:
+                                try:
+                                    user_obj = await self.bot.fetch_user(user_id)
+                                except discord.NotFound:
+                                    logger.warning(f"Could not find user {user_id} for overstay alert in guild {guild.id}.")
+                                    continue # Skip if user cannot be found for mention
+                            
+                            alert_channel_id = user_state["break_interaction_channel_id"]
+                            alert_channel = None
+                            try:
+                                # Fetch channel to ensure it's up-to-date and exists
+                                fetched_ch = await guild.fetch_channel(alert_channel_id)
+                                if isinstance(fetched_ch, discord.TextChannel):
+                                    alert_channel = fetched_ch
+                                else:
+                                    logger.warning(f"Break overstay alert channel {alert_channel_id} is not a TextChannel for user {user_id} in guild {guild.id}. Type: {type(fetched_ch)}")
+                            except (discord.NotFound, discord.Forbidden):
+                                logger.warning(f"Break overstay alert channel {alert_channel_id} not found or no permission for user {user_id} in guild {guild.id}.")
+                                # Potentially clear user_state["break_interaction_channel_id"] here if it's persistently bad?
+                                # For now, just skip sending the alert for this cycle.
+                                continue
+
+                            if not alert_channel:
+                                continue # Already logged
+
+                            overstay_duration = now_utc - expected_end_dt
+                            formatted_overstay = format_timedelta(overstay_duration, show_seconds=True)
+                            
+                            embed_title = "⚠️ Break Overstay Alert"
+                            embed_desc = f"{user_obj.mention}, you have exceeded your allowed break time of **{max_break_min_config} minutes**."
+                            embed_color = discord.Color.orange()
+
+                            alert_embed = discord.Embed(title=embed_title, description=embed_desc, color=embed_color, timestamp=now_utc)
+                            alert_embed.add_field(name="Currently Overstayed By", value=f"**{formatted_overstay}**")
+                            alert_embed.set_footer(text=f"User: {user_obj.display_name} ({user_obj.name})")
+
+                            try:
+                                if user_state.get("overstay_alert_message_id"):
+                                    msg = await alert_channel.fetch_message(user_state["overstay_alert_message_id"])
+                                    await msg.edit(embed=alert_embed) 
+                                else: 
+                                    msg = await alert_channel.send(content=user_obj.mention, embed=alert_embed)
+                                    user_state["overstay_alert_message_id"] = msg.id
+                                    guild_data_modified = True
+                            except discord.NotFound:
+                                logger.info(f"Overstay alert message {user_state.get('overstay_alert_message_id')} for user {user_id} not found. Sending a new one.")
+                                msg = await alert_channel.send(content=user_obj.mention, embed=alert_embed)
+                                user_state["overstay_alert_message_id"] = msg.id
+                                guild_data_modified = True
+                            except discord.Forbidden:
+                                logger.warning(f"Bot lacks permission to send/edit overstay alert in channel {alert_channel.id} for user {user_id}.")
+                            except Exception as e:
+                                logger.error(f"Error handling overstay alert for user {user_id} in guild {guild.id}: {e}", exc_info=True)
+                
+                if guild_data_modified:
+                    await self.save_clock_data(guild.id, clock_data)
+
+            except Exception as e:
+                logger.error(f"Error in check_break_overstays task for guild {guild.id}: {e}", exc_info=True)
+
+    @check_break_overstays.before_loop
+    async def before_check_break_overstays(self):
+        await self.bot.wait_until_ready()
+        logger.info("Break overstay checker task is now ready and running.")
+
+
 async def setup(bot):
+    if not hasattr(settings, 'get_guild_display_path') or \
+       not hasattr(settings, 'DEFAULT_DISPLAY_SETTINGS') or \
+       not hasattr(settings, 'get_guild_clock_data_path') or \
+       not hasattr(settings, 'DEFAULT_CLOCK_DATA'):
+        logger.error("Config 'settings' module is missing required attributes for ClockInTrackerSlash. Cog not loaded.")
+        raise ImportError("Missing required settings attributes for ClockInTrackerSlash.")
+    
+    if not hasattr(file_handlers, 'load_json') or not hasattr(file_handlers, 'save_json'):
+        logger.error("Utils 'file_handlers' module is missing required functions for ClockInTrackerSlash. Cog not loaded.")
+        raise ImportError("Missing required file_handlers functions for ClockInTrackerSlash.")
+
     await bot.add_cog(ClockInTrackerSlash(bot))
-    logger.info("ClockInTrackerSlash cog loaded with corrected ephemeral handling.")
+    logger.info("ClockInTrackerSlash cog loaded.")
