@@ -110,9 +110,9 @@ class ClockInTrackerSlash(commands.Cog, name="clock_in_tracker"):
                 logger.warning(f"Invalid role ID '{role_id_str}' in manager roles for guild {interaction.guild_id}")
         return False
 
-    async def should_display_public_clock_event(self, guild_id: int) -> bool:
-        clock_data = await self.get_clock_data(guild_id)
-        return clock_data.get("settings", {}).get("display_public_clock_embeds", True)
+    # async def should_display_public_clock_event(self, guild_id: int) -> bool: # TODO: Remove
+    #     clock_data = await self.get_clock_data(guild_id)
+    #     return clock_data.get("settings", {}).get("display_public_clock_embeds", True)
 
     async def send_response(
         self, interaction: discord.Interaction, message: Optional[str] = None,
@@ -205,16 +205,16 @@ class ClockInTrackerSlash(commands.Cog, name="clock_in_tracker"):
         else:
             await self.send_response(interaction, message=f"⚠️ Role {role.mention} was not a manager.", ephemeral=True) # Explicit ephemeral for warning
             
-    @clock_settings_group.command(name="toggle-public-clock-events", description="Toggle public display of clock-in/out/break embeds.")
-    async def toggle_public_clock_events(self, interaction: discord.Interaction):
-        clock_data = await self.get_clock_data(interaction.guild_id)
-        clock_data.setdefault("settings", settings.DEFAULT_CLOCK_DATA["settings"].copy())
-        current_setting = clock_data["settings"].get("display_public_clock_embeds", True)
-        new_setting = not current_setting
-        clock_data["settings"]["display_public_clock_embeds"] = new_setting
-        await self.save_clock_data(interaction.guild_id, clock_data)
-        status_text = "ENABLED" if new_setting else "DISABLED"
-        await self.send_response(interaction, message=f"🛠️ Public clock event announcements are now **{status_text}**.")
+    # @clock_settings_group.command(name="toggle-public-clock-events", description="Toggle public display of clock-in/out/break embeds.") # TODO: deprecated
+    # async def toggle_public_clock_events(self, interaction: discord.Interaction):
+    #     clock_data = await self.get_clock_data(interaction.guild_id)
+    #     clock_data.setdefault("settings", settings.DEFAULT_CLOCK_DATA["settings"].copy())
+    #     current_setting = clock_data["settings"].get("display_public_clock_embeds", True)
+    #     new_setting = not current_setting
+    #     clock_data["settings"]["display_public_clock_embeds"] = new_setting
+    #     await self.save_clock_data(interaction.guild_id, clock_data)
+    #     status_text = "ENABLED" if new_setting else "DISABLED"
+    #     await self.send_response(interaction, message=f"🛠️ Public clock event announcements are now **{status_text}**.")
 
     @clock_settings_group.command(name="view", description="View current clock system configuration.")
     async def view_clock_settings(self, interaction: discord.Interaction):
@@ -224,7 +224,7 @@ class ClockInTrackerSlash(commands.Cog, name="clock_in_tracker"):
         max_breaks_val = settings_data.get("max_breaks_per_shift", 3)
         max_breaks_display = str(max_breaks_val) if max_breaks_val > 0 else "Unlimited"
         max_break_duration_min = settings_data.get("max_break_duration_minutes", 0)
-        display_public_events = settings_data.get("display_public_clock_embeds", True)
+        # REMOVE PUBLIC EVENTS SETTING
         manager_role_ids = settings_data.get("bonus_penalty_manager_roles", [])
         
         manager_roles_mentions = [
@@ -232,7 +232,7 @@ class ClockInTrackerSlash(commands.Cog, name="clock_in_tracker"):
             if (role := interaction.guild.get_role(int(role_id_str)))
         ]
         manager_roles_display = ", ".join(manager_roles_mentions) if manager_roles_mentions else "None"
-        display_events_status = "Enabled" if display_public_events else "Disabled"
+        # REMOVED: display_events_status
         max_break_duration_display = f"{max_break_duration_min} minutes" if max_break_duration_min > 0 else "Unlimited"
 
         embed = discord.Embed(
@@ -246,21 +246,11 @@ class ClockInTrackerSlash(commands.Cog, name="clock_in_tracker"):
             value=(
                 "```text\n"
                 f"{'Max Breaks Per Shift:':<22} {max_breaks_display}\n"
-                f"{'Max Break Duration:':<22} {max_break_duration_display}\n"
-                f"{'Public Clock Embeds:':<22} {display_events_status}"
+                f"{'Max Break Duration:':<22} {max_break_duration_display}\n"  # REMOVED PUBLIC EVENTS LINE
                 "\n```"
             ),
             inline=False
         )
-
-        embed.add_field(
-            name="🛠️ Bonus / Penalty Managers",
-            value=manager_roles_display or "`No manager roles assigned.`",
-            inline=False
-        )
-
-        
-        await self.send_response(interaction, embed=embed) # Uses default ephemeral setting for this info embed
 
     # --- Main Clocking Commands ---
     @app_commands.command(name="clock-in", description="Clock in to start your shift.")
@@ -289,14 +279,14 @@ class ClockInTrackerSlash(commands.Cog, name="clock_in_tracker"):
         user_state["break_interaction_channel_id"] = None
         await self.save_clock_data(interaction.guild_id, clock_data)
         
-        if await self.should_display_public_clock_event(interaction.guild_id):
-            embed = discord.Embed(
-                description=f"✅ {interaction.user.mention} has **clocked in**.",
-                color=discord.Color.green(), timestamp=current_time_utc
-            )
-            await self.send_response(interaction, embed=embed, ephemeral=False) # Public event
-        else:
-            await self.send_response(interaction, message=f"✅ Clocked in at <t:{int(current_time_utc.timestamp())}:T>.", ephemeral=ephemeral_default)
+        # if await self.should_display_public_clock_event(interaction.guild_id): # TODO: Remove
+        embed = discord.Embed(
+            description=f"✅ {interaction.user.mention} has **clocked in**.",
+            color=discord.Color.green(), timestamp=current_time_utc
+        )
+        await self.send_response(interaction, embed=embed, ephemeral=False) # Public event
+        # else: # TODO: Remove
+        #     await self.send_response(interaction, message=f"✅ Clocked in at <t:{int(current_time_utc.timestamp())}:T>.", ephemeral=ephemeral_default)
 
     @app_commands.command(name="clock-out", description="Clock out to end your shift.")
     async def clock_out(self, interaction: discord.Interaction):
@@ -345,33 +335,34 @@ class ClockInTrackerSlash(commands.Cog, name="clock_in_tracker"):
              breaks_display += " (Unlimited)"
 
 
-        if await self.should_display_public_clock_event(interaction.guild_id):
-            embed = discord.Embed(
-                title=f"",
-                color=discord.Color.from_rgb(0, 150, 255), # Professional Blue
-                timestamp=now_utc
-            )
-            # embed.set_author(name=interaction.user.display_name, icon_url=interaction.user.display_avatar.url if interaction.user.display_avatar else None)
+        # if await self.should_display_public_clock_event(interaction.guild_id): # TODO: Remove
+        embed = discord.Embed(
+            title=f"",
+            color=discord.Color.from_rgb(0, 150, 255), # Professional Blue
+            timestamp=now_utc
+        )
+        # TODO: Remove
+        # embed.set_author(name=interaction.user.display_name, icon_url=interaction.user.display_avatar.url if interaction.user.display_avatar else None)
             
-            embed.add_field(name="", value=(
-                "```text\n"
-                f"{'Total Shift Duration:':<22} {format_timedelta(total_shift_duration_td)}\n"
-                f"{'Time Worked:':<22} {format_timedelta(total_work_duration_td)}\n"
-                f"{'Total Break Time:':<22} {format_timedelta(timedelta(seconds=original_accumulated_break_duration))}\n"
-                f"{'Breaks Taken:':<22} {breaks_display}"
-                "\n```"
-            ), inline=False)
-            
-            if interaction.user.display_avatar:
-                embed.set_thumbnail(url=interaction.user.display_avatar.url)
+        embed.add_field(name="", value=(
+            "```text\n"
+            f"{'Total Shift Duration:':<22} {format_timedelta(total_shift_duration_td)}\n"
+            f"{'Time Worked:':<22} {format_timedelta(total_work_duration_td)}\n"
+            f"{'Total Break Time:':<22} {format_timedelta(timedelta(seconds=original_accumulated_break_duration))}\n"
+            f"{'Breaks Taken:':<22} {breaks_display}"
+            "\n```"
+        ), inline=False)
+        
+        if interaction.user.display_avatar:
+            embed.set_thumbnail(url=interaction.user.display_avatar.url)
 
-            await self.send_response(interaction, embed=embed, ephemeral=False) # Public event
-        else:
-            await self.send_response(
-                interaction, 
-                message=f"✅ Clocked out. Time worked: **{format_timedelta(total_work_duration_td)}**. Breaks: {breaks_display}.",
-                ephemeral=ephemeral_default
-            )
+        await self.send_response(interaction, embed=embed, ephemeral=False) # Public event
+        # else:
+        #     await self.send_response(
+        #         interaction, 
+        #         message=f"✅ Clocked out. Time worked: **{format_timedelta(total_work_duration_td)}**. Breaks: {breaks_display}.",
+        #         ephemeral=ephemeral_default
+        #     )
 
     @app_commands.command(name="break", description="Start a break (must be clocked in).")
     async def start_break(self, interaction: discord.Interaction):
@@ -408,15 +399,15 @@ class ClockInTrackerSlash(commands.Cog, name="clock_in_tracker"):
 
         await self.save_clock_data(interaction.guild_id, clock_data)
 
-        if await self.should_display_public_clock_event(interaction.guild_id):
-            embed = discord.Embed(
-                description=f"⏸️ {interaction.user.mention} is now **on break**.",
-                color=discord.Color.from_rgb(170, 170, 170), # Grey
-                timestamp=current_time_utc
-            )
-            await self.send_response(interaction, embed=embed, ephemeral=False) # Public event
-        else:
-            await self.send_response(interaction, message=f"⏸️ Break started at <t:{int(current_time_utc.timestamp())}:T>.", ephemeral=ephemeral_default)
+        # if await self.should_display_public_clock_event(interaction.guild_id): # TODO: Remove
+        embed = discord.Embed(
+            description=f"⏸️ {interaction.user.mention} is now **on break**.",
+            color=discord.Color.from_rgb(170, 170, 170), # Grey
+            timestamp=current_time_utc
+        )
+        await self.send_response(interaction, embed=embed, ephemeral=False) # Public event # TODO: Remove
+        # else:
+            # await self.send_response(interaction, message=f"⏸️ Break started at <t:{int(current_time_utc.timestamp())}:T>.", ephemeral=ephemeral_default)
 
     async def _cleanup_overstay_alert(self, guild_id: int, user_id: int, user_state: Dict[str, Any], clock_data: Dict[str, Any], save_data: bool = True):
         updated = False
@@ -513,31 +504,31 @@ class ClockInTrackerSlash(commands.Cog, name="clock_in_tracker"):
         else:
             breaks_display += " (Unlimited)"
 
-        if await self.should_display_public_clock_event(interaction.guild_id):
-            embed = discord.Embed(
-                title="",
-                description=f"▶️ {interaction.user.mention} is **back from break**.{overstayed_message}",
-                color=discord.Color.from_rgb(100, 100, 255),  # Slightly vibrant purple-blue
-                timestamp=now_utc
-            )
+        # if await self.should_display_public_clock_event(interaction.guild_id): # TODO: Remove
+        embed = discord.Embed(
+            title="",
+            description=f"▶️ {interaction.user.mention} is **back from break**.{overstayed_message}",
+            color=discord.Color.from_rgb(100, 100, 255),  # Slightly vibrant purple-blue
+            timestamp=now_utc
+        )
 
-            embed.add_field(name="", value=(
-                "```text\n"
-                f"{'Break Duration:':<16} {format_timedelta(current_break_duration_td)}\n"
-                f"{'Breaks Taken:':<16} {breaks_display}"
-                "\n```"
-            ), inline=False)
+        embed.add_field(name="", value=(
+            "```text\n"
+            f"{'Break Duration:':<16} {format_timedelta(current_break_duration_td)}\n"
+            f"{'Breaks Taken:':<16} {breaks_display}"
+            "\n```"
+        ), inline=False)
 
-            if overstayed_message:
-                set_safe_embed_description(embed, overstayed_message.strip())
+        if overstayed_message:
+            set_safe_embed_description(embed, overstayed_message.strip())
 
-            await self.send_response(interaction, embed=embed, ephemeral=False)
-        else:
-            await self.send_response(
-                interaction,
-                message=f"▶️ Welcome back! Break duration: {format_timedelta(current_break_duration_td)}.{overstayed_message}",
-                ephemeral=ephemeral_default
-            )
+        await self.send_response(interaction, embed=embed, ephemeral=False)
+        # else: # TODO: Remove
+        #     await self.send_response(
+        #         interaction,
+        #         message=f"▶️ Welcome back! Break duration: {format_timedelta(current_break_duration_td)}.{overstayed_message}",
+        #         ephemeral=ephemeral_default
+        #     )
 
 
     # --- Bonus/Penalty Command Groups ---
