@@ -1185,6 +1185,37 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         
         # Process models
         models_list = ", ".join(selected_models) if selected_models else ""
+
+        # NOTE: Load active bonuses and penalties from clock system
+        clock_data = await file_handlers.load_json(settings.get_guild_clock_data_path(interaction.guild_id), {})
+        user_bonuses_penalties = clock_data.get("bonuses_penalties", {}).get(str(interaction.user.id), [])
+
+        # NOTE: Calculate total additional bonuses and penalties
+        total_additional_bonus = Decimal(0)
+        total_additional_penalty = Decimal(0)
+
+        active_bonuses = []
+        active_penalties = []
+
+        for item in user_bonuses_penalties:
+            if item["type"] == "bonus":
+                total_additional_bonus += Decimal(str(item["amount"]))
+                active_bonuses.append(item)
+            elif item["type"] == "penalty":
+                total_additional_penalty += Decimal(str(item["amount"]))
+                active_penalties.append(item)
+
+        # NOTE: Apply bonuses and penalties to the total cut
+        original_total_cut = Decimal(str(results["total_cut"]))
+        modified_total_cut = original_total_cut + total_additional_bonus - total_additional_penalty
+        results["total_cut"] = float(modified_total_cut)
+        # results["employee_cut"] = float(modified_total_cut)  # Update employee cut as well # NOTE: We do not modify employee cut
+
+        # NOTE: Store the active items for finalization
+        results["active_bonuses"] = active_bonuses
+        results["active_penalties"] = active_penalties
+        results["total_additional_bonus"] = float(total_additional_bonus)
+        results["total_additional_penalty"] = float(total_additional_penalty)
         
         # Create embed for preview
         embed = discord.Embed(title="📊 Earnings Calculation (PREVIEW)", color=0x009933)
@@ -1231,9 +1262,20 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         if compensation_type != "hourly":
             fields.append(("💵 Net Revenue", f"{format_currency(results['net_revenue'], decimal_places=True, thousands_separator=True)} (80%)", True))
         
+        # NOTE: Show shift bonus (from bonus rules)
+        fields.append(("🎁 Shift Bonus", format_currency(results['bonus'], decimal_places=True, thousands_separator=True), True))
+        
+        # NOTE: Show additional bonuses if any
+        if total_additional_bonus > 0:
+            fields.append(("➕ Additional Bonuses", format_currency(total_additional_bonus, decimal_places=True, thousands_separator=True), True))
+        
+        # NOTE: Show additional penalties if any
+        if total_additional_penalty > 0:
+            fields.append(("➖ Penalties", format_currency(total_additional_penalty, decimal_places=True, thousands_separator=True), True))
+
         # Remaining fields
         fields.extend([
-            ("🎁 Bonus", format_currency(results['bonus'], decimal_places=True, thousands_separator=True), True),
+            # ("🎁 Bonus", format_currency(results['bonus'], decimal_places=True, thousands_separator=True), True), # NOTE: removed since it will be added separately
             ("💼 Employee Cut", format_currency(results['employee_cut'], decimal_places=True, thousands_separator=True), True),
             ("💰 Total Cut", format_currency(results['total_cut'], decimal_places=True, thousands_separator=True), True),
             (" ", "" if results.get("compensation_type") == "hourly" else "", True),
@@ -1257,6 +1299,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         if compensation_type in ["hourly", "both"]:
             results["hours_worked"] = format_currency(hours_worked, decimal_places=True, thousands_separator=False)
 
+
         results.update({
             "date": current_date,
             "sender": sender,
@@ -1268,7 +1311,9 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             "bonus": results["bonus"],
             "employee_cut": results["employee_cut"],
             "total_cut": results["total_cut"], 
-            "models": models_list
+            "models": models_list,
+            "total_additional_bonus": total_additional_bonus, # NOTE: added for finalization
+            "total_additional_penalty": total_additional_penalty # NOTE: added for finalization
         })
         
         # Create confirmation view
@@ -1326,10 +1371,27 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             "shift": results["shift"].lower(),
             "role": results["role"],
             "models": models_list,
-            "hours_worked": hours_worked
+            "hours_worked": hours_worked,
+            "additional_bonuses": float(results.get("total_additional_bonus", 0)),  # NOTE: added for bonus
+            "additional_penalties": float(results.get("total_additional_penalty", 0)) # NOTE: added for penalty
         }
         
         earnings_data[sender].append(new_entry)
+
+        # NOTE: Remove used bonuses and penalties from clock system
+        if "active_bonuses" in results or "active_penalties" in results:
+            clock_data = await file_handlers.load_json(settings.get_guild_clock_data_path(interaction.guild.id), {})
+            user_bonuses_penalties = clock_data.get("bonuses_penalties", {}).get(str(interaction.user.id), [])
+            
+            # Remove all active bonuses and penalties that were applied
+            updated_items = [
+                item for item in user_bonuses_penalties 
+                if item not in results.get("active_bonuses", []) and item not in results.get("active_penalties", [])
+            ]
+            
+            clock_data["bonuses_penalties"][str(interaction.user.id)] = updated_items
+            await file_handlers.save_json(settings.get_guild_clock_data_path(interaction.guild.id), clock_data)
+        # NOTE: End
         
         # Log final calculation
         hours_worked_text = f", Hours Worked={results.get('hours_worked', 'N/A')}" if "hours_worked" in results else ""
@@ -1400,9 +1462,20 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         if results.get("compensation_type") != "hourly":
             fields.append(("💵 Net Revenue", f"{format_currency(results.get('net_revenue'), decimal_places=True, thousands_separator=True)} (80%)", True))
         
+        # NOTE: Show shift bonus (from bonus rules)
+        fields.append(("🎁 Shift Bonus", format_currency(results.get("bonus"), decimal_places=True, thousands_separator=True), True))
+        
+        # NOTE: Show additional bonuses if any
+        if results.get("total_additional_bonus", 0) > 0:
+            fields.append(("➕ Additional Bonuses", format_currency(results["total_additional_bonus"], decimal_places=True, thousands_separator=True), True))
+        
+        # NOTE: Show additional penalties if any
+        if results.get("total_additional_penalty", 0) > 0:
+            fields.append(("➖ Penalties", format_currency(results["total_additional_penalty"], decimal_places=True, thousands_separator=True), True))
+
         # Remaining fields
         fields.extend([
-            ("🎁 Bonus", format_currency(results.get("bonus"), decimal_places=True, thousands_separator=True), True),
+            # ("🎁 Bonus", format_currency(results.get("bonus"), decimal_places=True, thousands_separator=True), True), # NOTE: deprecated
             ("💼 Employee Cut", format_currency(results.get("employee_cut"), decimal_places=True, thousands_separator=True), True), 
             ("💰 Total Cut", format_currency(results.get("total_cut"), decimal_places=True, thousands_separator=True), True), 
             (" ", "" if results.get("compensation_type") == "hourly" else "", True),

@@ -573,7 +573,7 @@ class ClockInTrackerSlash(commands.Cog, name="clock_in_tracker"):
         display_name = user.display_name
         username = user.name
         embed = discord.Embed(
-            title=f"{display_name} ({username}) — {'✅ Bonus' if item_type == 'bonus' else '❌ Penalty'} [`{item_id[:8]}`]",
+            title=f"{display_name} ({username}) — {'🎁 Bonus' if item_type == 'bonus' else '🚫 Penalty'} [`{item_id[:8]}`]",
             color=embed_color,
             timestamp=datetime.now(timezone.utc)
         )
