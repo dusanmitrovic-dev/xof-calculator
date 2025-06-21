@@ -19,7 +19,8 @@ DEFAULT_USER_CLOCK_STATE = {
     "accumulated_break_duration_seconds_this_shift": 0.0,
     "expected_break_end_time_iso": None, # For overstay alert
     "overstay_alert_message_id": None,   # For overstay alert
-    "break_interaction_channel_id": None # For overstay alert, channel where /break was used
+    "break_interaction_channel_id": None, # For overstay alert, channel where /break was used
+    "break_overages_this_shift": []  # <-- Track per-break overages for this shift
 }
 
 def format_timedelta(td: timedelta, show_seconds=True) -> str:
@@ -309,6 +310,18 @@ class ClockInTrackerSlash(commands.Cog, name="clock_in_tracker"):
             # Attempt to clean up overstay alert message if any
             await self._cleanup_overstay_alert(interaction.guild_id, interaction.user.id, user_state, clock_data)
 
+            # --- Always record overage if clocking out while on break ---
+            max_break_duration_minutes = clock_data.get("settings", {}).get("max_break_duration_minutes", 0)
+            user_state.setdefault("break_overages_this_shift", [])
+            if max_break_duration_minutes > 0:
+                allowed_duration_seconds = max_break_duration_minutes * 60
+                if current_break_duration.total_seconds() > allowed_duration_seconds:
+                    overstayed_seconds = current_break_duration.total_seconds() - allowed_duration_seconds
+                    user_state["break_overages_this_shift"].append(overstayed_seconds)
+        else:
+            # If not on break, ensure break_overages_this_shift is at least an empty list
+            user_state.setdefault("break_overages_this_shift", [])
+
         if not user_state["clock_in_time"]:
             await self.send_response(interaction, message="❌ Error: Clock-in time missing. Please contact an admin.", ephemeral=True) # Error, likely ephemeral
             logger.error(f"User {interaction.user.id} clock_out error: clock_in_time missing. State: {user_state}")
@@ -324,16 +337,13 @@ class ClockInTrackerSlash(commands.Cog, name="clock_in_tracker"):
         total_work_duration_seconds = total_shift_duration_td.total_seconds() - original_accumulated_break_duration
         total_work_duration_td = timedelta(seconds=max(0, total_work_duration_seconds))
 
-        user_state.update(DEFAULT_USER_CLOCK_STATE.copy()) 
-        await self.save_clock_data(interaction.guild_id, clock_data)
-
+        # Prepare breaks_display before embed_fields
         max_breaks_config = clock_data.get("settings", {}).get("max_breaks_per_shift", 3)
         breaks_display = f"{original_breaks_taken}"
         if max_breaks_config > 0:
             breaks_display += f"/{max_breaks_config}"
-        else: # Unlimited breaks
-             breaks_display += " (Unlimited)"
-
+        else:
+            breaks_display += " (Unlimited)"
 
         # if await self.should_display_public_clock_event(interaction.guild_id): # TODO: Remove
         embed = discord.Embed(
@@ -344,25 +354,30 @@ class ClockInTrackerSlash(commands.Cog, name="clock_in_tracker"):
         # TODO: Remove
         # embed.set_author(name=interaction.user.display_name, icon_url=interaction.user.display_avatar.url if interaction.user.display_avatar else None)
             
-        embed.add_field(name="", value=(
-            "```text\n"
-            f"{'Total Shift Duration:':<22} {format_timedelta(total_shift_duration_td)}\n"
-            f"{'Time Worked:':<22} {format_timedelta(total_work_duration_td)}\n"
-            f"{'Total Break Time:':<22} {format_timedelta(timedelta(seconds=original_accumulated_break_duration))}\n"
-            f"{'Breaks Taken:':<22} {breaks_display}"
-            "\n```"
-        ), inline=False)
+        embed_fields = (
+            f"{'Total Shift Duration:':<30} {format_timedelta(total_shift_duration_td)}\n"
+            f"{'Time Worked:':<30} {format_timedelta(total_work_duration_td)}\n"
+            f"{'Total Break Time:':<30} {format_timedelta(timedelta(seconds=original_accumulated_break_duration))}\n"
+            f"{'Breaks Taken:':<30} {breaks_display}"
+        )
+
+        # Check for break time exceeded (per-break overages)
+        break_overages = user_state.get("break_overages_this_shift", [])
+        total_break_overage = sum(b for b in break_overages if b > 0)
+        if total_break_overage > 0:
+            exceeded_td = timedelta(seconds=total_break_overage)
+            embed_fields += f"\n{'🔴Break Time Exceeded by:':<29} {format_timedelta(exceeded_td, show_seconds=True)}"
+
+        embed.add_field(name="", value=f"```text\n{embed_fields}\n```", inline=False)
         
         if interaction.user.display_avatar:
             embed.set_thumbnail(url=interaction.user.display_avatar.url)
 
         await self.send_response(interaction, embed=embed, ephemeral=False) # Public event
-        # else:
-        #     await self.send_response(
-        #         interaction, 
-        #         message=f"✅ Clocked out. Time worked: **{format_timedelta(total_work_duration_td)}**. Breaks: {breaks_display}.",
-        #         ephemeral=ephemeral_default
-        #     )
+
+        # Now reset user state for next shift
+        user_state.update(DEFAULT_USER_CLOCK_STATE.copy())
+        await self.save_clock_data(interaction.guild_id, clock_data)
 
     @app_commands.command(name="break", description="Start a break (must be clocked in).")
     async def start_break(self, interaction: discord.Interaction):
@@ -479,23 +494,26 @@ class ClockInTrackerSlash(commands.Cog, name="clock_in_tracker"):
         
         await self._cleanup_overstay_alert(interaction.guild_id, interaction.user.id, user_state, clock_data, save_data=False)
         
-        await self.save_clock_data(interaction.guild_id, clock_data)
-        
         overstayed_message = ""
+        overstayed_seconds = 0
         if max_break_duration_minutes > 0 and user_state.get("expected_break_end_time_iso"): # Check if expected_break_end_time_iso was set
             # It was cleaned up by _cleanup_overstay_alert, so re-calculate if needed from original break start
             expected_end_dt_for_calc = break_start_dt + timedelta(minutes=max_break_duration_minutes)
             if now_utc > expected_end_dt_for_calc:
                 overstayed_seconds = (now_utc - expected_end_dt_for_calc).total_seconds()
                 overstayed_td = timedelta(seconds=overstayed_seconds)
-                overstayed_message = f"\n\n🔴 Overstayed by: {format_timedelta(overstayed_td, show_seconds=True)}"
+                overstayed_message = f"\n\n🔴 Exceeded by: {format_timedelta(overstayed_td, show_seconds=True)}"
         elif max_break_duration_minutes > 0: # Fallback if expected_break_end_time_iso wasn't set (should not happen if logic is correct)
             allowed_duration_seconds = max_break_duration_minutes * 60
             if current_break_duration_td.total_seconds() > allowed_duration_seconds:
                 overstayed_seconds = current_break_duration_td.total_seconds() - allowed_duration_seconds
                 overstayed_td = timedelta(seconds=overstayed_seconds)
-                overstayed_message = f"\n\n🔴 Overstayed by: {format_timedelta(overstayed_td, show_seconds=True)}"
+                overstayed_message = f"\n\n🔴 Exceeded by: {format_timedelta(overstayed_td, show_seconds=True)}"
 
+        # Record per-break overage if any
+        if overstayed_seconds > 0:
+            user_state.setdefault("break_overages_this_shift", [])
+            user_state["break_overages_this_shift"].append(overstayed_seconds)
 
         max_breaks_config = clock_data.get("settings", {}).get("max_breaks_per_shift", 3)
         breaks_display = f"{user_state['breaks_taken_this_shift']}"
@@ -504,6 +522,8 @@ class ClockInTrackerSlash(commands.Cog, name="clock_in_tracker"):
         else:
             breaks_display += " (Unlimited)"
 
+        await self.save_clock_data(interaction.guild_id, clock_data)
+        
         # if await self.should_display_public_clock_event(interaction.guild_id): # TODO: Remove
         embed = discord.Embed(
             title="",
@@ -814,7 +834,7 @@ class ClockInTrackerSlash(commands.Cog, name="clock_in_tracker"):
                             overstay_duration = now_utc - expected_end_dt
                             formatted_overstay = format_timedelta(overstay_duration, show_seconds=True)
                             
-                            embed_title = "⚠️ Break Overstay Alert"
+                            embed_title = "⚠️ Break Limit Exceeded Alert"
                             embed_desc = (
                                 f"{user_obj.mention} you have exceeded your allowed break time of "
                                 f"**{max_break_min_config} minutes**."
@@ -834,10 +854,10 @@ class ClockInTrackerSlash(commands.Cog, name="clock_in_tracker"):
                                 if user_state.get("overstay_alert_message_id"):
                                     # Try to fetch and edit the existing alert message
                                     msg = await alert_channel.fetch_message(user_state["overstay_alert_message_id"])
-                                    await msg.edit(embed=alert_embed)
+                                    await msg.edit(embed=alert_embed)  # Removed redundant mention
                                 else:
                                     # Send a new alert message and store its ID
-                                    msg = await alert_channel.send(content=user_obj.mention, embed=alert_embed)
+                                    msg = await alert_channel.send(embed=alert_embed)  # Removed redundant mention
                                     user_state["overstay_alert_message_id"] = msg.id
                                     guild_data_modified = True
 
@@ -846,7 +866,7 @@ class ClockInTrackerSlash(commands.Cog, name="clock_in_tracker"):
                                 logger.info(
                                     f"Overstay alert message {user_state.get('overstay_alert_message_id')} for user {user_id} not found. Sending a new one."
                                 )
-                                msg = await alert_channel.send(content=user_obj.mention, embed=alert_embed)
+                                msg = await alert_channel.send(embed=alert_embed)  # Removed redundant mention
                                 user_state["overstay_alert_message_id"] = msg.id
                                 guild_data_modified = True
 
