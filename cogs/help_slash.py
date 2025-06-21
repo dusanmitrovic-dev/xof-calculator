@@ -40,6 +40,36 @@ class HelpSlashCommands(commands.Cog):
         ])
         embed.add_field(name="General Commands", value=general_commands, inline=False)
 
+        # Clock-In System Commands (available to everyone)
+        clockin_commands = "\n".join([
+            "`/clock-in` - Clock in to start your shift.",
+            "`/clock-out` - Clock out to end your shift.",
+            "`/break` - Start a break (must be clocked in).",
+            "`/back` - Return from your break.",
+            "`/clock-settings set-max-breaks` - Set the maximum number of breaks allowed per shift.",
+            "`/clock-settings set-max-break-duration` - Set max allowed duration for a single break (in minutes).",
+            "`/clock-settings add-manager-role` - Allow a role to manage bonuses and penalties.",
+            "`/clock-settings remove-manager-role` - Revoke manager permissions for bonuses/penalties.",
+            "`/clock-settings view` - View current clock system configuration."
+        ])
+        embed.add_field(name="Clock-In System Commands", value=clockin_commands, inline=False)
+
+        # Bonus Commands (available to everyone)
+        bonus_commands = "\n".join([
+            "`/bonus add` - Add a bonus to a user.",
+            "`/bonus remove` - Remove an active bonus.",
+            "`/bonus list` - List active bonuses (defaults to all if no user)."
+        ])
+        embed.add_field(name="Bonus Commands", value=bonus_commands, inline=False)
+
+        # Penalty Commands (available to everyone)
+        penalty_commands = "\n".join([
+            "`/penalty add` - Apply a penalty to a user.",
+            "`/penalty remove` - Remove an active penalty.",
+            "`/penalty list` - List active penalties (defaults to all if no user)."
+        ])
+        embed.add_field(name="Penalty Commands", value=penalty_commands, inline=False)
+
         if is_admin:
             # Configuration Commands
             config_commands = "\n".join([

@@ -252,6 +252,7 @@ class ClockInTrackerSlash(commands.Cog, name="clock_in_tracker"):
             ),
             inline=False
         )
+        await self.send_response(interaction, embed=embed)
 
     # --- Main Clocking Commands ---
     @app_commands.command(name="clock-in", description="Clock in to start your shift.")
