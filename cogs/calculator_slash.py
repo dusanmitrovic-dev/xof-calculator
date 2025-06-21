@@ -1082,7 +1082,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
         logger.info(f"guild_id: {guild_id}")
         
         # Load commission settings for the guild
-        commission_file = settings.get_guild_commission_path(interaction.guild_id)
+        commission_file = settings.get_guild_commission_path(interaction.guild.id)
         role_data = await file_handlers.load_json(commission_file, {})
         
         guild_config = role_data
@@ -1118,7 +1118,7 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             percentage = Decimal(0)
         
         # Load bonus rules
-        guild_bonus_rules = await file_handlers.load_json(settings.get_guild_bonus_rules_path(interaction.guild_id), [])
+        guild_bonus_rules = await file_handlers.load_json(settings.get_guild_bonus_rules_path(interaction.guild.id), [])
         
         # Convert to proper Decimal objects for calculations
         bonus_rule_objects = []
@@ -1892,7 +1892,10 @@ class CalculatorSlashCommands(commands.GroupCog, name="calculate"):
             # Sort and truncate entries
             user_earnings = sorted(
                 user_earnings,
-                key=lambda x: datetime.strptime(x['date'], "%d/%m/%Y"),
+                key=lambda x: (
+                    datetime.strptime(x['date'], "%d/%m/%Y"),
+                    int(x['id'].split('-')[0]) if 'id' in x and '-' in x['id'] and x['id'].split('-')[0].isdigit() else 0
+                ),
                 reverse=True
             )[:entries]
 
